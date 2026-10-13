@@ -1,0 +1,15 @@
+package cm.jemil.proxi.gaz.infrastructure.reference;
+
+import cm.jemil.proxi.gaz.application.outbound.ReferenceGenerator;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+@Configuration
+public class ReferenceConfig {
+
+  @Bean
+  ReferenceGenerator referenceGenerator(JdbcTemplate jdbcTemplate) {
+    return new ReferenceGeneratorJdbc(jdbcTemplate);
+  }
+}

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+	<changeSet id="PROXIGAZ-1:1" author="pxg-scaffold">
+		<createTable tableName="t_demo">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_demo" />
+			</column>
+			<column name="c_name" type="varchar(50)" />
+			<column name="c_reference" type="varchar(20)" />
+			<column name="c_description" type="varchar(255)" />
+			<column name="c_deleted" type="boolean"
+				defaultValueBoolean="false" />
+		</createTable>
+	</changeSet>
+	<changeSet id="PROXIGAZ-1:2" author="pxg-scaffold">
+		<createSequence sequenceName="seq_demo_reference"
+			startWith="100" incrementBy="1" />
+	</changeSet>
+	<changeSet id="PROXIGAZ-1:3" author="pxg-scaffold"
+		context="e2e,data_test">
+		<insert tableName="t_demo">
+			<column name="c_id"
+				value="c03b8308-edb8-4800-aa7b-29cb9d5ee4a7" />
+			<column name="c_name" value="FetchDemo_Name1" />
+			<column name="c_reference" value="DEMO-001" />
+			<column name="c_description"
+				value="FetchDemo_Name1_Description" />
+		</insert>
+		<insert tableName="t_demo">
+			<column name="c_id"
+				value="b5899b94-b8ed-4c26-897c-d26644d32b69" />
+			<column name="c_name" value="FetchDemo_Name2" />
+			<column name="c_reference" value="DEMO-002" />
+			<column name="c_description"
+				value="FetchDemo_Name2_Description" />
+		</insert>
+		<insert tableName="t_demo">
+			<column name="c_id"
+				value="47929b74-9498-435e-be6b-6b10348676e8" />
+			<column name="c_name" value="FetchDemo_Name3" />
+			<column name="c_reference" value="DEMO-003" />
+			<column name="c_description"
+				value="FetchDemo_Name3_Description" />
+			<column name="c_deleted" valueBoolean="true" />
+		</insert>
+		<insert tableName="t_demo">
+			<column name="c_id"
+				value="393896b9-4f50-46bb-8a72-d0bf0cd3b228" />
+			<column name="c_name" value="UpdateTarget_InitialDemo" />
+			<column name="c_reference" value="DEMO-102" />
+			<column name="c_description"
+				value="UpdateTarget_InitialDemo_Description" />
+			<column name="c_deleted" valueBoolean="false" />
+		</insert>
+		<insert tableName="t_demo">
+			<column name="c_id"
+				value="840a6ef0-494b-4a98-959b-aaf94472e35c" />
+			<column name="c_name" value="ExistingDemo_ConflictName" />
+			<column name="c_reference" value="DEMO-110" />
+			<column name="c_description"
+				value="ExistingDemo_ConflictName_Description" />
+			<column name="c_deleted" valueBoolean="false" />
+		</insert>
+		<insert tableName="t_demo">
+			<column name="c_id"
+				value="c28b426d-2b31-403f-ad1c-db5b8f8143b3" />
+			<column name="c_name" value="DeleteTarget_InitialDemo" />
+			<column name="c_reference" value="DEMO-300" />
+			<column name="c_description"
+				value="DeleteTarget_InitialDemo_Description" />
+			<column name="c_deleted" valueBoolean="false" />
+		</insert>
+		<insert tableName="t_demo">
+			<column name="c_id"
+				value="7316ab6f-3ce2-497a-90db-5e98e5428f1e" />
+			<column name="c_name" value="ExistingDemo_ConflictName1" />
+			<column name="c_reference" value="DEMO-301" />
+			<column name="c_description"
+				value="ExistingDemo_ConflictName1_Description" />
+			<column name="c_deleted" valueBoolean="false" />
+		</insert>
+	</changeSet>
+</databaseChangeLog>

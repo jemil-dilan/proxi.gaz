@@ -1,3 +1,24 @@
+---
 spring:
   application:
     name: proxi.gaz
+    version: "0.0.0-SNAPSHOT"
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/proxigaz}
+    username: ${DB_USER:proxigaz}
+    password: ${DB_PASSWORD:proxigaz}
+  liquibase:
+    change-log: classpath:/cm/jemil/proxi/gaz/infrastructure/persistence/liquibase/changelog/master.xml
+    enabled: true
+    contexts: ${LIQUIBASE_CONTEXT:}
+  jpa:
+    open-in-view: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+proxigaz:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:proxigaz-dev-secret-key-0123456789abcdef0123456789abcdef}

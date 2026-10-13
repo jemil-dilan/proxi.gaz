@@ -1,0 +1,15 @@
+---
+spring:
+  datasource:
+    url: "jdbc:tc:postgresql:17.5:///proxigaz_e2e"
+    driver-class-name: ""
+  liquibase:
+    contexts: "e2e"
+proxigaz:
+  security:
+    jwt:
+      secret: "proxigaz-e2e-secret-key-0123456789abcdef0123456789abcdef"
+logging:
+  level:
+    cm.jemil.proxi.gaz: "DEBUG"
+    org.springframework.security: "DEBUG"

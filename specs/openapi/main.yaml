@@ -1,0 +1,209 @@
+---
+openapi: "3.0.3"
+info:
+  title: "PROXIGAZ"
+  description: "REST API endpoints for PROXIGAZ"
+  version: "2026-W40"
+servers:
+  - url: "https://api.proxigaz.cm"
+  - url: "http://localhost:8080"
+tags:
+  - name: "Demo"
+    description: "Demo operations"
+paths:
+  /demo:
+    get:
+      tags:
+        - "Demo"
+      summary: "Fetch all Demos"
+      description: "Fetch all Demos"
+      operationId: "fetchAllDemo"
+      security:
+        - oAuth:
+            - "demo:read:all"
+      parameters:
+        - name: "fieldsToExtractCode"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+          description: "specify the fields that will be present on the response"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/DemoDTO"
+    post:
+      tags:
+        - "Demo"
+      summary: "Create a new Demo"
+      description: "Create a new Demo"
+      operationId: "createDemo"
+      security:
+        - oAuth:
+            - "demo:create"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoCreateDTO"
+      responses:
+        "201":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreationResponseDTO"
+        "409":
+          description: "PROXIGAZ-409-000 – Demo name already exists"
+  /demo/{demoId}:
+    get:
+      tags:
+        - "Demo"
+      summary: "Fetch demo by id"
+      description: "Fetch demo by id"
+      operationId: "fetchDemoById"
+      security:
+        - oAuth:
+            - "demo:read"
+      parameters:
+        - name: "demoId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "represents the id of demo to fetch."
+        - name: "fieldsToExtractCode"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+          description: "specify the fields that will be present on the response"
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoDTO"
+        "404":
+          description: "PROXIGAZ-404-000 – Demo not found"
+    put:
+      tags:
+        - "Demo"
+      summary: "Replace an existing demo"
+      operationId: "updateDemo"
+      security:
+        - oAuth:
+            - "demo:update"
+      parameters:
+        - name: "demoId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "UUID of the demo to update"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoUpdateDTO"
+      responses:
+        "204":
+          description: "Demo updated successfully"
+        "404":
+          description: "PROXIGAZ-404-000 – Demo not found"
+        "409":
+          description: "PROXIGAZ-409-000 – Demo name already in use by another demo"
+    delete:
+      tags:
+        - "Demo"
+      summary: "Delete an existing demo"
+      operationId: "deleteDemo"
+      security:
+        - oAuth:
+            - "demo:delete"
+      parameters:
+        - name: "demoId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "UUID of the demo to delete"
+      responses:
+        "204":
+          description: "Demo deleted successfully"
+        "404":
+          description: "PROXIGAZ-404-000 – Demo not found"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+    oAuth:
+      type: "oauth2"
+      description: "This API uses OAuth 2 with the Authorization Code grant flow."
+      flows:
+        authorizationCode:
+          authorizationUrl: "https://auth.oauth.proxigaz.cm"
+          tokenUrl: "https://token.oauth.proxigaz.cm"
+          scopes:
+            demo:read:all: "Needed to fetch all Demo objects"
+            demo:create: "Needed when to create a new Demo object"
+            demo:read: "Needed to fetch a Demo object by id"
+            demo:update: "Needed to update a Demo object"
+            demo:delete: "Needed to delete a Demo object"
+  schemas:
+    DemoDTO:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "reference"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        reference:
+          type: "string"
+        description:
+          type: "string"
+    DemoCreateDTO:
+      type: "object"
+      required:
+        - "name"
+      properties:
+        name:
+          type: "string"
+        description:
+          type: "string"
+    CreationResponseDTO:
+      type: "object"
+      required:
+        - "newId"
+      properties:
+        newId:
+          type: "string"
+          format: "uuid"
+    DemoUpdateDTO:
+      type: "object"
+      required:
+        - "name"
+        - "description"
+      properties:
+        name:
+          type: "string"
+        description:
+          type: "string"
