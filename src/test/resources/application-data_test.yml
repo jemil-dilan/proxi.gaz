@@ -1,0 +1,14 @@
+---
+spring:
+  datasource:
+    url: "jdbc:tc:postgresql:17.5:///proxigaz_data_test"
+    driver-class-name: ""
+  liquibase:
+    contexts: "data_test"
+proxigaz:
+  security:
+    jwt:
+      secret: "proxigaz-data-test-secret-key-0123456789abcdef0123456789abcdef"
+logging:
+  level:
+    org.springframework.security: "TRACE"

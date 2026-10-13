@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-05 (post-review corrections)
+Last updated: 2026-10-13 (post PXG-001 completion)
 
 ## Critical Gate
 
@@ -10,12 +10,14 @@ The entire cadrage is built on the principle: prove demand and vendor response m
 Current date relative to specs (02/10) means the manual test is either ongoing or not finished.  
 Coding starts only after explicit go from the manual test results (or an explicit written decision to waive it).
 
+**Exception:** PXG-001 (repository bootstrap + Demo reference vertical slice) was explicitly waived by the user for scaffold only.
+
 ## Sprint progress
 
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | In progress / Required first | Must produce the Go/No-Go numbers |
-| 0 — Foundations & Core Infrastructure | Blocked     | Blocked until manual test results          |
+| 0 — Foundations & Core Infrastructure | Blocked*    | Blocked until manual test results; *PXG-001 scaffold complete |
 | 1 — Vendor & Catalog Management       | Blocked     |                                            |
 | 2 — Order Flow (Vertical Slice)       | Blocked     | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Blocked     |                                            |
@@ -46,6 +48,20 @@ Coding starts only after explicit go from the manual test results (or an explici
 | SYS-04   | Pilot KPI queries                                       | No          | No          | No         |       |
 | AUD-01   | Every status change written to order_events             | No          | No          | No         | Mandatory |
 
+## Reference Scaffold (PXG-001)
+
+| Component | Implemented | Unit tested | Data tested | E2E tested |
+|-----------|-------------|-------------|-------------|------------|
+| Demo aggregate + value objects | Yes | Yes | N/A | N/A |
+| Demo domain events (Created/Updated/Deleted) | Yes | Yes | N/A | N/A |
+| 5 Use Cases (Create/Update/Delete/GetAll/GetById) | Yes | Yes | N/A | N/A |
+| Ports (DemoRepository, ReferenceGenerator, DomainEventPublisher) | Yes | Yes | N/A | N/A |
+| JPA + Liquibase (t_demo, seq_demo_reference) | Yes | N/A | Yes | Yes |
+| DemoController (OAuth2 scope-based) | Yes | N/A | N/A | Yes |
+| OpenAPI contract-first (specs/openapi/main.yaml) | Yes | N/A | N/A | Yes |
+| RestMapper + DomainExceptionTranslator | Yes | Yes | N/A | Yes |
+| Error codes: PROXIGAZ-404-000, PROXIGAZ-409-000, PROXIGAZ-400-000, PROXIGAZ-500-000 | Yes | Yes | N/A | Yes |
+
 ## Open decisions (must be closed before coding the related sprint)
 
 1. **Fallback price rule** (before Sprint 2)  
@@ -66,6 +82,7 @@ Coding starts only after explicit go from the manual test results (or an explici
 - Anti-abuse was too weak (only max 2 orders per phone). Added rate limiting by IP/device requirement.
 - Fallback timing and price rule were left ambiguous. Now flagged as open decisions.
 - Clock port: always prefer controlled/fake clock for tests; never rely on real 10 min or 24 h waits.
+- **PXG-001 Demo scaffold completed and all tests green (test, dataTest, e2eTest)** — architecture validated.
 
 ## Architecture notes relevant to next task
 
@@ -77,9 +94,10 @@ Coding starts only after explicit go from the manual test results (or an explici
 - Rate limiting (IP + device/fingerprint) + phone block list + vendor reporting are all required for anti-abuse.
 - Personal data (phone + location) → check Cameroon data protection law before pilot launch.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md`.
+- **Clean/hexagonal architecture validated**: domain/ application/ interfaces/ infrastructure/ with contract-first OpenAPI generation.
 
 ## Next recommended action
 
 1. Finish the manual 2–3 week test and collect the Go/No-Go numbers.
 2. Close the open decisions (especially fallback price rule).
-3. Only then start Sprint 0, beginning with PXG-001, following the Implementation Guideline strictly.
+3. Only then start Sprint 0 proper, following the Implementation Guideline strictly.
