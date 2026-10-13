@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,7 +73,8 @@ class UpdateDemoUseCaseTest {
 
     // Then
     then(demoRepository).should().update(demoArgumentCaptor.capture());
-    assertThat(demoArgumentCaptor.getValue().getReference()).isEqualTo(DemoReference.fromIndex("001"));
+    assertThat(demoArgumentCaptor.getValue().getReference())
+        .isEqualTo(DemoReference.fromIndex("001"));
     assertThat(demoArgumentCaptor.getValue().getId()).isEqualTo(DemoId.from(DEMO_ID));
   }
 

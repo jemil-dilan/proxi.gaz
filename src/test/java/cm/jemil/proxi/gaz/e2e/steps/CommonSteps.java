@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.e2e.steps;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,8 +50,8 @@ public class CommonSteps implements En {
               .single();
         });
 
-    Given("I am connected with the scopes {string}",
-        (String scopes) -> httpClient.setScopes(scopes));
+    Given(
+        "I am connected with the scopes {string}", (String scopes) -> httpClient.setScopes(scopes));
 
     And(
         "The last request failed with the http status {string} and error code {string}",

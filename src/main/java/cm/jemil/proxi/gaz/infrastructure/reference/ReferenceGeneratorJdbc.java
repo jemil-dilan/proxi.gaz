@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.infrastructure.reference;
 
 import cm.jemil.proxi.gaz.application.outbound.ReferenceGenerator;

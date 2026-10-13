@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.e2e.steps;
 
 import static cm.jemil.proxi.gaz.e2e.HttpClient.ACCESS_TOKEN_WITH_BEARER;
@@ -379,5 +383,6 @@ public class DemoSteps implements En {
     return dto;
   }
 
-  private record DemoData(UUID id, String name, String reference, String description, boolean deleted) {}
+  private record DemoData(
+      UUID id, String name, String reference, String description, boolean deleted) {}
 }

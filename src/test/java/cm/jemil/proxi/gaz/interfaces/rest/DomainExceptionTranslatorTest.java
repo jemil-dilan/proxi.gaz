@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,7 +52,8 @@ class DomainExceptionTranslatorTest {
   @Test
   void handleDomainException_shouldReturnInternalServerError_forUnknownDomainException() {
     // When
-    var response = translator.handleDomainException(new DomainException(ErrorCodes.PROXIGAZ_500_000) {});
+    var response =
+        translator.handleDomainException(new DomainException(ErrorCodes.PROXIGAZ_500_000) {});
 
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);

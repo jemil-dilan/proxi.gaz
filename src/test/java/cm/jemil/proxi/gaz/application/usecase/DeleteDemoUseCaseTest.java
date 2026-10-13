@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,7 +71,9 @@ class DeleteDemoUseCaseTest {
     assertThatThrownBy(() -> deleteDemoUseCase.execute(new Command(DEMO_ID)))
         .isInstanceOf(DemoNotFoundException.class);
     then(demoRepository).should(never()).delete(DemoId.from(DEMO_ID));
-    then(domainEventPublisher).should(never()).publishDemoDeletedEvent(org.mockito.ArgumentMatchers.any());
+    then(domainEventPublisher)
+        .should(never())
+        .publishDemoDeletedEvent(org.mockito.ArgumentMatchers.any());
   }
 
   @Test

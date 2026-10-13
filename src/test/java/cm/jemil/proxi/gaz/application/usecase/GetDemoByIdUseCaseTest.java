@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,8 +42,7 @@ class GetDemoByIdUseCaseTest {
     given(demoRepository.loadAsView1(DemoId.from(DEMO_ID))).willReturn(view1);
 
     // When
-    DemoView result =
-        getDemoByIdUseCase.execute(new Query(DEMO_ID, Constants.FIELDS_TO_EXTRACT_1));
+    DemoView result = getDemoByIdUseCase.execute(new Query(DEMO_ID, Constants.FIELDS_TO_EXTRACT_1));
 
     // Then
     assertThat(result).isSameAs(view1);
@@ -54,8 +57,7 @@ class GetDemoByIdUseCaseTest {
     given(demoRepository.loadAsView2(DemoId.from(DEMO_ID))).willReturn(view2);
 
     // When
-    DemoView result =
-        getDemoByIdUseCase.execute(new Query(DEMO_ID, Constants.FIELDS_TO_EXTRACT_2));
+    DemoView result = getDemoByIdUseCase.execute(new Query(DEMO_ID, Constants.FIELDS_TO_EXTRACT_2));
 
     // Then
     assertThat(result).isSameAs(view2);

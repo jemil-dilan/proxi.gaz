@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz;
 
 import org.springframework.boot.test.context.TestConfiguration;
@@ -9,10 +13,9 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 class TestcontainersConfiguration {
 
-	@Bean
-	@ServiceConnection
-	PostgreSQLContainer postgresContainer() {
-		return new PostgreSQLContainer(DockerImageName.parse("postgres:17.5"));
-	}
-
+  @Bean
+  @ServiceConnection
+  PostgreSQLContainer postgresContainer() {
+    return new PostgreSQLContainer(DockerImageName.parse("postgres:17.5"));
+  }
 }

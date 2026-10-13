@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.infrastructure.reference;
 
 import static org.assertj.core.api.Assertions.assertThat;

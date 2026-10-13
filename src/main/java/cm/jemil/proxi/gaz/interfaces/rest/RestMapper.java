@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
