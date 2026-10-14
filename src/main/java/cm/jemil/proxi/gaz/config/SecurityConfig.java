@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.config;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;

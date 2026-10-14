@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,8 +26,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("data_test")
 class JpaDemoRepositoryTest {
 
-  private static final UUID SEEDED_ID =
-      UUID.fromString("c03b8308-edb8-4800-aa7b-29cb9d5ee4a7");
+  private static final UUID SEEDED_ID = UUID.fromString("c03b8308-edb8-4800-aa7b-29cb9d5ee4a7");
   private static final UUID SEEDED_DELETED_ID =
       UUID.fromString("47929b74-9498-435e-be6b-6b10348676e8");
 
@@ -159,8 +162,7 @@ class JpaDemoRepositoryTest {
 
     // Then
     assertThat(demoRepository.existsById(demoId)).isFalse();
-    assertThatThrownBy(() -> demoRepository.load(demoId))
-        .isInstanceOf(DemoNotFoundException.class);
+    assertThatThrownBy(() -> demoRepository.load(demoId)).isInstanceOf(DemoNotFoundException.class);
     assertThat(demoRepository.existsByName(DemoName.from("Delete_RoundTrip"))).isFalse();
   }
 

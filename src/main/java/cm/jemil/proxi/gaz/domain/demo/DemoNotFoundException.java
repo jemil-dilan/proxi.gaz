@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 ProxiGaz
+ * All rights reserved.
+ */
 package cm.jemil.proxi.gaz.domain.demo;
 
 import static cm.jemil.proxi.gaz.domain.ErrorCodes.PROXIGAZ_404_000;
