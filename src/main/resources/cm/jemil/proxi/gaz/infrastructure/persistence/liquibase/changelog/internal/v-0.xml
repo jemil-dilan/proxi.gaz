@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
-	<changeSet id="PROXIGAZ-1:1" author="pxg-scaffold">
+	<changeSet id="PROXIGAZ-1:1" author="Jemil-Dilan">
 		<createTable tableName="t_demo">
 			<column name="c_id" type="uuid">
 				<constraints nullable="false" primaryKey="true"
@@ -16,11 +16,11 @@
 				defaultValueBoolean="false" />
 		</createTable>
 	</changeSet>
-	<changeSet id="PROXIGAZ-1:2" author="pxg-scaffold">
+	<changeSet id="PROXIGAZ-1:2" author="Jemil-Dilan">
 		<createSequence sequenceName="seq_demo_reference"
 			startWith="100" incrementBy="1" />
 	</changeSet>
-	<changeSet id="PROXIGAZ-1:3" author="pxg-scaffold"
+	<changeSet id="PROXIGAZ-1:3" author="Jemil-Dilan"
 		context="e2e,data_test">
 		<insert tableName="t_demo">
 			<column name="c_id"
