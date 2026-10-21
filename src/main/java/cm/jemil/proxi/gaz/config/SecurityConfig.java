@@ -9,7 +9,6 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 import cm.jemil.proxi.gaz.domain.Constants;
 import java.nio.charset.StandardCharsets;
 import javax.crypto.spec.SecretKeySpec;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -27,7 +26,8 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
   @Bean
-  public JwtDecoder jwtDecoder(@Value("${proxigaz.security.jwt.secret}") String secret) {
+  public JwtDecoder jwtDecoder(ProxigazProperties properties) {
+    String secret = properties.security().jwt().secret();
     return NimbusJwtDecoder.withSecretKey(
             new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"))
         .build();

@@ -23,8 +23,11 @@ Local DB options:
 - Or any Postgres where you can install PostGIS; Liquibase runs `CREATE EXTENSION IF NOT EXISTS postgis` on migrate
 
 ```bash
-# Local app (uses env vars / defaults from application.yaml)
+# Local app (default profile: local — defaults in application-local.yaml)
 ./gradlew bootRun
+
+# Staging example (secrets required via env — no YAML defaults):
+# SPRING_PROFILES_ACTIVE=staging DB_URL=... DB_USER=... DB_PASSWORD=... JWT_SECRET=... ./gradlew bootRun
 
 # Unit tests
 ./gradlew test
@@ -39,7 +42,15 @@ Local DB options:
 ./gradlew spotlessJavaCheck
 ```
 
-Acceptance for PXG-003: migrations apply on an empty PostGIS database and `PostGIS_Version()` is available after Liquibase.
+## Spring profiles
+
+| Profile | File | Secrets / DB defaults |
+|---------|------|------------------------|
+| `local` (default) | `application-local.yaml` | Dev defaults allowed |
+| `staging` | `application-staging.yaml` | **Required** via env — no defaults |
+| `production` | `application-production.yaml` | **Required** via env — no defaults |
+
+Central config type: `ProxigazProperties` (`proxigaz.*`). Staging/production refuse to start if `JWT_SECRET` is missing, too short, or equal to the local development placeholder.
 
 ## Environment variables
 
@@ -47,13 +58,12 @@ Secrets must not be committed. Copy `.env.example` to `.env` for local use (`.en
 
 | Variable | Purpose | Local default (dev only) |
 |----------|---------|---------------------------|
-| `DB_URL` | JDBC URL | `jdbc:postgresql://localhost:5432/proxigaz` |
-| `DB_USER` | DB user | `proxigaz` |
-| `DB_PASSWORD` | DB password | `proxigaz` |
-| `JWT_SECRET` | HMAC secret for JWT resource server | documented dev placeholder in `application.yaml` — **never use in staging/production** |
+| `SPRING_PROFILES_ACTIVE` | Active profile(s) | unset → default `local` |
+| `DB_URL` | JDBC URL | `jdbc:postgresql://localhost:5432/proxigaz` (local only) |
+| `DB_USER` | DB user | `proxigaz` (local only) |
+| `DB_PASSWORD` | DB password | `proxigaz` (local only) |
+| `JWT_SECRET` | HMAC secret for JWT resource server | local placeholder in `application-local.yaml` — **never use in staging/production** |
 | `LIQUIBASE_CONTEXT` | Liquibase contexts | empty (all default changesets) |
-
-Multi-environment profile files (`staging` / `production`) and fail-fast secret checks are **PXG-004**, not this task.
 
 ## Related docs
 
