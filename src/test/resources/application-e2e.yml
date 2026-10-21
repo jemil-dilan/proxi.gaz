@@ -1,7 +1,7 @@
 ---
 spring:
   datasource:
-    url: "jdbc:tc:postgresql:17.5:///proxigaz_e2e"
+    url: "jdbc:tc:postgis:17-3.5:///proxigaz_e2e"
     driver-class-name: ""
   liquibase:
     contexts: "e2e"
