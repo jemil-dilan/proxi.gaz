@@ -75,6 +75,13 @@ Only begin this phase after the plan is approved.
 4. Create a task file at the project root (e.g. `TASK_PXG-<task-number>.md`) that states clearly, as a checklist, everything the approved plan says will be implemented — one line per concrete step.
 5. As each step is completed during implementation, mark it done in this file. This file is the running, visible record of progress on this specific task — keep it accurate in real time.
 6. Once the task is fully complete (implementation done, tests passing — see Phase 4), **delete this task file** before considering the task finished. It is a working artifact for the duration of the task only.
+7. **Commits:** every commit on the task branch must be created with Commitizen via `cz c` (alias for `cz commit`). Do not use plain `git commit -m "..."` for project commits. Interactive `cz c` is required.
+   - **Choose the suitable type** for what actually changed — do not default to `fix`. Examples: documentation / guideline / README → `docs`; new capability → `feat`; bug correction → `fix`; tooling/chore → `chore` / `build` / `ci` as appropriate.
+   - **Scope = task id** from the branch name `working/PXG-<task-number>` (e.g. `PXG-002`), not the full branch string.
+   - **Required message shape:** `<type>(PXG-<task-number>): <short imperative summary>`  
+     Example: `docs(PXG-002): document runtime and env template`  
+     (Commitizen’s documentation type is `docs`, not `doc`.)
+8. **README.md:** keep the root `README.md` accurate as work lands. After a completed task, update the README **only when the change is legitimate** — i.e. the project’s runnable state, documented capabilities, setup steps, or sprint progress actually changed. Do not edit the README for cosmetic rewrites, speculative future work, or filler. If nothing user-facing or setup-related changed, leave the README untouched.
 
 ### Task file template
 
@@ -142,5 +149,7 @@ These rules come from the final specification (Cadrage v1.5 + MVP Spec v1.2). An
 - [ ] Acceptance / e2e test(s) written first, including failure and race-condition scenarios
 - [ ] Implementation + unit tests written together, module by module
 - [ ] Full test suite run and green
+- [ ] Commits created with `cz c`, suitable type, scope `PXG-<n>` (e.g. `docs(PXG-002): …`)
+- [ ] `README.md` updated only if the task changed setup, capabilities, or accurate project status
 - [ ] Task file deleted after completion
 - [ ] `../status.md` updated to reflect the newly completed work, ready for the next task’s Phase 1

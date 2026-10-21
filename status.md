@@ -1,27 +1,21 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-13 (post PXG-001 completion)
+Last updated: 2026-10-21 (working/PXG-002)
 
 ## Critical Gate
 
-**DO NOT start Sprint 0 coding until the manual 2–3 week test has produced numbers.**
-
-The entire cadrage is built on the principle: prove demand and vendor response manually before writing production code.  
-Current date relative to specs (02/10) means the manual test is either ongoing or not finished.  
-Coding starts only after explicit go from the manual test results (or an explicit written decision to waive it).
-
-**Exception:** PXG-001 (repository bootstrap + Demo reference vertical slice) was explicitly waived by the user for scaffold only.
+Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user direction). Continue collecting/using pilot numbers for open product decisions (offer duration, Web Push plan B).
 
 ## Sprint progress
 
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
-| Manual Test (2–3 weeks)               | In progress / Required first | Must produce the Go/No-Go numbers |
-| 0 — Foundations & Core Infrastructure | Blocked*    | Blocked until manual test results; *PXG-001 scaffold complete |
-| 1 — Vendor & Catalog Management       | Blocked     |                                            |
-| 2 — Order Flow (Vertical Slice)       | Blocked     | Open decision on fallback price rule must be closed before this sprint |
-| 3 — Fallback, Delivery & Reviews      | Blocked     |                                            |
-| 4 — Hardening, Admin & Pilot Ready    | Blocked     |                                            |
+| Manual Test (2–3 weeks)               | Go (assumed) | Unblocks Sprint 0 |
+| 0 — Foundations & Core Infrastructure | In progress | PXG-001 done; PXG-002 done; next PXG-003/004 |
+| 1 — Vendor & Catalog Management       | Not started |                                            |
+| 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
+| 3 — Fallback, Delivery & Reviews      | Not started |                                            |
+| 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
 
 ## Use case status
 
@@ -47,6 +41,22 @@ Coding starts only after explicit go from the manual test results (or an explici
 | SYS-03   | OrderReport (fake order) + phone block list + rate limit| No          | No          | No         | Strengthen anti-abuse |
 | SYS-04   | Pilot KPI queries                                       | No          | No          | No         |       |
 | AUD-01   | Every status change written to order_events             | No          | No          | No         | Mandatory |
+
+## Sprint 0 task status
+
+| ID | Task | Status |
+|----|------|--------|
+| PXG-001 | Repository bootstrap + Demo reference slice | Done |
+| PXG-002 | Runtime documented + env management | Done |
+| PXG-003 | Database setup (PostgreSQL + PostGIS) | Not started |
+| PXG-004 | Config & secrets (local / staging / production) | Not started |
+| PXG-005 | Initial domain migrations + GIST | Not started |
+| PXG-006 | Domain entities & value objects | Not started |
+| PXG-007 | Ports definition | Not started |
+| PXG-008 | Null / in-memory adapters | Not started |
+| PXG-009 | Admin user model & repository | Not started |
+| PXG-010 | Admin JWT/session auth | Not started |
+| PXG-011 | Seed data | Not started |
 
 ## Reference Scaffold (PXG-001)
 
@@ -78,26 +88,24 @@ Coding starts only after explicit go from the manual test results (or an explici
 
 ## Known gaps / discrepancies found this session
 
-- status.md previously suggested starting Sprint 0. Corrected: coding is blocked until manual test numbers exist.
-- Anti-abuse was too weak (only max 2 orders per phone). Added rate limiting by IP/device requirement.
-- Fallback timing and price rule were left ambiguous. Now flagged as open decisions.
-- Clock port: always prefer controlled/fake clock for tests; never rely on real 10 min or 24 h waits.
-- **PXG-001 Demo scaffold completed and all tests green (test, dataTest, e2eTest)** — architecture validated.
+- Manual-test gate lifted for Sprint 0 per user direction; status table updated accordingly.
+- PXG-002 documents Java/Spring runtime (not Nest); adds `.env.example`, gitignores secrets, `docs/RUNTIME.md`, root `README.md`.
+- `SECURITY.md` filled for pre-release support + private vulnerability reporting (was GitHub placeholder).
+- Guideline now requires Commitizen (`cz c`) and legitimate-only README updates.
 
 ## Architecture notes relevant to next task
 
-- Must use PostgreSQL + PostGIS.
+- Must use PostgreSQL + PostGIS (PXG-003 next).
 - Ports required from day one: `OtpProvider`, `NotificationChannel`, `GeoQueryPort`, `Clock` (controlled clock mandatory for tests).
 - Order state machine and `order_offers` are central.
 - Tracking must use `tracking_token`.
 - Availability is computed at query time.
 - Rate limiting (IP + device/fingerprint) + phone block list + vendor reporting are all required for anti-abuse.
 - Personal data (phone + location) → check Cameroon data protection law before pilot launch.
-- All work must follow `docs/ProxiGaz_Implementation_Guideline.md`.
+- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits).
 - **Clean/hexagonal architecture validated**: domain/ application/ interfaces/ infrastructure/ with contract-first OpenAPI generation.
 
 ## Next recommended action
 
-1. Finish the manual 2–3 week test and collect the Go/No-Go numbers.
-2. Close the open decisions (especially fallback price rule).
-3. Only then start Sprint 0 proper, following the Implementation Guideline strictly.
+1. PXG-003 — confirm PostGIS and migration path against empty DB.
+2. Then PXG-004 (multi-env config), then PXG-005+ domain schema.
