@@ -43,7 +43,8 @@ jobs:
     # (Testcontainers starts its own Postgres; Docker is preinstalled).
     services:
       postgres:
-        image: postgres:17.5
+        # Keep in sync with TestcontainersConfiguration.POSTGIS_IMAGE
+        image: postgis/postgis:17-3.5
         env:
           POSTGRES_USER: proxigaz
           POSTGRES_PASSWORD: proxigaz

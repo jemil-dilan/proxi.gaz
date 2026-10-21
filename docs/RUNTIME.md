@@ -7,14 +7,20 @@
 | Language | Java 25 (Temurin) |
 | Framework | Spring Boot 4.1.x |
 | Build | Gradle (Kotlin DSL) via `./gradlew` |
-| Persistence | PostgreSQL + Liquibase (+ PostGIS in Sprint 0 / PXG-003) |
+| Persistence | PostgreSQL + PostGIS + Liquibase |
 | API contract | OpenAPI-first (`specs/openapi/main.yaml`) |
 
 **Why not NestJS/Node:** PXG-001 already validated a hexagonal (clean) architecture on Spring Boot with contract-first OpenAPI, JPA, Liquibase, and Cucumber e2e. Changing stacks would discard that proven scaffold without benefit for the MVP backend plan.
 
 ## How to run
 
-Prerequisites: JDK 25, Docker (for Testcontainers / local Postgres), a reachable PostgreSQL instance for local `bootRun`.
+Prerequisites: JDK 25, Docker (for Testcontainers), and a reachable **PostgreSQL + PostGIS** instance for local `bootRun`.
+
+Pinned image for CI / Testcontainers (keep in sync): `postgis/postgis:17-3.5`.
+
+Local DB options:
+- Run `docker run --name proxigaz-db -e POSTGRES_USER=proxigaz -e POSTGRES_PASSWORD=proxigaz -e POSTGRES_DB=proxigaz -p 5432:5432 -d postgis/postgis:17-3.5`
+- Or any Postgres where you can install PostGIS; Liquibase runs `CREATE EXTENSION IF NOT EXISTS postgis` on migrate
 
 ```bash
 # Local app (uses env vars / defaults from application.yaml)
@@ -33,7 +39,7 @@ Prerequisites: JDK 25, Docker (for Testcontainers / local Postgres), a reachable
 ./gradlew spotlessJavaCheck
 ```
 
-Acceptance for PXG-002: the application starts with `./gradlew bootRun` when Postgres is available and environment variables are set (or local defaults are acceptable).
+Acceptance for PXG-003: migrations apply on an empty PostGIS database and `PostGIS_Version()` is available after Liquibase.
 
 ## Environment variables
 
