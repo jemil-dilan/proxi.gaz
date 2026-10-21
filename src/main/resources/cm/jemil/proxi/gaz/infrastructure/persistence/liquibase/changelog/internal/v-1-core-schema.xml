@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+	<changeSet id="PROXIGAZ-5:1" author="Jemil-Dilan">
+		<comment>admin_users</comment>
+		<createTable tableName="t_admin_users">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_admin_users" />
+			</column>
+			<column name="c_email" type="varchar(255)">
+				<constraints nullable="false" unique="true"
+					uniqueConstraintName="uq_admin_users_email" />
+			</column>
+			<column name="c_password_hash" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:2" author="Jemil-Dilan">
+		<comment>vendors with PostGIS geography location</comment>
+		<createTable tableName="t_vendors">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_vendors" />
+			</column>
+			<column name="c_name" type="varchar(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_phone" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_address_text" type="varchar(512)" />
+			<column name="c_is_station" type="boolean"
+				defaultValueBoolean="false">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_delivery_fee_type" type="varchar(32)" />
+			<column name="c_delivery_fee_amount" type="integer" />
+			<column name="c_is_active" type="boolean"
+				defaultValueBoolean="true">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_reliability_score" type="integer"
+				defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<sql>ALTER TABLE t_vendors ADD COLUMN c_location geography(Point,
+			4326) NOT NULL;</sql>
+		<sql>CREATE INDEX idx_vendors_location ON t_vendors USING GIST
+			(c_location);</sql>
+		<createIndex tableName="t_vendors"
+			indexName="idx_vendors_is_active">
+			<column name="c_is_active" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:3" author="Jemil-Dilan">
+		<comment>vendor_brands</comment>
+		<createTable tableName="t_vendor_brands">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_vendor_brands" />
+			</column>
+			<column name="c_vendor_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_vendor_brands_vendor"
+					references="t_vendors(c_id)" />
+			</column>
+			<column name="c_brand_name" type="varchar(128)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_size_kg" type="numeric(6,2)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_price_with_exchange" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_price_without_exchange" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_is_available" type="boolean"
+				defaultValueBoolean="false">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_available_until" type="timestamptz" />
+			<column name="c_is_open_now" type="boolean"
+				defaultValueBoolean="false">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<createIndex tableName="t_vendor_brands"
+			indexName="idx_vendor_brands_vendor_id">
+			<column name="c_vendor_id" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:4" author="Jemil-Dilan">
+		<comment>vendor_sessions (long-lived pilot tokens, hashed)</comment>
+		<createTable tableName="t_vendor_sessions">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_vendor_sessions" />
+			</column>
+			<column name="c_vendor_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_vendor_sessions_vendor"
+					references="t_vendors(c_id)" />
+			</column>
+			<column name="c_token_hash" type="varchar(255)">
+				<constraints nullable="false" unique="true"
+					uniqueConstraintName="uq_vendor_sessions_token_hash" />
+			</column>
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_expires_at" type="timestamptz" />
+		</createTable>
+		<createIndex tableName="t_vendor_sessions"
+			indexName="idx_vendor_sessions_vendor_id">
+			<column name="c_vendor_id" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:5" author="Jemil-Dilan">
+		<comment>orders</comment>
+		<createTable tableName="t_orders">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_orders" />
+			</column>
+			<column name="c_client_phone" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_vendor_id" type="uuid">
+				<constraints foreignKeyName="fk_orders_vendor"
+					references="t_vendors(c_id)" />
+			</column>
+			<column name="t_vendor_brand_id" type="uuid">
+				<constraints foreignKeyName="fk_orders_vendor_brand"
+					references="t_vendor_brands(c_id)" />
+			</column>
+			<column name="c_status" type="varchar(64)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_tracking_token" type="varchar(64)">
+				<constraints nullable="false" unique="true"
+					uniqueConstraintName="uq_orders_tracking_token" />
+			</column>
+			<column name="c_confirmation_code" type="varchar(4)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_confirmation_attempts" type="integer"
+				defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_has_empty_bottle" type="boolean"
+				defaultValueBoolean="false">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_is_pickup" type="boolean"
+				defaultValueBoolean="false">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_client_landmark" type="varchar(512)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_price_bottle" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_delivery_fee" type="integer"
+				defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_total_price" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_delivered_at" type="timestamptz" />
+			<column name="c_client_confirmed_at" type="timestamptz" />
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_updated_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<sql>ALTER TABLE t_orders ADD COLUMN c_client_location
+			geography(Point, 4326);</sql>
+		<createIndex tableName="t_orders"
+			indexName="idx_orders_client_phone">
+			<column name="c_client_phone" />
+		</createIndex>
+		<createIndex tableName="t_orders"
+			indexName="idx_orders_status">
+			<column name="c_status" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:6" author="Jemil-Dilan">
+		<comment>order_offers</comment>
+		<createTable tableName="t_order_offers">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_order_offers" />
+			</column>
+			<column name="c_order_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_order_offers_order" references="t_orders(c_id)" />
+			</column>
+			<column name="c_vendor_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_order_offers_vendor"
+					references="t_vendors(c_id)" />
+			</column>
+			<column name="c_vendor_brand_id" type="uuid">
+				<constraints
+					foreignKeyName="fk_order_offers_vendor_brand"
+					references="t_vendor_brands(c_id)" />
+			</column>
+			<column name="c_status" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_attempt_no" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_expires_at" type="timestamptz">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<createIndex tableName="t_order_offers"
+			indexName="idx_order_offers_order_id">
+			<column name="c_order_id" />
+		</createIndex>
+		<createIndex tableName="t_order_offers"
+			indexName="idx_order_offers_vendor_status">
+			<column name="c_vendor_id" />
+			<column name="c_status" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:7" author="Jemil-Dilan">
+		<comment>order_events audit trail</comment>
+		<createTable tableName="t_order_events">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_order_events" />
+			</column>
+			<column name="c_order_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_order_events_order" references="t_orders(c_id)" />
+			</column>
+			<column name="c_from_status" type="varchar(64)" />
+			<column name="c_to_status" type="varchar(64)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_note" type="varchar(1024)" />
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<createIndex tableName="t_order_events"
+			indexName="idx_order_events_order_id">
+			<column name="c_order_id" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:8" author="Jemil-Dilan">
+		<comment>order_reports (fake-order reporting)</comment>
+		<createTable tableName="t_order_reports">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_order_reports" />
+			</column>
+			<column name="c_order_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_order_reports_order" references="t_orders(c_id)" />
+			</column>
+			<column name="c_vendor_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_order_reports_vendor"
+					references="t_vendors(c_id)" />
+			</column>
+			<column name="c_reason" type="varchar(512)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<createIndex tableName="t_order_reports"
+			indexName="idx_order_reports_order_id">
+			<column name="c_order_id" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:9" author="Jemil-Dilan">
+		<comment>reviews — one per order</comment>
+		<createTable tableName="t_reviews">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_reviews" />
+			</column>
+			<column name="c_order_id" type="uuid">
+				<constraints nullable="false" unique="true"
+					uniqueConstraintName="uq_reviews_order_id"
+					foreignKeyName="fk_reviews_order" references="t_orders(c_id)" />
+			</column>
+			<column name="c_vendor_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_reviews_vendor" references="t_vendors(c_id)" />
+			</column>
+			<column name="c_rating" type="integer">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_comment" type="varchar(2000)" />
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<sql>ALTER TABLE t_reviews ADD CONSTRAINT chk_reviews_rating CHECK
+			(c_rating &gt;= 1 AND c_rating &lt;= 5);</sql>
+	</changeSet>
+
+	<changeSet id="PROXIGAZ-5:10" author="Jemil-Dilan">
+		<comment>push_subscriptions</comment>
+		<createTable tableName="t_push_subscriptions">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_push_subscriptions" />
+			</column>
+			<column name="c_vendor_id" type="uuid">
+				<constraints
+					foreignKeyName="fk_push_subscriptions_vendor"
+					references="t_vendors(c_id)" />
+			</column>
+			<column name="c_endpoint" type="varchar(2048)">
+				<constraints nullable="false" unique="true"
+					uniqueConstraintName="uq_push_subscriptions_endpoint" />
+			</column>
+			<column name="c_p256dh" type="varchar(512)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_auth" type="varchar(256)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<createIndex tableName="t_push_subscriptions"
+			indexName="idx_push_subscriptions_vendor_id">
+			<column name="c_vendor_id" />
+		</createIndex>
+	</changeSet>
+
+</databaseChangeLog>
