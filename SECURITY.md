@@ -2,20 +2,31 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+ProxiGaz is pre-pilot. Only the current development line receives security fixes.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Version | Supported |
+|---------|-----------|
+| `main` / `0.0.0-SNAPSHOT` (pre-release) | :white_check_mark: |
+| Any published release tag (once cut) | Documented per release |
+| Older / abandoned branches | :x: |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+Do **not** open a public GitHub issue for security vulnerabilities.
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+1. Prefer [GitHub private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability) on this repository if enabled.
+2. Otherwise contact the repository maintainers privately (account that owns this repo).
+
+You can expect:
+
+- Acknowledgement when the report is received (typically within a few business days).
+- An initial assessment of impact and whether a fix will be pursued.
+- A coordinated disclosure timeline once a fix is available; please do not publish exploit details until then.
+
+Accepted reports will be fixed on `main` (and on supported release tags when they exist). Declined reports will include a short rationale (e.g. out of scope, duplicate, or not considered a vulnerability).
+
+## Project security expectations (pilot)
+
+- No secrets in source control; use environment variables (see `.env.example` and `docs/RUNTIME.md`).
+- Default JWT / DB credentials in config are for **local development only**.
+- Personal data (phone, location) must be handled under applicable Cameroon data-protection rules before pilot launch.
