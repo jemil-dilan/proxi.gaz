@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-21 (working/PXG-004)
+Last updated: 2026-10-21 (working/PXG-005)
 
 ## Critical Gate
 
@@ -11,7 +11,7 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (assumed) | Unblocks Sprint 0 |
-| 0 — Foundations & Core Infrastructure | In progress | PXG-001–004 done; next PXG-005 |
+| 0 — Foundations & Core Infrastructure | In progress | PXG-001–005 done; next PXG-006 |
 | 1 — Vendor & Catalog Management       | Not started |                                            |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
@@ -50,7 +50,7 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 | PXG-002 | Runtime documented + env management | Done |
 | PXG-003 | Database setup (PostgreSQL + PostGIS) | Done |
 | PXG-004 | Config & secrets (local / staging / production) | Done |
-| PXG-005 | Initial domain migrations + GIST | Not started |
+| PXG-005 | Initial domain migrations + GIST | Done |
 | PXG-006 | Domain entities & value objects | Not started |
 | PXG-007 | Ports definition | Not started |
 | PXG-008 | Null / in-memory adapters | Not started |
@@ -94,21 +94,17 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 - Guideline now requires Commitizen (`cz c`) and legitimate-only README updates.
 - PXG-003: Liquibase `CREATE EXTENSION postgis`; CI/Testcontainers pinned to `postgis/postgis:17-3.5`; data test proves `PostGIS_Version()` / `ST_MakePoint`.
 - PXG-004: `ProxigazProperties`; profiles `local` / `staging` / `production`; fail-fast JWT checks for non-local.
+- PXG-005: core tables + GIST on `vendors.location` (`v-1-core-schema.xml`); no Java domain entities yet.
 
 ## Architecture notes relevant to next task
 
-- PostgreSQL + PostGIS ready (extension via Liquibase; image `postgis/postgis:17-3.5`).
-- Config: default profile `local`; staging/production require env secrets (`ProxigazProperties` + `NonLocalSecretsValidator`).
-- Ports required from day one: `OtpProvider`, `NotificationChannel`, `GeoQueryPort`, `Clock` (controlled clock mandatory for tests).
-- Order state machine and `order_offers` are central.
-- Tracking must use `tracking_token`.
-- Availability is computed at query time.
-- Rate limiting (IP + device/fingerprint) + phone block list + vendor reporting are all required for anti-abuse.
-- Personal data (phone + location) → check Cameroon data protection law before pilot launch.
-- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits).
-- **Clean/hexagonal architecture validated**: domain/ application/ interfaces/ infrastructure/ with contract-first OpenAPI generation.
+- PostgreSQL + PostGIS ready; domain tables exist (`admin_users`, `vendors`, brands, orders/offers/events/reports, reviews, push_subscriptions, vendor_sessions).
+- Config: default profile `local`; staging/production require env secrets.
+- Next: domain entities/VOs (PXG-006) should map to this schema; ports (PXG-007) and adapters (PXG-008) follow.
+- Tracking must use `tracking_token`; availability is query-time; anti-abuse rules still apply.
+- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; branch from `main`).
 
 ## Next recommended action
 
-1. PXG-005 — initial domain migrations (tables + GIST on `vendors.location`).
-2. Then PXG-006+ domain entities and ports.
+1. PXG-006 — domain entities & value objects (OrderStatus state machine, Money, GeoPoint, etc.).
+2. Then PXG-007 / PXG-008 ports and null adapters.

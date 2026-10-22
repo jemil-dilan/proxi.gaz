@@ -6,4 +6,7 @@
 	<include file="internal/v-0-postgis.xml"
 		relativeToChangelogFile="true" />
 	<include file="internal/v-0.xml" relativeToChangelogFile="true" />
+	<include file="internal/v-1-core-schema.xml"
+		relativeToChangelogFile="true" />
 </databaseChangeLog>
+
