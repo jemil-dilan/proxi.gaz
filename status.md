@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-22 (working/PXG-007)
+Last updated: 2026-10-22 (working/PXG-008)
 
 ## Critical Gate
 
@@ -11,7 +11,7 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (assumed) | Unblocks Sprint 0 |
-| 0 — Foundations & Core Infrastructure | In progress | PXG-001–006 done; next PXG-007 |
+| 0 — Foundations & Core Infrastructure | In progress | PXG-001–008 done; next PXG-009 |
 | 1 — Vendor & Catalog Management       | Not started |                                            |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
@@ -53,7 +53,7 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 | PXG-005 | Initial domain migrations + GIST | Done |
 | PXG-006 | Domain entities & value objects | Done |
 | PXG-007 | Ports definition | Done |
-| PXG-008 | Null / in-memory adapters | Not started |
+| PXG-008 | Null / in-memory adapters | Done |
 | PXG-009 | Admin user model & repository | Not started |
 | PXG-010 | Admin JWT/session auth | Not started |
 | PXG-011 | Seed data | Not started |
