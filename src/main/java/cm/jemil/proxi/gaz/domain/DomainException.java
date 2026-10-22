@@ -13,6 +13,11 @@ public class DomainException extends RuntimeException {
     this.errorCode = errorCode;
   }
 
+  public DomainException(ErrorCode errorCode, String detail) {
+    super("%s: %s (%s)".formatted(errorCode.value(), errorCode.description(), detail));
+    this.errorCode = errorCode;
+  }
+
   public ErrorCode getErrorCode() {
     return errorCode;
   }

@@ -6,8 +6,10 @@ package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.domain.DomainException;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
+import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
+import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,10 @@ class DomainExceptionTranslator {
         switch (ex) {
           case DemoNotFoundException _ -> HttpStatus.NOT_FOUND;
           case DemoAlreadyExistsException _ -> HttpStatus.CONFLICT;
-          case FieldsExtractionCodeNotSupported _ -> HttpStatus.BAD_REQUEST;
+          case FieldsExtractionCodeNotSupported _,
+              InvalidOrderStatusTransitionException _,
+              InvalidDomainValueException _ ->
+              HttpStatus.BAD_REQUEST;
           default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     var message = ex.getMessage() == null ? "" : ex.getMessage();

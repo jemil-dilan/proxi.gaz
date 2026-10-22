@@ -9,8 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import cm.jemil.proxi.gaz.domain.DomainException;
 import cm.jemil.proxi.gaz.domain.ErrorCodes;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
+import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
+import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
+import cm.jemil.proxi.gaz.domain.order.OrderStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -47,6 +50,24 @@ class DomainExceptionTranslatorTest {
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-400-000");
+  }
+
+  @Test
+  void handleDomainException_shouldReturnBadRequest_forInvalidOrderStatusTransition() {
+    var response =
+        translator.handleDomainException(
+            new InvalidOrderStatusTransitionException(OrderStatus.PENDING, OrderStatus.DELIVERED));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-400-001");
+  }
+
+  @Test
+  void handleDomainException_shouldReturnBadRequest_forInvalidDomainValue() {
+    var response = translator.handleDomainException(new InvalidDomainValueException("bad value"));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-400-002");
   }
 
   @Test

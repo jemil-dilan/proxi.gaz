@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-21 (working/PXG-005)
+Last updated: 2026-10-22 (working/PXG-006)
 
 ## Critical Gate
 
@@ -11,7 +11,7 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (assumed) | Unblocks Sprint 0 |
-| 0 — Foundations & Core Infrastructure | In progress | PXG-001–005 done; next PXG-006 |
+| 0 — Foundations & Core Infrastructure | In progress | PXG-001–006 done; next PXG-007 |
 | 1 — Vendor & Catalog Management       | Not started |                                            |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
@@ -27,7 +27,7 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 | VEN-02   | Admin activates / deactivates vendor                    | No          | No          | No         |       |
 | VEN-03   | Admin creates long-lived VendorSession                  | No          | No          | No         |       |
 | VEN-04   | CRUD VendorBrand (prices with/without exchange)         | No          | No          | No         |       |
-| VEN-05   | Availability rule (`is_available AND available_until > now() AND is_open_now`) | No | No | No | Query-time computation |
+| VEN-05   | Availability rule (`is_available AND available_until > now() AND is_open_now`) | Partial | Yes | No | Domain `Availability` VO; query wiring later |
 | GEO-01   | Nearby vendors (ST_DWithin + distance sort)             | No          | No          | No         |       |
 | ORD-01   | Create order + first OrderOffer + tracking_token + code | No          | No          | No         | Max 2 active + rate limit by IP/device |
 | ORD-02   | Vendor accepts / refuses offer                          | No          | No          | No         |       |
@@ -51,7 +51,7 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 | PXG-003 | Database setup (PostgreSQL + PostGIS) | Done |
 | PXG-004 | Config & secrets (local / staging / production) | Done |
 | PXG-005 | Initial domain migrations + GIST | Done |
-| PXG-006 | Domain entities & value objects | Not started |
+| PXG-006 | Domain entities & value objects | Done |
 | PXG-007 | Ports definition | Not started |
 | PXG-008 | Null / in-memory adapters | Not started |
 | PXG-009 | Admin user model & repository | Not started |
@@ -94,17 +94,17 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 - Guideline now requires Commitizen (`cz c`) and legitimate-only README updates.
 - PXG-003: Liquibase `CREATE EXTENSION postgis`; CI/Testcontainers pinned to `postgis/postgis:17-3.5`; data test proves `PostGIS_Version()` / `ST_MakePoint`.
 - PXG-004: `ProxigazProperties`; profiles `local` / `staging` / `production`; fail-fast JWT checks for non-local.
-- PXG-005: core tables + GIST on `vendors.location` (`v-1-core-schema.xml`); no Java domain entities yet.
+- PXG-005: core tables + GIST on `vendors.location` (`v-1-core-schema.xml`).
+- PXG-006: `OrderStatus` state machine, `Money`, `GeoPoint`, `ConfirmationCode`, `TrackingToken`, `Availability` (+ unit tests).
 
 ## Architecture notes relevant to next task
 
-- PostgreSQL + PostGIS ready; domain tables exist (`admin_users`, `vendors`, brands, orders/offers/events/reports, reviews, push_subscriptions, vendor_sessions).
-- Config: default profile `local`; staging/production require env secrets.
-- Next: domain entities/VOs (PXG-006) should map to this schema; ports (PXG-007) and adapters (PXG-008) follow.
-- Tracking must use `tracking_token`; availability is query-time; anti-abuse rules still apply.
+- PostgreSQL + PostGIS ready; domain tables exist (`t_*` schema).
+- Domain VOs/state machine ready for use cases; next ports (PXG-007) and adapters (PXG-008).
+- Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; branch from `main`).
 
 ## Next recommended action
 
-1. PXG-006 — domain entities & value objects (OrderStatus state machine, Money, GeoPoint, etc.).
-2. Then PXG-007 / PXG-008 ports and null adapters.
+1. PXG-007 — ports: `OtpProvider`, `NotificationChannel`, `GeoQueryPort`, `Clock`.
+2. PXG-008 — null / in-memory adapters (`FakeClock`, etc.).
