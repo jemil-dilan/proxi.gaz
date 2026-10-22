@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-22 (working/PXG-006)
+Last updated: 2026-10-22 (working/PXG-007)
 
 ## Critical Gate
 
@@ -52,7 +52,7 @@ Manual 2–3 week test: **treated as Go** for Sprint 0 coding (explicit user dir
 | PXG-004 | Config & secrets (local / staging / production) | Done |
 | PXG-005 | Initial domain migrations + GIST | Done |
 | PXG-006 | Domain entities & value objects | Done |
-| PXG-007 | Ports definition | Not started |
+| PXG-007 | Ports definition | Done |
 | PXG-008 | Null / in-memory adapters | Not started |
 | PXG-009 | Admin user model & repository | Not started |
 | PXG-010 | Admin JWT/session auth | Not started |
