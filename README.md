@@ -7,7 +7,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 | Area | State |
 |------|--------|
 | Manual demand/vendor test | Assumed go — Sprint 0 coding unblocked |
-| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-005` done; next `PXG-006`) |
+| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-006` done; next `PXG-007`) |
 | Sprints 1–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
@@ -17,6 +17,7 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - Hexagonal Spring Boot scaffold with a **Demo** vertical slice (CRUD, Liquibase, OpenAPI-generated API, OAuth2 JWT scopes).
 - PostgreSQL **+ PostGIS** (Liquibase enables the extension; CI/tests use `postgis/postgis:17-3.5`).
 - Core domain tables migrated (vendors with GIST location, orders/offers, admin_users, etc.).
+- Domain VOs: order status state machine, Money (FCFA), GeoPoint, ConfirmationCode, TrackingToken, Availability.
 - Config profiles: `local` (default), `staging`, `production` — secrets via env; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - CI: Spotless + unit / data / e2e tests on GitHub Actions.
 
