@@ -34,7 +34,7 @@ public class InfrastructureConfig {
   }
 
   @Bean
-  @Profile("test")
+  @Profile({"test", "data_test"})
   Clock fakeClock() {
     return new FakeClock(Instant.now());
   }
