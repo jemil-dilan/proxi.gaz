@@ -7,6 +7,7 @@ package cm.jemil.proxi.gaz.interfaces.rest;
 import cm.jemil.proxi.gaz.domain.DomainException;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
+import cm.jemil.proxi.gaz.domain.admin.InvalidAdminCredentialsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
@@ -25,6 +26,7 @@ class DomainExceptionTranslator {
         switch (ex) {
           case DemoNotFoundException _ -> HttpStatus.NOT_FOUND;
           case DemoAlreadyExistsException _ -> HttpStatus.CONFLICT;
+          case InvalidAdminCredentialsException _ -> HttpStatus.UNAUTHORIZED;
           case FieldsExtractionCodeNotSupported _,
               InvalidOrderStatusTransitionException _,
               InvalidDomainValueException _ ->

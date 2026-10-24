@@ -5,10 +5,16 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
+import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase.Command;
 import cm.jemil.proxi.gaz.application.views.DemoView;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView2;
+import cm.jemil.proxi.gaz.domain.shared.Email;
+import cm.jemil.proxi.gaz.domain.shared.UserId;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginRequest;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginResponse;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileResponse;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreationResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoCreateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoDTO;
@@ -25,6 +31,22 @@ import org.mapstruct.ReportingPolicy;
     injectionStrategy = InjectionStrategy.CONSTRUCTOR,
     unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface RestMapper {
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "email", source = "email")
+  @Mapping(target = "password", source = "password")
+  LoginAdminUseCase.Command toCommand(AdminLoginRequest request);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "accessToken", source = "accessToken")
+  @Mapping(target = "tokenType", expression = "java(AdminLoginResponse.TokenTypeEnum.BEARER)")
+  @Mapping(target = "expiresIn", source = "expiresInSeconds")
+  AdminLoginResponse fromDomain(LoginAdminUseCase.Result result);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "id", source = "userId.value")
+  @Mapping(target = "email", source = "email.value")
+  AdminProfileResponse fromDomain(UserId userId, Email email);
 
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "name")

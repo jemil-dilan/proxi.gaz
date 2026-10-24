@@ -10,6 +10,7 @@ import cm.jemil.proxi.gaz.domain.DomainException;
 import cm.jemil.proxi.gaz.domain.ErrorCodes;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
+import cm.jemil.proxi.gaz.domain.admin.InvalidAdminCredentialsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
@@ -40,6 +41,14 @@ class DomainExceptionTranslatorTest {
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-409-000");
+  }
+
+  @Test
+  void handleDomainException_shouldReturnUnauthorized_forInvalidAdminCredentials() {
+    var response = translator.handleDomainException(new InvalidAdminCredentialsException());
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-401-000");
   }
 
   @Test

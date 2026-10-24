@@ -4,7 +4,6 @@
  */
 package cm.jemil.proxi.gaz.e2e.steps;
 
-import static cm.jemil.proxi.gaz.e2e.HttpClient.ACCESS_TOKEN_WITH_BEARER;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -100,7 +99,7 @@ public class DemoSteps implements En {
         (String fieldsExtractionCode) ->
             this.demos =
                 given()
-                    .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                    .header("Authorization", httpClient.authorizationHeader())
                     .queryParam(Constants.FIELDS_TO_EXTRACT_CODE, fieldsExtractionCode)
                     .when()
                     .get("/demo")
@@ -115,7 +114,7 @@ public class DemoSteps implements En {
           var response =
               given()
                   .contentType(ContentType.JSON)
-                  .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                  .header("Authorization", httpClient.authorizationHeader())
                   .queryParam(Constants.FIELDS_TO_EXTRACT_CODE, fieldsExtractionCode)
                   .when()
                   .get("/demo");
@@ -159,7 +158,7 @@ public class DemoSteps implements En {
           this.creationResponseDTO =
               given()
                   .contentType(ContentType.JSON)
-                  .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                  .header("Authorization", httpClient.authorizationHeader())
                   .when()
                   .body(demoCreateDTO)
                   .post("/demo")
@@ -179,7 +178,7 @@ public class DemoSteps implements En {
           var response =
               given()
                   .contentType(ContentType.JSON)
-                  .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                  .header("Authorization", httpClient.authorizationHeader())
                   .when()
                   .body(demoCreateDTO)
                   .post("/demo");
@@ -193,7 +192,7 @@ public class DemoSteps implements En {
           var response =
               given()
                   .contentType(ContentType.JSON)
-                  .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                  .header("Authorization", httpClient.authorizationHeader())
                   .when()
                   .body(demoCreateDTO)
                   .post("/demo");
@@ -277,7 +276,7 @@ public class DemoSteps implements En {
             this.demo =
                 given()
                     .contentType(ContentType.JSON)
-                    .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                    .header("Authorization", httpClient.authorizationHeader())
                     .pathParam("demoId", UUID.fromString(demoId))
                     .queryParam(Constants.FIELDS_TO_EXTRACT_CODE, fieldsExtractionCode)
                     .when()
@@ -293,7 +292,7 @@ public class DemoSteps implements En {
           var response =
               given()
                   .contentType(ContentType.JSON)
-                  .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                  .header("Authorization", httpClient.authorizationHeader())
                   .pathParam("demoId", UUID.fromString(demoId))
                   .queryParam(Constants.FIELDS_TO_EXTRACT_CODE, fieldsExtractionCode)
                   .when()
@@ -320,7 +319,7 @@ public class DemoSteps implements En {
           httpClient.lastUpdatedId = UUID.fromString(demoId);
           given()
               .contentType(ContentType.JSON)
-              .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+              .header("Authorization", httpClient.authorizationHeader())
               .pathParam("demoId", httpClient.lastUpdatedId)
               .when()
               .body(updateDemoDTO)
@@ -338,7 +337,7 @@ public class DemoSteps implements En {
           var response =
               given()
                   .contentType(ContentType.JSON)
-                  .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                  .header("Authorization", httpClient.authorizationHeader())
                   .pathParam("demoId", httpClient.lastUpdatedId)
                   .when()
                   .body(updateDemoDTO)
@@ -352,7 +351,7 @@ public class DemoSteps implements En {
           httpClient.lastUpdatedId = UUID.fromString(demoId);
           given()
               .contentType(ContentType.JSON)
-              .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+              .header("Authorization", httpClient.authorizationHeader())
               .pathParam("demoId", httpClient.lastUpdatedId)
               .when()
               .delete("/demo/{demoId}")
@@ -367,7 +366,7 @@ public class DemoSteps implements En {
           var response =
               given()
                   .contentType(ContentType.JSON)
-                  .header("Authorization", ACCESS_TOKEN_WITH_BEARER)
+                  .header("Authorization", httpClient.authorizationHeader())
                   .pathParam("demoId", httpClient.lastUpdatedId)
                   .when()
                   .delete("/demo/{demoId}");
