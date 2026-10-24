@@ -9,6 +9,11 @@ proxigaz:
   security:
     jwt:
       secret: "proxigaz-e2e-secret-key-0123456789abcdef0123456789abcdef"
+  admin:
+    bootstrap:
+      enabled: true
+      email: "pxg010-admin@example.test"
+      password: "PXG010-test-password"
 logging:
   level:
     cm.jemil.proxi.gaz: "DEBUG"
