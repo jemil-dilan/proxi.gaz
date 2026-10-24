@@ -11,7 +11,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
-| 0 — Foundations & Core Infrastructure | In progress | PXG-001–009 done; next PXG-010 |
+| 0 — Foundations & Core Infrastructure | In progress | PXG-001–010 done; next PXG-011 |
 | 1 — Vendor & Catalog Management       | Not started |                                            |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
@@ -55,7 +55,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-007 | Ports definition | Done |
 | PXG-008 | Null / in-memory adapters | Done |
 | PXG-009 | Admin user model & repository | Done |
-| PXG-010 | Admin JWT/session auth | Not started |
+| PXG-010 | Admin JWT/session auth | Done |
 | PXG-011 | Seed data | Not started |
 
 ## Reference Scaffold (PXG-001)
@@ -92,6 +92,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - The Sprint Plan prerequisite now records that the manual-test gate can be explicitly waived; the user-directed Sprint 0 waiver is reflected above.
 - `InMemoryGeoQueryPort` is a test adapter that currently returns registered vendors without radius filtering or distance ordering. Production PostGIS search remains Sprint 1 work (PXG-020).
 - PXG-009 completed on `working/PXG-009`: normalized admin email model, repository CRUD adapter, and opt-in BCrypt-backed bootstrap creation.
+- PXG-010 completed on `working/PXG-010`, based on `working/PXG-009` by explicit user direction while its MR is open. Unit, PostGIS data, and Cucumber E2E suites passed.
 - PXG-002 documents Java/Spring runtime (not Nest); adds `.env.example`, gitignores secrets, `docs/RUNTIME.md`, root `README.md`.
 - `SECURITY.md` filled for pre-release support + private vulnerability reporting (was GitHub placeholder).
 - Guideline requires Commitizen (`cz c`) and legitimate-only README updates.
@@ -112,5 +113,4 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 
 ## Next recommended action
 
-1. PXG-010 — admin login and JWT/session authentication.
-2. PXG-011 — development seed data, including pilot vendors.
+1. PXG-011 — development seed data, including pilot vendors.

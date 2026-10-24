@@ -4,6 +4,9 @@
  */
 package cm.jemil.proxi.gaz.config;
 
+import cm.jemil.proxi.gaz.application.outbound.AdminAccessTokenIssuer;
+import cm.jemil.proxi.gaz.application.outbound.AdminPasswordVerifier;
+import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
 import cm.jemil.proxi.gaz.application.outbound.DomainEventPublisher;
 import cm.jemil.proxi.gaz.application.outbound.ReferenceGenerator;
@@ -11,12 +14,22 @@ import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.DeleteDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetDemoByIdUseCase;
+import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class UseCaseConfig {
+
+  @Bean
+  public LoginAdminUseCase loginAdminUseCase(
+      AdminUserRepository adminUserRepository,
+      AdminPasswordVerifier adminPasswordVerifier,
+      AdminAccessTokenIssuer adminAccessTokenIssuer) {
+    return new LoginAdminUseCase(
+        adminUserRepository, adminPasswordVerifier, adminAccessTokenIssuer);
+  }
 
   @Bean
   public CreateDemoUseCase createDemoUseCase(

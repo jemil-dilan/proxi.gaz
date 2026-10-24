@@ -15,15 +15,14 @@ import org.springframework.http.HttpStatusCode;
 @Scope(SCOPE_CUCUMBER_GLUE)
 public class HttpClient {
 
-  public static final String ACCESS_TOKEN = "proxigaz-e2e-access-token";
-  public static final String ACCESS_TOKEN_WITH_BEARER = "Bearer " + ACCESS_TOKEN;
-
   public record LastRequestResponse(HttpStatusCode status, String errorCode) {}
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private String scopes = "";
   private LastRequestResponse lastResponse;
+  private String lastResponseBody = "";
+  private String accessToken;
 
   public UUID lastUpdatedId;
 
@@ -33,6 +32,18 @@ public class HttpClient {
 
   public void setScopes(String scopes) {
     this.scopes = scopes == null ? "" : scopes;
+  }
+
+  public String authorizationHeader() {
+    return accessToken == null ? null : "Bearer " + accessToken;
+  }
+
+  public void setAccessToken(String accessToken) {
+    this.accessToken = accessToken;
+  }
+
+  public void clearAccessToken() {
+    accessToken = null;
   }
 
   public LastRequestResponse getLastResponse() {
@@ -46,6 +57,11 @@ public class HttpClient {
   public void recordResponse(int statusCode, String body) {
     lastResponse =
         new LastRequestResponse(HttpStatusCode.valueOf(statusCode), extractErrorCode(body));
+    lastResponseBody = body == null ? "" : body;
+  }
+
+  public String getLastResponseBody() {
+    return lastResponseBody;
   }
 
   private static String extractErrorCode(String body) {

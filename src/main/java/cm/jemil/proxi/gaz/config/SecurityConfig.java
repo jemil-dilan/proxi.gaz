@@ -7,6 +7,8 @@ package cm.jemil.proxi.gaz.config;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import cm.jemil.proxi.gaz.domain.Constants;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.nimbusds.jose.proc.SecurityContext;
 import java.nio.charset.StandardCharsets;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +20,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -27,10 +31,18 @@ public class SecurityConfig {
 
   @Bean
   public JwtDecoder jwtDecoder(ProxigazProperties properties) {
+    return NimbusJwtDecoder.withSecretKey(jwtSecretKey(properties)).build();
+  }
+
+  @Bean
+  public JwtEncoder jwtEncoder(ProxigazProperties properties) {
+    var jwkSource = new ImmutableSecret<SecurityContext>(jwtSecretKey(properties));
+    return new NimbusJwtEncoder(jwkSource);
+  }
+
+  private SecretKeySpec jwtSecretKey(ProxigazProperties properties) {
     String secret = properties.security().jwt().secret();
-    return NimbusJwtDecoder.withSecretKey(
-            new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"))
-        .build();
+    return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
   }
 
   @Order(0)
@@ -49,6 +61,10 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             authorize ->
                 authorize
+                    .requestMatchers(HttpMethod.POST, Constants.PATH_ADMIN_LOGIN)
+                    .permitAll()
+                    .requestMatchers(Constants.PATH_ADMIN_AUTH)
+                    .hasAuthority(Scopes.ADMIN)
                     .requestMatchers(HttpMethod.GET, Constants.PATH_DEMO)
                     .hasAnyAuthority(Scopes.DEMO_READ_ALL)
                     .requestMatchers(HttpMethod.POST, Constants.PATH_DEMO)
