@@ -4,7 +4,7 @@
 **Based on:** Cadrage v1.5 + MVP Specification v1.2 + Manual Test Plan  
 **Language:** English  
 **Scope:** Backend only (API, domain, persistence, jobs, admin endpoints). Frontend / PWA is out of scope of this plan.  
-**Prerequisite:** Manual 2–3 week test must produce Go/No-Go numbers before any Sprint 0 coding. All sprints are **Blocked** until that gate is passed (see `../status.md`).
+**Prerequisite:** The manual 2–3 week test should produce Go/No-Go numbers before Sprint 0 coding. The project may proceed if the gate is explicitly waived by the user; `../status.md` records the current decision. All work must follow `ProxiGaz_Implementation_Guideline.md`.
 
 All work must follow `ProxiGaz_Implementation_Guideline.md`.
 
