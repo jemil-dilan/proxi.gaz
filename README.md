@@ -7,7 +7,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 | Area | State |
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
-| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-008` done; next `PXG-009`) |
+| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-009` done; next `PXG-010`) |
 | Sprints 1–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
@@ -17,8 +17,10 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - Hexagonal Spring Boot scaffold with a **Demo** vertical slice (CRUD, Liquibase, OpenAPI-generated API, OAuth2 JWT scopes).
 - PostgreSQL **+ PostGIS** (Liquibase enables the extension; CI/tests use `postgis/postgis:17-3.5`).
 - Core domain tables migrated (vendors with GIST location, orders/offers, admin_users, etc.).
+- Admin user domain model and repository persist normalized emails and BCrypt password hashes.
 - Domain VOs: order status state machine, Money (FCFA), GeoPoint, ConfirmationCode, TrackingToken, Availability.
 - Config profiles: `local` (default), `staging`, `production` — secrets via env; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
+- Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - CI: Spotless + unit / data / e2e tests on GitHub Actions.
 
 Domain features (vendors, geo search, orders, fallback, reviews, admin login) are **not** implemented yet — see `status.md` use-case table.

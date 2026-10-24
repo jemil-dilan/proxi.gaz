@@ -11,7 +11,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
-| 0 — Foundations & Core Infrastructure | In progress | PXG-001–008 done; PXG-009 in progress |
+| 0 — Foundations & Core Infrastructure | In progress | PXG-001–009 done; next PXG-010 |
 | 1 — Vendor & Catalog Management       | Not started |                                            |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
@@ -54,7 +54,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-006 | Domain entities & value objects | Done |
 | PXG-007 | Ports definition | Done |
 | PXG-008 | Null / in-memory adapters | Done |
-| PXG-009 | Admin user model & repository | In progress |
+| PXG-009 | Admin user model & repository | Done |
 | PXG-010 | Admin JWT/session auth | Not started |
 | PXG-011 | Seed data | Not started |
 
@@ -91,7 +91,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - README and prior status notes pointed to PXG-007/PXG-008 as next, but both are implemented; corrected to PXG-009.
 - The Sprint Plan prerequisite now records that the manual-test gate can be explicitly waived; the user-directed Sprint 0 waiver is reflected above.
 - `InMemoryGeoQueryPort` is a test adapter that currently returns registered vendors without radius filtering or distance ordering. Production PostGIS search remains Sprint 1 work (PXG-020).
-- PXG-009 is in progress on `working/PXG-009`; its admin user implementation has not yet been completed.
+- PXG-009 completed on `working/PXG-009`: normalized admin email model, repository CRUD adapter, and opt-in BCrypt-backed bootstrap creation.
 - PXG-002 documents Java/Spring runtime (not Nest); adds `.env.example`, gitignores secrets, `docs/RUNTIME.md`, root `README.md`.
 - `SECURITY.md` filled for pre-release support + private vulnerability reporting (was GitHub placeholder).
 - Guideline requires Commitizen (`cz c`) and legitimate-only README updates.
@@ -105,13 +105,12 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 ## Architecture notes relevant to next task
 
 - PostgreSQL + PostGIS ready; core domain tables exist (`t_*` schema), including `t_admin_users`.
-- Domain VOs/state machine, outbound ports, and base adapters are in place; admin authentication is not implemented.
-- Follow the existing Demo clean/hexagonal persistence pattern for the admin repository. PXG-010 owns login/JWT; Sprint 1 PXG-020 owns production PostGIS nearby search.
+- Domain VOs/state machine, outbound ports, base adapters, and admin user persistence are in place; admin login is not implemented.
+- Admin bootstrap is opt-in through environment properties; it hashes the supplied password and skips an existing email. PXG-010 owns login/JWT; Sprint 1 PXG-020 owns production PostGIS nearby search.
 - Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; branch from `main`).
 
 ## Next recommended action
 
-1. Complete PXG-009 — admin user model, repository, and secure seed/CLI creation path.
-2. PXG-010 — admin login and JWT/session authentication.
-3. PXG-011 — development seed data, including pilot vendors.
+1. PXG-010 — admin login and JWT/session authentication.
+2. PXG-011 — development seed data, including pilot vendors.
