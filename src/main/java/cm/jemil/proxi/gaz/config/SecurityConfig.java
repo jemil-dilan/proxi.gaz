@@ -95,6 +95,8 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(Constants.PATH_ADMIN_AUTH)
                     .hasAuthority(Scopes.ADMIN)
+                    .requestMatchers(Constants.PATH_ADMIN_VENDORS)
+                    .hasAuthority(Scopes.ADMIN)
                     .requestMatchers(HttpMethod.GET, Constants.PATH_DEMO)
                     .hasAnyAuthority(Scopes.DEMO_READ_ALL)
                     .requestMatchers(HttpMethod.POST, Constants.PATH_DEMO)

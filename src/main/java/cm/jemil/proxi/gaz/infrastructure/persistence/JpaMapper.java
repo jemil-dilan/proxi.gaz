@@ -10,6 +10,16 @@ import cm.jemil.proxi.gaz.domain.demo.DemoDescription;
 import cm.jemil.proxi.gaz.domain.demo.DemoId;
 import cm.jemil.proxi.gaz.domain.demo.DemoName;
 import cm.jemil.proxi.gaz.domain.demo.DemoReference;
+import cm.jemil.proxi.gaz.domain.shared.AddressText;
+import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
+import cm.jemil.proxi.gaz.domain.shared.Money;
+import cm.jemil.proxi.gaz.domain.shared.PhoneNumber;
+import cm.jemil.proxi.gaz.domain.vendor.DeliveryFeeType;
+import cm.jemil.proxi.gaz.domain.vendor.Vendor;
+import cm.jemil.proxi.gaz.domain.vendor.VendorDetails;
+import cm.jemil.proxi.gaz.domain.vendor.VendorId;
+import cm.jemil.proxi.gaz.domain.vendor.VendorName;
+import java.util.Optional;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
@@ -22,6 +32,35 @@ import org.mapstruct.ReportingPolicy;
     injectionStrategy = InjectionStrategy.CONSTRUCTOR,
     unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface JpaMapper {
+
+  default VendorPersistenceModel toPersistence(Vendor vendor) {
+    var d = vendor.details();
+    return new VendorPersistenceModel(
+        vendor.id().value(),
+        d.name().value(),
+        d.phone().value(),
+        d.location().latitude(),
+        d.location().longitude(),
+        d.addressText().map(AddressText::value).orElse(null),
+        d.station(),
+        d.deliveryFeeType().map(DeliveryFeeType::value).orElse(null),
+        d.deliveryFeeAmount().map(Money::amountFcfa).orElse(null),
+        d.active());
+  }
+
+  default Vendor toDomain(VendorPersistenceModel row) {
+    return Vendor.reconstitute(
+        VendorId.from(row.id()),
+        new VendorDetails(
+            VendorName.from(row.name()),
+            PhoneNumber.from(row.phone()),
+            GeoPoint.of(row.latitude(), row.longitude()),
+            AddressText.fromOptional(row.addressText()),
+            row.station(),
+            DeliveryFeeType.fromOptional(row.deliveryFeeType()),
+            Optional.ofNullable(row.deliveryFeeAmount()).map(Money::fcfa),
+            row.active()));
+  }
 
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "id", source = "id.value")

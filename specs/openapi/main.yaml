@@ -12,7 +12,58 @@ tags:
     description: "Demo operations"
   - name: "AdminAuth"
     description: "Admin login and identity operations"
+  - name: "AdminVendor"
+    description: "Admin vendor management"
 paths:
+  /admin/vendors:
+    post:
+      tags: ["AdminVendor"]
+      summary: "Create a vendor"
+      operationId: "createVendor"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorDetailsDTO"
+      responses:
+        "201":
+          description: "Vendor created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreationResponseDTO"
+        "400":
+          description: "Invalid vendor details"
+  /admin/vendors/{vendorId}:
+    put:
+      tags: ["AdminVendor"]
+      summary: "Replace vendor details"
+      operationId: "updateVendor"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "vendorId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorDetailsDTO"
+      responses:
+        "204":
+          description: "Vendor updated"
+        "400":
+          description: "Invalid vendor details"
+        "404":
+          description: "Vendor not found"
   /admin/auth/login:
     post:
       tags:
@@ -292,3 +343,16 @@ components:
           type: "string"
         description:
           type: "string"
+    VendorDetailsDTO:
+      type: "object"
+      required: ["name", "phone", "latitude", "longitude", "isStation", "isActive"]
+      properties:
+        name: { type: "string" }
+        phone: { type: "string" }
+        latitude: { type: "number", format: "double" }
+        longitude: { type: "number", format: "double" }
+        addressText: { type: "string" }
+        isStation: { type: "boolean" }
+        deliveryFeeType: { type: "string" }
+        deliveryFeeAmount: { type: "integer", format: "int32" }
+        isActive: { type: "boolean" }

@@ -7,8 +7,9 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 | Area | State |
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
-| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-011` done; next `PXG-012`) |
-| Sprints 1–4 | Not started |
+| Sprint 0 — Foundations | Done (`PXG-001`–`PXG-011`) |
+| Sprint 1 — Vendor & Catalog | In progress (`PXG-012` done; next `PXG-013`) |
+| Sprints 2–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
 
@@ -18,13 +19,14 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - PostgreSQL **+ PostGIS** (Liquibase enables the extension; CI/tests use `postgis/postgis:17-3.5`).
 - Core domain tables migrated (vendors with GIST location, orders/offers, admin_users, etc.).
 - Admin user domain model and repository persist normalized emails and BCrypt password hashes.
+- Admins can create and update vendors through `POST /admin/vendors` and `PUT /admin/vendors/{vendorId}`; vendor locations persist as PostGIS geography points.
 - Domain VOs: order status state machine, Money (FCFA), GeoPoint, ConfirmationCode, TrackingToken, Availability.
 - Config profiles: `local` (default), `staging`, `production` — secrets via env; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - The `local` Liquibase context seeds a development-only admin (`admin@proxigaz.local` / `password`) and five fictional vendors in central Douala. Seed data is excluded from staging and production contexts.
 - CI: Spotless + unit / data / e2e tests on GitHub Actions.
 
-Admin login (AUTH-01) is implemented. Vendor management and authentication, production geo search, orders, fallback, and reviews are **not** implemented yet — see `status.md` use-case table.
+Admin login (AUTH-01) and vendor create/update (VEN-01) are implemented. Vendor sessions, catalog management, production geo search, orders, fallback, and reviews are **not** implemented yet — see `status.md` use-case table.
 
 ## Stack
 

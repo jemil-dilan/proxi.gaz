@@ -5,9 +5,11 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
+import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase.Response;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase.Command;
+import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import cm.jemil.proxi.gaz.application.views.DemoView;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView2;
@@ -20,6 +22,7 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoCreateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoUpdateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDetailsDTO;
 import java.util.UUID;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.InjectionStrategy;
@@ -32,6 +35,33 @@ import org.mapstruct.ReportingPolicy;
     injectionStrategy = InjectionStrategy.CONSTRUCTOR,
     unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface RestMapper {
+
+  default CreateVendorUseCase.Command toCreateVendorCommand(VendorDetailsDTO dto) {
+    return new CreateVendorUseCase.Command(
+        dto.getName(),
+        dto.getPhone(),
+        dto.getLatitude(),
+        dto.getLongitude(),
+        dto.getAddressText(),
+        dto.getIsStation(),
+        dto.getDeliveryFeeType(),
+        dto.getDeliveryFeeAmount(),
+        dto.getIsActive());
+  }
+
+  default UpdateVendorUseCase.Command toUpdateVendorCommand(UUID vendorId, VendorDetailsDTO dto) {
+    return new UpdateVendorUseCase.Command(
+        vendorId,
+        dto.getName(),
+        dto.getPhone(),
+        dto.getLatitude(),
+        dto.getLongitude(),
+        dto.getAddressText(),
+        dto.getIsStation(),
+        dto.getDeliveryFeeType(),
+        dto.getDeliveryFeeAmount(),
+        dto.getIsActive());
+  }
 
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "email.value", source = "email")

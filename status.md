@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-25 (working/PXG-011)
+Last updated: 2026-10-25 (working/PXG-012)
 
 ## Critical Gate
 
@@ -11,8 +11,8 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
-| 0 — Foundations & Core Infrastructure | In progress | PXG-001–011 done; next PXG-012 |
-| 1 — Vendor & Catalog Management       | Not started |                                            |
+| 0 — Foundations & Core Infrastructure | Done | PXG-001–011 complete; manual-test gate explicitly waived |
+| 1 — Vendor & Catalog Management       | In progress | VEN-01 create/update is implemented; remaining vendor/catalog tasks are pending |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -23,7 +23,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 |----------|---------------------------------------------------------|-------------|-------------|------------|-------|
 | AUTH-01  | Admin login (JWT / session)                             | Yes         | Yes         | Yes        | Generic credentials errors; JWT settings and token ports; full unit, data, and E2E checks pass |
 | AUTH-02  | Vendor session validation (long-lived token by admin)   | No          | No          | No         |       |
-| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | No          | No          | No         |       |
+| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Yes         | Yes         | Yes        | Admin-only create/update endpoints; PostgreSQL adapter persists WGS84 geography; unit, data, and E2E checks pass |
 | VEN-02   | Admin activates / deactivates vendor                    | No          | No          | No         |       |
 | VEN-03   | Admin creates long-lived VendorSession                  | No          | No          | No         |       |
 | VEN-04   | CRUD VendorBrand (prices with/without exchange)         | No          | No          | No         |       |
@@ -42,7 +42,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | SYS-04   | Pilot KPI queries                                       | No          | No          | No         |       |
 | AUD-01   | Every status change written to order_events             | No          | No          | No         | Mandatory |
 
-## Sprint 0 task status
+## Sprint 0 and Sprint 1 task status
 
 | ID | Task | Status |
 |----|------|--------|
@@ -57,6 +57,8 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-009 | Admin user model & repository | Done |
 | PXG-010 | Admin JWT/session auth | Done |
 | PXG-011 | Seed data | Done |
+| PXG-012 | Vendor create/update | Done |
+| PXG-013 | Vendor activate/deactivate | Next |
 
 ## Reference Scaffold (PXG-001)
 
@@ -96,7 +98,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - PXG-010 implements AUTH-01 with credential lookup policy in the application and generic password/token ports. Unit, PostGIS data, and E2E suites passed.
 - PXG-010 follow-up consolidates `proxigaz.*` binding in `Configurations` port and `ConfigurationsImpl`, keeps admin bootstrap opt-in and password-hashed, and confirms the disabled runner is not registered.
 - PXG-011 adds a local-only Liquibase seed with a BCrypt-backed development admin and five fictional vendor records with PostGIS locations in central Douala. The changeset is selected only by the local, `data_test`, or `e2e` contexts; the production context excludes it.
-- Seed data does not implement vendor management: Vendor and VendorBrand domain entities and persistence adapters remain future work. Only the schema, GeoPoint/Availability value objects, and seed rows exist.
+- PXG-012 adds VEN-01 create/update using the existing vendor schema and PostGIS geography; it does not add migrations or handle activation/deactivation transitions beyond accepting the current active flag as part of full replacement. PXG-013 remains the next Sprint 0 item.
 - Architecture review gaps remain in committed code: Demo retrieval use cases still consume REST constants and extraction strings, Demo value objects do not enforce the documented column bounds, `AdminUser.id()` exposes a UUID, and `SecurityConfig` contains bean definitions despite the `*Beans` naming convention.
 - PXG-002 documents Java/Spring runtime (not Nest); adds `.env.example`, gitignores secrets, `docs/RUNTIME.md`, root `README.md`.
 - `SECURITY.md` filled for pre-release support + private vulnerability reporting (was GitHub placeholder).
@@ -114,8 +116,9 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - Domain VOs/state machine, outbound ports, base adapters, admin user persistence, and AUTH-01 admin login/JWT are implemented. Generic password/token ports and the JWT settings port are wired through infrastructure beans. All `proxigaz.*` settings bind through the `Configurations` port implemented by `ConfigurationsImpl`. Demo projection selection still passes REST wire codes into application use cases and needs a follow-up boundary cleanup.
 - Admin bootstrap is opt-in through environment properties; it hashes the supplied password and skips an existing email. PXG-010 owns login/JWT; Sprint 1 PXG-020 owns production PostGIS nearby search.
 - Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
-- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; branch from `main`).
+- PXG-012 provides vendor create/update on `working/PXG-012`, branched from PXG-011 as directed; the implementation is tested but not yet committed or merged.
+- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; PXG-012 was based on PXG-011 by user direction).
 
 ## Next recommended action
 
-1. PXG-012 — create/update Vendor and location management.
+1. PXG-013 — implement admin-controlled vendor activation/deactivation and ensure inactive vendors are excluded from nearby search.
