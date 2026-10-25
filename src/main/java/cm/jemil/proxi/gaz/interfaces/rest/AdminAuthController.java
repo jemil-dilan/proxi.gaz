@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.domain.shared.Email;
@@ -42,7 +43,19 @@ class AdminAuthController implements AdminAuthApi {
     }
 
     var token = jwtAuthentication.getToken();
-    var userId = UserId.from(UUID.fromString(token.getSubject()));
+    var subject = token.getSubject();
+    if (subject == null || subject.isBlank()) {
+      return ResponseEntity.status(UNAUTHORIZED).build();
+    }
+
+    UUID subjectId;
+    try {
+      subjectId = UUID.fromString(subject);
+    } catch (IllegalArgumentException exception) {
+      return ResponseEntity.status(UNAUTHORIZED).build();
+    }
+
+    var userId = UserId.from(subjectId);
     var email = Email.from(token.getClaimAsString("email"));
     return ResponseEntity.ok(restMapper.fromDomain(userId, email));
   }
