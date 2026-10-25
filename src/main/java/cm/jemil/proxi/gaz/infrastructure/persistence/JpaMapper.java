@@ -4,16 +4,17 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
+import cm.jemil.proxi.gaz.domain.admin.AdminUser;
 import cm.jemil.proxi.gaz.domain.demo.Demo;
 import cm.jemil.proxi.gaz.domain.demo.DemoDescription;
 import cm.jemil.proxi.gaz.domain.demo.DemoId;
 import cm.jemil.proxi.gaz.domain.demo.DemoName;
 import cm.jemil.proxi.gaz.domain.demo.DemoReference;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.InjectionStrategy;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
+import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
+import cm.jemil.proxi.gaz.domain.shared.Email;
+import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
+import cm.jemil.proxi.gaz.domain.shared.UserId;
+import org.mapstruct.*;
 
 @Mapper(
     componentModel = "spring",
@@ -27,6 +28,28 @@ interface JpaMapper {
   @Mapping(target = "reference", source = "reference.value")
   @Mapping(target = "description", source = "description.value")
   DemoJpa fromDomain(Demo demo);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "id", source = "id.value")
+  @Mapping(target = "email", source = "email.value")
+  @Mapping(target = "passwordHash", source = "passwordHash.value")
+  @Mapping(target = "createdAt", source = "createdAt.value")
+  AdminUserJpa fromDomain(AdminUser adminUser);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "id", source = "id.value")
+  @Mapping(target = "email", source = "email.value")
+  @Mapping(target = "passwordHash", source = "passwordHash.value")
+  @Mapping(target = "createdAt", source = "createdAt.value")
+  void fromDomain(@MappingTarget AdminUserJpa adminUserJpa, AdminUser adminUser);
+
+  default AdminUser toDomain(AdminUserJpa adminUser) {
+    return AdminUser.reconstitute(
+        UserId.from(adminUser.getId()),
+        Email.from(adminUser.getEmail()),
+        PasswordHash.from(adminUser.getPasswordHash()),
+        CreatedAt.from(adminUser.getCreatedAt()));
+  }
 
   default Demo toDomain(DemoJpa value) {
     return Demo.reconstitute(

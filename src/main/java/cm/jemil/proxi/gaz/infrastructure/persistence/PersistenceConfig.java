@@ -4,6 +4,7 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
+import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.annotation.Bean;
@@ -18,5 +19,11 @@ public class PersistenceConfig {
   @Bean
   DemoRepository demoRepository(DemoSpringRepository demoSpringRepository, JpaMapper jpaMapper) {
     return new JpaDemoRepository(demoSpringRepository, jpaMapper);
+  }
+
+  @Bean
+  AdminUserRepository adminUserRepository(
+      AdminUserSpringRepository adminUserSpringRepository, JpaMapper jpaMapper) {
+    return new JpaAdminUserRepository(adminUserSpringRepository, jpaMapper);
   }
 }
