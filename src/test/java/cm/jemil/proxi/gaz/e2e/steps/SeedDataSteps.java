@@ -25,6 +25,8 @@ public class SeedDataSteps implements En {
                     c_delivery_fee_type, c_delivery_fee_amount, c_is_active
                   FROM t_vendors
                   WHERE c_id::text LIKE '01100000-%'
+                    AND ST_X(c_location::geometry) BETWEEN 9.68 AND 9.75
+                    AND ST_Y(c_location::geometry) BETWEEN 4.00 AND 4.08
                   """,
                   (rs, rowNum) ->
                       new SeedVendor(

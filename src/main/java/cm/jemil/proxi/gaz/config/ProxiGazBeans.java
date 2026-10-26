@@ -23,7 +23,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+<<<<<<<< HEAD:src/main/java/cm/jemil/proxi/gaz/config/ProxiGazBeans.java
 public class ProxiGazBeans {
+========
+public class UseCaseBeans {
+
+>>>>>>>> 88e9c0d (refactor(PXG-010): Align authentication and domain boundaries):src/main/java/cm/jemil/proxi/gaz/config/UseCaseBeans.java
   @Bean
   public LoginAdminUseCase loginAdminUseCase(
       AdminUserRepository adminUserRepository,

@@ -134,7 +134,6 @@ public class AdminAuthSteps implements En {
                           new AdminData(
                               UUID.fromString(rs.getString("c_id")),
                               rs.getString("c_email"),
-                              rs.getString("c_password_hash"),
                               Optional.ofNullable(rs.getTimestamp("c_created_at"))
                                   .map(Timestamp::toLocalDateTime)
                                   .orElse(null)))
@@ -149,7 +148,6 @@ public class AdminAuthSteps implements En {
                                   .map(UUID::fromString)
                                   .orElse(null),
                               data.get("email"),
-                              data.get("password"),
                               Optional.ofNullable(data.get("created_at"))
                                   .map(LocalDateTime::parse)
                                   .orElse(null)))
@@ -192,5 +190,5 @@ public class AdminAuthSteps implements En {
         });
   }
 
-  private record AdminData(UUID id, String email, String password, LocalDateTime createdAt) {}
+  private record AdminData(UUID id, String email, LocalDateTime createdAt) {}
 }
