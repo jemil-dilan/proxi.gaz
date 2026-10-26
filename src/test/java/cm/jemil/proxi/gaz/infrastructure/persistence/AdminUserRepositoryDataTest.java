@@ -64,8 +64,8 @@ class AdminUserRepositoryDataTest {
 
     adminUserRepository.update(updatedAdmin);
 
-    assertThat(adminUserRepository.findByEmail(existingEmail)).isEmpty();
     assertThat(adminUserRepository.findByEmail(updatedEmail)).contains(updatedAdmin);
+    assertThat(adminUserRepository.findByEmail(existingEmail)).isEmpty();
   }
 
   @Test

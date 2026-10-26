@@ -25,14 +25,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AdminLoginRequest"
+              $ref: "#/components/schemas/AdminLoginDTO"
       responses:
         "200":
           description: "Admin authenticated"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AdminLoginResponse"
+                $ref: "#/components/schemas/LoginResponseDTO"
         "400":
           description: "Invalid login request"
         "401":
@@ -51,7 +51,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AdminProfileResponse"
+                $ref: "#/components/schemas/AdminProfileDTO"
         "401":
           description: "Missing or invalid access token"
   /demo:
@@ -207,7 +207,7 @@ components:
             demo:update: "Needed to update a Demo object"
             demo:delete: "Needed to delete a Demo object"
   schemas:
-    AdminLoginRequest:
+    AdminLoginDTO:
       type: "object"
       required:
         - "email"
@@ -220,7 +220,7 @@ components:
           type: "string"
           format: "password"
           writeOnly: true
-    AdminLoginResponse:
+    LoginResponseDTO:
       type: "object"
       required:
         - "accessToken"
@@ -237,7 +237,7 @@ components:
           type: "integer"
           format: "int64"
           description: "Access token lifetime in seconds"
-    AdminProfileResponse:
+    AdminProfileDTO:
       type: "object"
       required:
         - "id"

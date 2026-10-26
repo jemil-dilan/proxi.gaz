@@ -6,7 +6,7 @@ package cm.jemil.proxi.gaz.application.outbound;
 
 import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
 
-public interface AdminPasswordVerifier {
+public interface PasswordVerifier {
 
   boolean matches(String rawPassword, PasswordHash passwordHash);
 }

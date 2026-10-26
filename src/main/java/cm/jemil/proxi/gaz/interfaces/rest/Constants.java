@@ -2,7 +2,7 @@
  * Copyright (c) 2026 ProxiGaz
  * All rights reserved.
  */
-package cm.jemil.proxi.gaz.domain;
+package cm.jemil.proxi.gaz.interfaces.rest;
 
 public final class Constants {
 

@@ -50,11 +50,13 @@ Local DB options:
 | `staging` | `application-staging.yaml` | **Required** via env — no defaults |
 | `production` | `application-production.yaml` | **Required** via env — no defaults |
 
-Central config type: `ProxigazProperties` (`proxigaz.*`). Staging/production refuse to start if `JWT_SECRET` is missing, too short, or equal to the local development placeholder.
+Central config type: `Configurations` port (`ConfigurationsImpl`) binding `proxigaz.*` properties. Staging/production refuse to start if `JWT_SECRET` is missing, too short, or equal to the local development placeholder.
 
 ## Environment variables
 
 Secrets must not be committed. Copy `.env.example` to `.env` for local use (`.env` is gitignored). Spring Boot reads process environment variables; load `.env` via your shell, IDE, or a dotenv helper if you use one.
+
+Application settings use the single `proxigaz` root in `application.yaml` and bind through `ConfigurationsImpl` implementing the `Configurations` port, grouped into typed sections such as `security.jwt` and `admin.bootstrap`.
 
 | Variable | Purpose | Local default (dev only) |
 |----------|---------|---------------------------|

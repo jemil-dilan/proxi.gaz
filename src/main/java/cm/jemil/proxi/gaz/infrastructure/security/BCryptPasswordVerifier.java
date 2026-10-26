@@ -4,15 +4,13 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.security;
 
-import cm.jemil.proxi.gaz.application.outbound.AdminPasswordVerifier;
+import cm.jemil.proxi.gaz.application.outbound.PasswordVerifier;
 import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
-public class BCryptAdminPasswordVerifier implements AdminPasswordVerifier {
+public class BCryptPasswordVerifier implements PasswordVerifier {
 
   private final PasswordEncoder passwordEncoder;
 

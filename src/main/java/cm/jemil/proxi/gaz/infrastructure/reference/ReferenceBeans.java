@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @Configuration
-public class ReferenceConfig {
+public class ReferenceBeans {
 
   @Bean
   ReferenceGenerator referenceGenerator(JdbcTemplate jdbcTemplate) {

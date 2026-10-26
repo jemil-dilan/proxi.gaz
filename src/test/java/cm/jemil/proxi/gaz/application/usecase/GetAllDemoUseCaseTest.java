@@ -13,8 +13,8 @@ import static org.mockito.Mockito.never;
 
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
-import cm.jemil.proxi.gaz.domain.Constants;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
+import cm.jemil.proxi.gaz.interfaces.rest.Constants;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

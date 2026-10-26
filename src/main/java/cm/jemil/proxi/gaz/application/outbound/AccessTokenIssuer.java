@@ -6,10 +6,11 @@ package cm.jemil.proxi.gaz.application.outbound;
 
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
+import java.util.Set;
 
-public interface AdminAccessTokenIssuer {
+public interface AccessTokenIssuer {
 
-  IssuedAccessToken issue(UserId adminUserId, Email email);
+  IssuedAccessToken issue(UserId userId, Email email, Set<String> scopes);
 
   record IssuedAccessToken(String value, long expiresInSeconds) {}
 }

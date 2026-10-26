@@ -7,12 +7,12 @@ package cm.jemil.proxi.gaz.e2e.steps;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import cm.jemil.proxi.gaz.domain.Constants;
 import cm.jemil.proxi.gaz.e2e.HttpClient;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreationResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoCreateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoUpdateDTO;
+import cm.jemil.proxi.gaz.interfaces.rest.Constants;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java8.En;
 import io.restassured.common.mapper.TypeRef;

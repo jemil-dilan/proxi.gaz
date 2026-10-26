@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-24 (working/PXG-009)
+Last updated: 2026-10-25 (working/PXG-010 configuration follow-up)
 
 ## Critical Gate
 
@@ -21,7 +21,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 
 | ID       | Name / Description                                      | Implemented | Unit tested | E2E tested | Notes |
 |----------|---------------------------------------------------------|-------------|-------------|------------|-------|
-| AUTH-01  | Admin login (JWT / session)                             | No          | No          | No         |       |
+| AUTH-01  | Admin login (JWT / session)                             | Yes         | Yes         | Yes        | Generic credentials errors; JWT settings and token ports; full unit, data, and E2E checks pass |
 | AUTH-02  | Vendor session validation (long-lived token by admin)   | No          | No          | No         |       |
 | VEN-01   | Admin creates / updates vendor + location (PostGIS)     | No          | No          | No         |       |
 | VEN-02   | Admin activates / deactivates vendor                    | No          | No          | No         |       |
@@ -93,11 +93,14 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - `InMemoryGeoQueryPort` is a test adapter that currently returns registered vendors without radius filtering or distance ordering. Production PostGIS search remains Sprint 1 work (PXG-020).
 - PXG-009 completed on `working/PXG-009`: normalized admin email model, repository CRUD adapter, and opt-in BCrypt-backed bootstrap creation.
 - PXG-010 completed on `working/PXG-010`, based on `working/PXG-009` by explicit user direction while its MR is open. Unit, PostGIS data, and Cucumber E2E suites passed.
+- PXG-010 implements AUTH-01 with credential lookup policy in the application and generic password/token ports. Unit, PostGIS data, and E2E suites passed.
+- PXG-010 follow-up consolidates `proxigaz.*` binding in `Configurations` port and `ConfigurationsImpl`, keeps admin bootstrap opt-in and password-hashed, and confirms the disabled runner is not registered.
+- Architecture review gaps remain in committed code: Demo retrieval use cases still consume REST constants and extraction strings, Demo value objects do not enforce the documented column bounds, `AdminUser.id()` exposes a UUID, and `SecurityConfig` contains bean definitions despite the `*Beans` naming convention.
 - PXG-002 documents Java/Spring runtime (not Nest); adds `.env.example`, gitignores secrets, `docs/RUNTIME.md`, root `README.md`.
 - `SECURITY.md` filled for pre-release support + private vulnerability reporting (was GitHub placeholder).
 - Guideline requires Commitizen (`cz c`) and legitimate-only README updates.
 - PXG-003: Liquibase `CREATE EXTENSION postgis`; CI/Testcontainers pinned to `postgis/postgis:17-3.5`; data test proves `PostGIS_Version()` / `ST_MakePoint`.
-- PXG-004: `ProxigazProperties`; profiles `local` / `staging` / `production`; fail-fast JWT checks for non-local.
+- PXG-004: `Configurations` port with `ConfigurationsImpl`; profiles `local` / `staging` / `production`; fail-fast JWT checks for non-local.
 - PXG-005: core tables + GIST on `vendors.location` (`v-1-core-schema.xml`).
 - PXG-006: `OrderStatus` state machine, `Money`, `GeoPoint`, `ConfirmationCode`, `TrackingToken`, `Availability` (+ unit tests).
 - PXG-007: outbound ports for `Clock`, `OtpProvider`, `NotificationChannel`, and `GeoQueryPort`.
@@ -106,7 +109,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 ## Architecture notes relevant to next task
 
 - PostgreSQL + PostGIS ready; core domain tables exist (`t_*` schema), including `t_admin_users`.
-- Domain VOs/state machine, outbound ports, base adapters, and admin user persistence are in place; admin login is not implemented.
+- Domain VOs/state machine, outbound ports, base adapters, admin user persistence, and AUTH-01 admin login/JWT are implemented. Generic password/token ports and the JWT settings port are wired through infrastructure beans. All `proxigaz.*` settings bind through the `Configurations` port implemented by `ConfigurationsImpl`. Demo projection selection still passes REST wire codes into application use cases and needs a follow-up boundary cleanup.
 - Admin bootstrap is opt-in through environment properties; it hashes the supplied password and skips an existing email. PXG-010 owns login/JWT; Sprint 1 PXG-020 owns production PostGIS nearby search.
 - Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; branch from `main`).

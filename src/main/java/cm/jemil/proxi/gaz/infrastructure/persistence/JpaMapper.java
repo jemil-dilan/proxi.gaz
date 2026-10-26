@@ -10,11 +10,12 @@ import cm.jemil.proxi.gaz.domain.demo.DemoDescription;
 import cm.jemil.proxi.gaz.domain.demo.DemoId;
 import cm.jemil.proxi.gaz.domain.demo.DemoName;
 import cm.jemil.proxi.gaz.domain.demo.DemoReference;
-import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
-import cm.jemil.proxi.gaz.domain.shared.Email;
-import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
-import cm.jemil.proxi.gaz.domain.shared.UserId;
-import org.mapstruct.*;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.InjectionStrategy;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.ReportingPolicy;
 
 @Mapper(
     componentModel = "spring",
@@ -43,13 +44,12 @@ interface JpaMapper {
   @Mapping(target = "createdAt", source = "createdAt.value")
   void fromDomain(@MappingTarget AdminUserJpa adminUserJpa, AdminUser adminUser);
 
-  default AdminUser toDomain(AdminUserJpa adminUser) {
-    return AdminUser.reconstitute(
-        UserId.from(adminUser.getId()),
-        Email.from(adminUser.getEmail()),
-        PasswordHash.from(adminUser.getPasswordHash()),
-        CreatedAt.from(adminUser.getCreatedAt()));
-  }
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "id.value", source = "id")
+  @Mapping(target = "email.value", source = "email")
+  @Mapping(target = "passwordHash.value", source = "passwordHash")
+  @Mapping(target = "createdAt.value", source = "createdAt")
+  AdminUser toDomain(AdminUserJpa adminUser);
 
   default Demo toDomain(DemoJpa value) {
     return Demo.reconstitute(

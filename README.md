@@ -23,7 +23,7 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - CI: Spotless + unit / data / e2e tests on GitHub Actions.
 
-Domain features (vendors, geo search, orders, fallback, reviews, admin login) are **not** implemented yet — see `status.md` use-case table.
+Admin login (AUTH-01) is implemented. Vendor management and authentication, production geo search, orders, fallback, and reviews are **not** implemented yet — see `status.md` use-case table.
 
 ## Stack
 

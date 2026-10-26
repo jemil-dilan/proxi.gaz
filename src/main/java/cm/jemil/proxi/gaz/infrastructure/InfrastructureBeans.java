@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Profile;
  * OtpProvider, NotificationChannel, and GeoQueryPort.
  */
 @Configuration
-public class InfrastructureConfig {
+public class InfrastructureBeans {
 
   // ==================== Clock Beans ====================
 
