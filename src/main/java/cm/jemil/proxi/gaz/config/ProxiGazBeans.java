@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class ProxiGazBeans {
-
   @Bean
   public LoginAdminUseCase loginAdminUseCase(
       AdminUserRepository adminUserRepository,

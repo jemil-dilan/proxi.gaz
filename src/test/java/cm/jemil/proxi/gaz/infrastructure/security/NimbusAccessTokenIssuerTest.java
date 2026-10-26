@@ -11,6 +11,8 @@ import static org.mockito.BDDMockito.then;
 
 import cm.jemil.proxi.gaz.application.outbound.AccessTokenIssuer.IssuedAccessToken;
 import cm.jemil.proxi.gaz.application.outbound.JwtSettings;
+import cm.jemil.proxi.gaz.application.outbound.AccessTokenIssuer.IssuedAccessToken;
+import cm.jemil.proxi.gaz.config.ProxigazProperties;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
 import cm.jemil.proxi.gaz.infrastructure.time.FakeClock;

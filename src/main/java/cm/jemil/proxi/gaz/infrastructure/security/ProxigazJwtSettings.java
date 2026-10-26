@@ -6,6 +6,7 @@ package cm.jemil.proxi.gaz.infrastructure.security;
 
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.JwtSettings;
+import cm.jemil.proxi.gaz.config.ProxigazProperties;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 
