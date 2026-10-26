@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,73 @@ class AdminAuthControllerTest {
         Jwt.withTokenValue("test-token")
             .header("alg", "none")
             .claim("email", "admin@example.test")
+            .build();
+    var authentication =
+        new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+
+    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void getAdminProfile_shouldRejectTokenWithMalformedSubject() {
+    var jwt =
+        Jwt.withTokenValue("test-token")
+            .header("alg", "none")
+            .subject("not-a-uuid")
+            .claim("email", "admin@example.test")
+            .build();
+    var authentication =
+        new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+
+    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void getAdminProfile_shouldRejectTokenWithoutEmail() {
+    UUID userId = UUID.randomUUID();
+    var jwt =
+        Jwt.withTokenValue("test-token").header("alg", "none").subject(userId.toString()).build();
+    var authentication =
+        new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+
+    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void getAdminProfile_shouldRejectTokenWithMalformedEmail() {
+    UUID userId = UUID.randomUUID();
+    var jwt =
+        Jwt.withTokenValue("test-token")
+            .header("alg", "none")
+            .subject(userId.toString())
+            .claim("email", "not-an-email")
+            .build();
+    var authentication =
+        new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+
+    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+  }
+
+  @Test
+  void getAdminProfile_shouldRejectTokenWithBlankEmail() {
+    UUID userId = UUID.randomUUID();
+    var jwt =
+        Jwt.withTokenValue("test-token")
+            .header("alg", "none")
+            .subject(userId.toString())
+            .claim("email", "  ")
             .build();
     var authentication =
         new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));

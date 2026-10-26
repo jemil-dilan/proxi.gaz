@@ -8,6 +8,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
+import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.AdminAuthApi;
@@ -60,7 +61,13 @@ class AdminAuthController implements AdminAuthApi {
       return ResponseEntity.status(UNAUTHORIZED).build();
     }
     var userId = UserId.from(subjectId);
-    var email = Email.from(emailClaim);
+
+    Email email;
+    try {
+      email = Email.from(emailClaim);
+    } catch (InvalidDomainValueException exception) {
+      return ResponseEntity.status(UNAUTHORIZED).build();
+    }
     return ResponseEntity.ok(restMapper.fromDomain(userId, email));
   }
 }

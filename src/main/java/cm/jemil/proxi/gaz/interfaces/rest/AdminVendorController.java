@@ -28,10 +28,8 @@ class AdminVendorController implements AdminVendorApi {
 
   @Override
   public ResponseEntity<CreationResponseDTO> createVendor(VendorDetailsDTO request) {
-    UUID id = createVendor.execute(mapper.toCreateVendorCommand(request));
-    var response = new CreationResponseDTO();
-    response.setNewId(id);
-    return ResponseEntity.status(201).body(response);
+    var result = createVendor.execute(mapper.toCreateVendorCommand(request));
+    return ResponseEntity.status(201).body(mapper.fromDomain(result));
   }
 
   @Override

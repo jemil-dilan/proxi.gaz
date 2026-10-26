@@ -10,7 +10,6 @@ import static org.mockito.Mockito.verify;
 
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import cm.jemil.proxi.gaz.domain.vendor.Vendor;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -20,14 +19,14 @@ class CreateVendorUseCaseTest {
 
   @Test
   void execute_shouldCreateVendorAndInsertIt() {
-    UUID id =
+    var result =
         useCase.execute(
             new CreateVendorUseCase.Command(
                 " Vendor ", "+237699002001", 4.05, 9.70, null, false, null, null, true));
 
     var captor = ArgumentCaptor.forClass(Vendor.class);
     verify(repository).insert(captor.capture());
-    assertThat(captor.getValue().id().value()).isEqualTo(id);
+    assertThat(captor.getValue().id()).isEqualTo(result.vendorId());
     assertThat(captor.getValue().details().name().value()).isEqualTo("Vendor");
   }
 }

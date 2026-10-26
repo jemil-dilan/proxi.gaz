@@ -6,6 +6,8 @@ package cm.jemil.proxi.gaz.domain.vendor;
 
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 
+import java.util.UUID;
+
 public class Vendor {
   private final VendorId id;
   private VendorDetails details;
@@ -26,8 +28,8 @@ public class Vendor {
     return new Vendor(id, details);
   }
 
-  public VendorId id() {
-    return id;
+  public UUID id() {
+    return id.value();
   }
 
   public VendorDetails details() {

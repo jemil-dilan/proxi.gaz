@@ -19,7 +19,6 @@ import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -47,7 +46,7 @@ class LoginAdminUseCaseTest {
             CreatedAt.from(Instant.EPOCH));
     given(adminUserRepository.findByEmail(Email.from(EMAIL))).willReturn(Optional.of(adminUser));
     given(passwordVerifier.matches(PASSWORD, adminUser.getPasswordHash())).willReturn(true);
-    given(accessTokenIssuer.issue(adminUser.getId(), adminUser.getEmail(), Set.of("admin")))
+    given(accessTokenIssuer.issue(adminUser.getId(), adminUser.getEmail(), adminUser.getScopes()))
         .willReturn(new AccessTokenIssuer.IssuedAccessToken("signed-token", 900));
 
     var result =

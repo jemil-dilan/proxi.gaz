@@ -7,6 +7,8 @@ package cm.jemil.proxi.gaz.application.usecase;
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import cm.jemil.proxi.gaz.domain.vendor.Vendor;
 import cm.jemil.proxi.gaz.domain.vendor.VendorDetails;
+import cm.jemil.proxi.gaz.domain.vendor.VendorId;
+
 import java.util.UUID;
 
 public class CreateVendorUseCase {
@@ -19,7 +21,7 @@ public class CreateVendorUseCase {
   public UUID execute(Command command) {
     var vendor = Vendor.create(command.toDetails());
     repository.insert(vendor);
-    return vendor.id().value();
+    return vendor.id();
   }
 
   public record Command(

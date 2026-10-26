@@ -9,7 +9,6 @@ import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
 import cm.jemil.proxi.gaz.application.outbound.PasswordVerifier;
 import cm.jemil.proxi.gaz.domain.admin.InvalidAdminCredentialsException;
 import cm.jemil.proxi.gaz.domain.shared.Email;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -29,7 +28,7 @@ public class LoginAdminUseCase {
     }
 
     var accessToken =
-        accessTokenIssuer.issue(adminUser.getId(), adminUser.getEmail(), Set.of("admin"));
+        accessTokenIssuer.issue(adminUser.getId(), adminUser.getEmail(), adminUser.getScopes());
     return new Response(accessToken.value(), accessToken.expiresInSeconds());
   }
 

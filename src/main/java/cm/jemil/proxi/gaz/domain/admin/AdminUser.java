@@ -9,11 +9,14 @@ import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
 
 @Getter
 public class AdminUser {
+
+  private static final Set<String> ADMIN_SCOPES = Set.of("admin");
 
   private final UserId id;
   private final Email email;
@@ -34,6 +37,10 @@ public class AdminUser {
   public static AdminUser reconstitute(
       UserId id, Email email, PasswordHash passwordHash, CreatedAt createdAt) {
     return new AdminUser(id, email, passwordHash, createdAt);
+  }
+
+  public Set<String> getScopes() {
+    return ADMIN_SCOPES;
   }
 
   public UUID id() {
