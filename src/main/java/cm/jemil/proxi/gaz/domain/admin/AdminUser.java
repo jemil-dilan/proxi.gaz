@@ -20,7 +20,7 @@ public class AdminUser {
   private final PasswordHash passwordHash;
   private final CreatedAt createdAt;
 
-  private AdminUser(UserId id, Email email, PasswordHash passwordHash, CreatedAt createdAt) {
+  public AdminUser(UserId id, Email email, PasswordHash passwordHash, CreatedAt createdAt) {
     this.id = Objects.requireNonNull(id);
     this.email = Objects.requireNonNull(email);
     this.passwordHash = Objects.requireNonNull(passwordHash);

@@ -7,7 +7,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 | Area | State |
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
-| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-009` done; next `PXG-010`) |
+| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-010` done; next `PXG-011`) |
 | Sprints 1–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
@@ -23,7 +23,7 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - CI: Spotless + unit / data / e2e tests on GitHub Actions.
 
-Domain features (vendors, geo search, orders, fallback, reviews, admin login) are **not** implemented yet — see `status.md` use-case table.
+Admin login (AUTH-01) is implemented. Vendor management and authentication, production geo search, orders, fallback, and reviews are **not** implemented yet — see `status.md` use-case table.
 
 ## Stack
 

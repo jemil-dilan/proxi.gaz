@@ -376,5 +376,16 @@
 			<column name="c_vendor_id" />
 		</createIndex>
 	</changeSet>
+	<changeSet id="PROXIGAZ-10:1" author="Jemil-Dilan"
+		context="e2e,data_test">
+		<insert tableName="t_admin_users">
+			<column name="c_id"
+				value="f75c66ed-8cb4-4afd-91d2-d0a10ea92548" />
+			<column name="c_email" value="admin@proxigaz.cm" />
+			<column name="c_password_hash"
+				value="$2b$10$wtULcRC7X0o70OnhEYMDu.5eX3e30zxQYJsz6eNwLfUcnaNB4sx3i" />
+			<column name="c_created_at" value="2026-10-24T17:06:00" />
+		</insert>
+	</changeSet>
 
 </databaseChangeLog>

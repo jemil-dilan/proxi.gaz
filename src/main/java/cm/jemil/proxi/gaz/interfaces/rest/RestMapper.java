@@ -5,14 +5,21 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
+import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
+import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase.Response;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase.Command;
 import cm.jemil.proxi.gaz.application.views.DemoView;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView2;
+import cm.jemil.proxi.gaz.domain.shared.Email;
+import cm.jemil.proxi.gaz.domain.shared.UserId;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreationResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoCreateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoUpdateDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
 import java.util.UUID;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.InjectionStrategy;
@@ -25,6 +32,22 @@ import org.mapstruct.ReportingPolicy;
     injectionStrategy = InjectionStrategy.CONSTRUCTOR,
     unmappedTargetPolicy = ReportingPolicy.IGNORE)
 interface RestMapper {
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "email.value", source = "email")
+  @Mapping(target = "password", source = "password")
+  LoginAdminUseCase.Command toCommand(AdminLoginDTO request);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "accessToken", source = "accessToken")
+  @Mapping(target = "tokenType", expression = "java(LoginResponseDTO.TokenTypeEnum.BEARER)")
+  @Mapping(target = "expiresIn", source = "expiresInSeconds")
+  LoginResponseDTO fromDomain(Response response);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "id", source = "userId.value")
+  @Mapping(target = "email", source = "email.value")
+  AdminProfileDTO fromDomain(UserId userId, Email email);
 
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "name")

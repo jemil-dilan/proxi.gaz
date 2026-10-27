@@ -16,3 +16,12 @@ management:
     web:
       exposure:
         include: "health,info"
+proxigaz:
+  security:
+    jwt:
+      access-token-ttl: "${PROXIGAZ_SECURITY_JWT_ACCESS_TOKEN_TTL:15m}"
+  admin:
+    bootstrap:
+      enabled: "${PROXIGAZ_ADMIN_BOOTSTRAP_ENABLED:false}"
+      email: "${PROXIGAZ_ADMIN_BOOTSTRAP_EMAIL:}"
+      password: "${PROXIGAZ_ADMIN_BOOTSTRAP_PASSWORD:}"

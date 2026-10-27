@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Profile;
  * OtpProvider, NotificationChannel, and GeoQueryPort.
  */
 @Configuration
-public class InfrastructureConfig {
+public class InfrastructureBeans {
 
   // ==================== Clock Beans ====================
 
@@ -34,7 +34,7 @@ public class InfrastructureConfig {
   }
 
   @Bean
-  @Profile({"test", "data_test"})
+  @Profile({"test", "data_test", "e2e"})
   Clock fakeClock() {
     return new FakeClock(Instant.now());
   }
