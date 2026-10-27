@@ -39,7 +39,7 @@ class AdminAuthController implements AdminAuthApi {
   public ResponseEntity<AdminProfileDTO> getAdminProfile() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (!(authentication instanceof JwtAuthenticationToken jwtAuthentication)) {
-      return ResponseEntity.status(401).build();
+      return ResponseEntity.status(UNAUTHORIZED).build();
     }
 
     var token = jwtAuthentication.getToken();
@@ -51,12 +51,16 @@ class AdminAuthController implements AdminAuthApi {
     UUID subjectId;
     try {
       subjectId = UUID.fromString(subject);
-    } catch (IllegalArgumentException exception) {
+    } catch (IllegalArgumentException _) {
       return ResponseEntity.status(UNAUTHORIZED).build();
     }
 
+    String emailClaim = token.getClaimAsString("email");
+    if (emailClaim == null || emailClaim.isBlank()) {
+      return ResponseEntity.status(UNAUTHORIZED).build();
+    }
     var userId = UserId.from(subjectId);
-    var email = Email.from(token.getClaimAsString("email"));
+    var email = Email.from(emailClaim);
     return ResponseEntity.ok(restMapper.fromDomain(userId, email));
   }
 }

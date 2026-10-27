@@ -7,7 +7,6 @@ package cm.jemil.proxi.gaz.infrastructure.persistence;
 import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
 import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
-import cm.jemil.proxi.gaz.config.ProxigazProperties.Admin.Bootstrap;
 import cm.jemil.proxi.gaz.domain.admin.AdminUser;
 import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.Email;

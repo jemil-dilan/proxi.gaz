@@ -1,5 +1,7 @@
 ---
 spring:
+  liquibase:
+    contexts: "staging"
   datasource:
     url: "${DB_URL}"
     username: "${DB_USER}"

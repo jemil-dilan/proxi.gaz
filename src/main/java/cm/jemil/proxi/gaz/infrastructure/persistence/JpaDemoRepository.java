@@ -34,15 +34,15 @@ class JpaDemoRepository implements DemoRepository {
 
   @Override
   public DemoView1 loadAsView1(DemoId demoId) throws DemoNotFoundException {
-    return demoSpringRepository.findByIdAsView1(demoId.value()).stream()
-        .findFirst()
+    return demoSpringRepository
+        .findByIdAsView1(demoId.value())
         .orElseThrow(DemoNotFoundException::new);
   }
 
   @Override
   public DemoView2 loadAsView2(DemoId demoId) throws DemoNotFoundException {
-    return demoSpringRepository.findByIdAsView2(demoId.value()).stream()
-        .findFirst()
+    return demoSpringRepository
+        .findByIdAsView2(demoId.value())
         .orElseThrow(DemoNotFoundException::new);
   }
 

@@ -7,7 +7,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 | Area | State |
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
-| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-010` done; next `PXG-011`) |
+| Sprint 0 — Foundations | In progress (`PXG-001`–`PXG-011` done; next `PXG-012`) |
 | Sprints 1–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
@@ -21,6 +21,7 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - Domain VOs: order status state machine, Money (FCFA), GeoPoint, ConfirmationCode, TrackingToken, Availability.
 - Config profiles: `local` (default), `staging`, `production` — secrets via env; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
+- The `local` Liquibase context seeds a development-only admin (`admin@proxigaz.local` / `password`) and five fictional vendors in central Douala. Seed data is excluded from staging and production contexts.
 - CI: Spotless + unit / data / e2e tests on GitHub Actions.
 
 Admin login (AUTH-01) is implemented. Vendor management and authentication, production geo search, orders, fallback, and reviews are **not** implemented yet — see `status.md` use-case table.
@@ -41,6 +42,8 @@ cp .env.example .env   # edit secrets as needed; never commit .env
 #   -e POSTGRES_DB=proxigaz -p 5432:5432 -d postgis/postgis:17-3.5
 ./gradlew bootRun
 ```
+
+The default `local` profile applies the local seed data. The seeded account and vendors are for local development only.
 
 Tests:
 

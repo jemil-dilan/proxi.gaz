@@ -1,5 +1,7 @@
 ---
 spring:
+  liquibase:
+    contexts: "local"
   datasource:
     url: "${DB_URL:jdbc:postgresql://localhost:5432/proxigaz}"
     username: "${DB_USER:proxigaz}"

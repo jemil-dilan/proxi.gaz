@@ -8,7 +8,6 @@ spring:
   liquibase:
     change-log: "classpath:/cm/jemil/proxi/gaz/infrastructure/persistence/liquibase/changelog/master.xml"
     enabled: true
-    contexts: "${LIQUIBASE_CONTEXT:}"
   jpa:
     open-in-view: false
 management:

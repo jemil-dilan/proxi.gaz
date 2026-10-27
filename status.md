@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-25 (working/PXG-010 configuration follow-up)
+Last updated: 2026-10-25 (working/PXG-011)
 
 ## Critical Gate
 
@@ -11,7 +11,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
-| 0 — Foundations & Core Infrastructure | In progress | PXG-001–010 done; next PXG-011 |
+| 0 — Foundations & Core Infrastructure | In progress | PXG-001–011 done; next PXG-012 |
 | 1 — Vendor & Catalog Management       | Not started |                                            |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
@@ -56,7 +56,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-008 | Null / in-memory adapters | Done |
 | PXG-009 | Admin user model & repository | Done |
 | PXG-010 | Admin JWT/session auth | Done |
-| PXG-011 | Seed data | Not started |
+| PXG-011 | Seed data | Done |
 
 ## Reference Scaffold (PXG-001)
 
@@ -88,13 +88,15 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 
 ## Known gaps / discrepancies found this session
 
-- README and prior status notes pointed to PXG-007/PXG-008 as next, but both are implemented; corrected to PXG-009.
+- PXG-010 is pushed on `working/PXG-010` and not yet integrated into `main`; following the user's clarification, PXG-011 is based on `working/PXG-010`.
 - The Sprint Plan prerequisite now records that the manual-test gate can be explicitly waived; the user-directed Sprint 0 waiver is reflected above.
 - `InMemoryGeoQueryPort` is a test adapter that currently returns registered vendors without radius filtering or distance ordering. Production PostGIS search remains Sprint 1 work (PXG-020).
 - PXG-009 completed on `working/PXG-009`: normalized admin email model, repository CRUD adapter, and opt-in BCrypt-backed bootstrap creation.
 - PXG-010 completed on `working/PXG-010`, based on `working/PXG-009` by explicit user direction while its MR is open. Unit, PostGIS data, and Cucumber E2E suites passed.
 - PXG-010 implements AUTH-01 with credential lookup policy in the application and generic password/token ports. Unit, PostGIS data, and E2E suites passed.
 - PXG-010 follow-up consolidates `proxigaz.*` binding in `Configurations` port and `ConfigurationsImpl`, keeps admin bootstrap opt-in and password-hashed, and confirms the disabled runner is not registered.
+- PXG-011 adds a local-only Liquibase seed with a BCrypt-backed development admin and five fictional vendor records with PostGIS locations in central Douala. The changeset is selected only by the local, `data_test`, or `e2e` contexts; the production context excludes it.
+- Seed data does not implement vendor management: Vendor and VendorBrand domain entities and persistence adapters remain future work. Only the schema, GeoPoint/Availability value objects, and seed rows exist.
 - Architecture review gaps remain in committed code: Demo retrieval use cases still consume REST constants and extraction strings, Demo value objects do not enforce the documented column bounds, `AdminUser.id()` exposes a UUID, and `SecurityConfig` contains bean definitions despite the `*Beans` naming convention.
 - PXG-002 documents Java/Spring runtime (not Nest); adds `.env.example`, gitignores secrets, `docs/RUNTIME.md`, root `README.md`.
 - `SECURITY.md` filled for pre-release support + private vulnerability reporting (was GitHub placeholder).
@@ -108,7 +110,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 
 ## Architecture notes relevant to next task
 
-- PostgreSQL + PostGIS ready; core domain tables exist (`t_*` schema), including `t_admin_users`.
+- PostgreSQL + PostGIS ready; core domain tables exist (`t_*` schema), including `t_admin_users`. Local startup seeds a development admin and five central Douala sample vendors.
 - Domain VOs/state machine, outbound ports, base adapters, admin user persistence, and AUTH-01 admin login/JWT are implemented. Generic password/token ports and the JWT settings port are wired through infrastructure beans. All `proxigaz.*` settings bind through the `Configurations` port implemented by `ConfigurationsImpl`. Demo projection selection still passes REST wire codes into application use cases and needs a follow-up boundary cleanup.
 - Admin bootstrap is opt-in through environment properties; it hashes the supplied password and skips an existing email. PXG-010 owns login/JWT; Sprint 1 PXG-020 owns production PostGIS nearby search.
 - Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
@@ -116,4 +118,4 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 
 ## Next recommended action
 
-1. PXG-011 — development seed data, including pilot vendors.
+1. PXG-012 — create/update Vendor and location management.
