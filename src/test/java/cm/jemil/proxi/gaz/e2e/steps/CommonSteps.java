@@ -59,6 +59,22 @@ public class CommonSteps implements En {
           httpClient.setAccessToken(buildAccessToken(scopes));
         });
 
+    Given(
+        "I am connected with an admin token with subject {string}",
+        (String subject) -> {
+          var now = Instant.now();
+          var claims =
+              JwtClaimsSet.builder()
+                  .subject(subject)
+                  .issuedAt(now)
+                  .expiresAt(now.plus(5, ChronoUnit.MINUTES))
+                  .claim("scope", "admin")
+                  .build();
+          var header = JwsHeader.with(MacAlgorithm.HS256).build();
+          httpClient.setAccessToken(
+              jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue());
+        });
+
     And(
         "The last request failed with the http status {string} and error code {string}",
         (String httpStatus, String errorCode) ->

@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.infrastructure.messaging;
 
 import cm.jemil.proxi.gaz.application.outbound.DomainEventPublisher;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class MessagingBeans {
 
   @Bean
-  DomainEventPublisher domainEventPublisher() {
-    return new LoggingDomainEventPublisher();
+  DomainEventPublisher domainEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+    return new LoggingDomainEventPublisher(applicationEventPublisher);
   }
 }

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+	<changeSet id="PROXIGAZ-11:1" author="Jemil-Dilan"
+		context="@local,@data_test,@e2e">
+		<comment>Local development admin account and sample vendors;
+			credentials are non-production</comment>
+		<insert tableName="t_admin_users">
+			<column name="c_id"
+				value="01100000-0000-0000-0000-000000000001" />
+			<column name="c_email" value="admin@proxigaz.local" />
+			<column name="c_password_hash"
+				value="$2b$10$wtULcRC7X0o70OnhEYMDu.5eX3e30zxQYJsz6eNwLfUcnaNB4sx3i" />
+			<column name="c_created_at" value="2026-10-24T17:06:00" />
+		</insert>
+
+		<insert tableName="t_vendors">
+			<column name="c_id"
+				value="01100000-0000-0000-0000-000000000101" />
+			<column name="c_name" value="Demo Gas Akwa" />
+			<column name="c_phone" value="+237699001001" />
+			<column name="c_location"
+				valueComputed="ST_SetSRID(ST_MakePoint(9.7048, 4.0483), 4326)::geography" />
+			<column name="c_address_text" value="Demo location, Akwa" />
+			<column name="c_is_station" valueBoolean="false" />
+			<column name="c_delivery_fee_type" value="flat" />
+			<column name="c_delivery_fee_amount" valueNumeric="1000" />
+			<column name="c_is_active" valueBoolean="true" />
+			<column name="c_reliability_score" valueNumeric="0" />
+		</insert>
+
+		<insert tableName="t_vendors">
+			<column name="c_id"
+				value="01100000-0000-0000-0000-000000000102" />
+			<column name="c_name" value="Demo Gas Bonanjo" />
+			<column name="c_phone" value="+237699001002" />
+			<column name="c_location"
+				valueComputed="ST_SetSRID(ST_MakePoint(9.6906, 4.0178), 4326)::geography" />
+			<column name="c_address_text" value="Demo location, Bonanjo" />
+			<column name="c_is_station" valueBoolean="false" />
+			<column name="c_delivery_fee_type" value="flat" />
+			<column name="c_delivery_fee_amount" valueNumeric="1000" />
+			<column name="c_is_active" valueBoolean="true" />
+			<column name="c_reliability_score" valueNumeric="0" />
+		</insert>
+
+		<insert tableName="t_vendors">
+			<column name="c_id"
+				value="01100000-0000-0000-0000-000000000103" />
+			<column name="c_name" value="Demo Gas Deido" />
+			<column name="c_phone" value="+237699001003" />
+			<column name="c_location"
+				valueComputed="ST_SetSRID(ST_MakePoint(9.7053, 4.0718), 4326)::geography" />
+			<column name="c_address_text" value="Demo location, Deido" />
+			<column name="c_is_station" valueBoolean="false" />
+			<column name="c_delivery_fee_type" value="flat" />
+			<column name="c_delivery_fee_amount" valueNumeric="1000" />
+			<column name="c_is_active" valueBoolean="true" />
+			<column name="c_reliability_score" valueNumeric="0" />
+		</insert>
+
+		<insert tableName="t_vendors">
+			<column name="c_id"
+				value="01100000-0000-0000-0000-000000000104" />
+			<column name="c_name" value="Demo Gas Bali" />
+			<column name="c_phone" value="+237699001004" />
+			<column name="c_location"
+				valueComputed="ST_SetSRID(ST_MakePoint(9.7007, 4.0356), 4326)::geography" />
+			<column name="c_address_text" value="Demo location, Bali" />
+			<column name="c_is_station" valueBoolean="false" />
+			<column name="c_delivery_fee_type" value="flat" />
+			<column name="c_delivery_fee_amount" valueNumeric="1000" />
+			<column name="c_is_active" valueBoolean="true" />
+			<column name="c_reliability_score" valueNumeric="0" />
+		</insert>
+
+		<insert tableName="t_vendors">
+			<column name="c_id"
+				value="01100000-0000-0000-0000-000000000105" />
+			<column name="c_name" value="Demo Gas Bonapriso" />
+			<column name="c_phone" value="+237699001005" />
+			<column name="c_location"
+				valueComputed="ST_SetSRID(ST_MakePoint(9.6971, 4.0239), 4326)::geography" />
+			<column name="c_address_text" value="Demo location, Bonapriso" />
+			<column name="c_is_station" valueBoolean="false" />
+			<column name="c_delivery_fee_type" value="flat" />
+			<column name="c_delivery_fee_amount" valueNumeric="1000" />
+			<column name="c_is_active" valueBoolean="true" />
+			<column name="c_reliability_score" valueNumeric="0" />
+		</insert>
+	</changeSet>
+</databaseChangeLog>

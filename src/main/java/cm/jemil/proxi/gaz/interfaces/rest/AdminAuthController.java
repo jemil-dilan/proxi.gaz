@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.domain.shared.Email;
@@ -38,12 +39,28 @@ class AdminAuthController implements AdminAuthApi {
   public ResponseEntity<AdminProfileDTO> getAdminProfile() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (!(authentication instanceof JwtAuthenticationToken jwtAuthentication)) {
-      return ResponseEntity.status(401).build();
+      return ResponseEntity.status(UNAUTHORIZED).build();
     }
 
     var token = jwtAuthentication.getToken();
-    var userId = UserId.from(UUID.fromString(token.getSubject()));
-    var email = Email.from(token.getClaimAsString("email"));
+    var subject = token.getSubject();
+    if (subject == null || subject.isBlank()) {
+      return ResponseEntity.status(UNAUTHORIZED).build();
+    }
+
+    UUID subjectId;
+    try {
+      subjectId = UUID.fromString(subject);
+    } catch (IllegalArgumentException _) {
+      return ResponseEntity.status(UNAUTHORIZED).build();
+    }
+
+    String emailClaim = token.getClaimAsString("email");
+    if (emailClaim == null || emailClaim.isBlank()) {
+      return ResponseEntity.status(UNAUTHORIZED).build();
+    }
+    var userId = UserId.from(subjectId);
+    var email = Email.from(emailClaim);
     return ResponseEntity.ok(restMapper.fromDomain(userId, email));
   }
 }

@@ -27,7 +27,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class AdminAuthSteps implements En {
 
   private final JdbcClient jdbcClient;
-  private final PasswordEncoder passwordEncoder;
   private LoginResponseDTO loginResponseDTO;
   private AdminProfileDTO adminProfileDTO;
 
@@ -38,7 +37,6 @@ public class AdminAuthSteps implements En {
       HttpClient httpClient, JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder) {
 
     this.jdbcClient = JdbcClient.create(jdbcTemplate);
-    this.passwordEncoder = passwordEncoder;
     When(
         "I log in as admin with email {string} and password {string} from bootstrapped class",
         (String email, String password) -> {
@@ -147,7 +145,9 @@ public class AdminAuthSteps implements En {
                   .map(
                       data ->
                           new AdminData(
-                              UUID.fromString(data.get("id")),
+                              Optional.ofNullable(data.get("id"))
+                                  .map(UUID::fromString)
+                                  .orElse(null),
                               data.get("email"),
                               data.get("password"),
                               Optional.ofNullable(data.get("created_at"))
@@ -170,6 +170,18 @@ public class AdminAuthSteps implements En {
         "I try to access the protected admin profile with an invalid token",
         () -> {
           httpClient.setAccessToken("not-a-valid-jwt");
+          var response =
+              given()
+                  .contentType(ContentType.JSON)
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .when()
+                  .get(PROFILE_PATH);
+          httpClient.recordResponse(response.statusCode(), response.getBody().asString());
+        });
+
+    When(
+        "I try to access the protected admin profile",
+        () -> {
           var response =
               given()
                   .contentType(ContentType.JSON)

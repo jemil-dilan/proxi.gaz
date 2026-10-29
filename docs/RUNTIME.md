@@ -66,12 +66,13 @@ Application settings use the single `proxigaz` root in `application.yaml` and bi
 | `DB_PASSWORD` | DB password | `proxigaz` (local only) |
 | `JWT_SECRET` | HMAC secret for JWT resource server | local placeholder in `application-local.yaml` — **never use in staging/production** |
 | `PROXIGAZ_SECURITY_JWT_ACCESS_TOKEN_TTL` | Admin JWT lifetime | `15m` |
-| `LIQUIBASE_CONTEXT` | Liquibase contexts | empty (all default changesets) |
 | `PROXIGAZ_ADMIN_BOOTSTRAP_ENABLED` | Create the initial admin at startup when set to `true` | `false` (unset) |
 | `PROXIGAZ_ADMIN_BOOTSTRAP_EMAIL` | Initial admin email; required when bootstrap is enabled | unset |
 | `PROXIGAZ_ADMIN_BOOTSTRAP_PASSWORD` | Initial admin password; BCrypt-hashed before storage; required when enabled | unset |
 
-Admin bootstrap is opt-in and idempotent: enable it with credentials supplied through the process environment, start the app once, then disable it and remove the credentials from the environment. No default admin credentials are provided.
+The `local` Liquibase context seeds a development admin and five fictional central Douala vendors. `data_test` and `e2e` also opt into this seed for acceptance coverage; `staging` and `production` use their own contexts and exclude it. The local seed credentials are documented in the root README and must only be used for local development.
+
+Admin bootstrap is opt-in and idempotent: enable it with credentials supplied through the process environment, start the app once, then disable it and remove the credentials from the environment. No environment-provided default admin credentials are configured.
 
 ## Related docs
 

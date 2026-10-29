@@ -8,5 +8,7 @@
 	<include file="internal/v-0.xml" relativeToChangelogFile="true" />
 	<include file="internal/v-1-core-schema.xml"
 		relativeToChangelogFile="true" />
+	<include file="internal/v-2-local-seed.xml"
+		relativeToChangelogFile="true" />
 </databaseChangeLog>
 

@@ -7,6 +7,7 @@ package cm.jemil.proxi.gaz.infrastructure.persistence;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView2;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,7 +25,7 @@ interface DemoSpringRepository extends JpaRepository<DemoJpa, UUID> {
           FROM DemoJpa t
           WHERE t.id = :demoId
       """)
-  List<DemoView1> findByIdAsView1(@Param("demoId") UUID demoId);
+  Optional<DemoView1> findByIdAsView1(@Param("demoId") UUID demoId);
 
   @Query(
       """
@@ -46,7 +47,7 @@ interface DemoSpringRepository extends JpaRepository<DemoJpa, UUID> {
           FROM DemoJpa t
           WHERE t.id = :demoId
       """)
-  List<DemoView2> findByIdAsView2(@Param("demoId") UUID demoId);
+  Optional<DemoView2> findByIdAsView2(@Param("demoId") UUID demoId);
 
   boolean existsByNameAndIdNot(String name, UUID value);
 
