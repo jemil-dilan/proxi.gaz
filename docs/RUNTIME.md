@@ -78,5 +78,6 @@ Admin bootstrap is opt-in and idempotent: enable it with credentials supplied th
 
 - Sprint plan: `docs/ProxiGaz_Sprint_Plan.md`
 - Implementation workflow: `docs/ProxiGaz_Implementation_Guideline.md`
+- Sprint releases and deployment: `docs/RELEASE_AND_DEPLOYMENT.md`
 - Security reporting: `SECURITY.md`
 - Live progress: `status.md`, `README.md`

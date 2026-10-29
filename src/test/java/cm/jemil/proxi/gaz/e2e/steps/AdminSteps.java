@@ -24,7 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-public class AdminAuthSteps implements En {
+public class AdminSteps implements En {
 
   private final JdbcClient jdbcClient;
   private LoginResponseDTO loginResponseDTO;
@@ -33,7 +33,7 @@ public class AdminAuthSteps implements En {
   private static final String LOGIN_PATH = "/admin/auth/login";
   private static final String PROFILE_PATH = "/admin/auth/me";
 
-  public AdminAuthSteps(
+  public AdminSteps(
       HttpClient httpClient, JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder) {
 
     this.jdbcClient = JdbcClient.create(jdbcTemplate);
@@ -128,7 +128,10 @@ public class AdminAuthSteps implements En {
         (DataTable dataTable) -> {
           List<AdminData> rowsUnderTest =
               jdbcClient
-                  .sql("SELECT * FROM t_admin_users")
+                  .sql(
+                      "SELECT u.c_id, u.c_email, u.c_password_hash, u.c_created_at "
+                          + "FROM t_users u JOIN t_user_roles r ON r.c_user_id = u.c_id "
+                          + "WHERE r.c_role = 'ADMIN'")
                   .query(
                       (rs, _) ->
                           new AdminData(

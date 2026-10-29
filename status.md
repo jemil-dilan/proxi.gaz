@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-25 (working/PXG-011)
+Last updated: 2026-10-29 (working/PXG-012B review; test results reported by user)
 
 ## Critical Gate
 
@@ -11,8 +11,8 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | Sprint                                | Status      | Notes                                      |
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
-| 0 — Foundations & Core Infrastructure | In progress | PXG-001–011 done; next PXG-012 |
-| 1 — Vendor & Catalog Management       | Not started |                                            |
+| 0 — Foundations & Core Infrastructure | Done | PXG-001–011 complete; manual-test gate explicitly waived |
+| 1 — Vendor & Catalog Management       | In progress | PXG-012B implementation and tests are complete; user reports unit, data, and E2E suites pass. Review follow-ups and sprint release remain |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -21,9 +21,9 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 
 | ID       | Name / Description                                      | Implemented | Unit tested | E2E tested | Notes |
 |----------|---------------------------------------------------------|-------------|-------------|------------|-------|
-| AUTH-01  | Admin login (JWT / session)                             | Yes         | Yes         | Yes        | Generic credentials errors; JWT settings and token ports; full unit, data, and E2E checks pass |
-| AUTH-02  | Vendor session validation (long-lived token by admin)   | No          | No          | No         |       |
-| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | No          | No          | No         |       |
+| AUTH-01  | Admin login (JWT / session)                             | Implemented | Yes (user-reported) | Yes (user-reported) | Generic invalid-credential response; JWT settings and token ports |
+| AUTH-02  | Vendor session validation (long-lived token by admin)   | Partial     | Onboarding tests pass (user-reported) | Onboarding E2E passes (user-reported) | PXG-012B issues an initial one-time token; validation, rotation, expiry, and revocation remain unimplemented |
+| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Implemented | Yes (user-reported) | Yes (user-reported) | JPA persists separate Vendor aggregate and PostGIS location; review follow-ups remain |
 | VEN-02   | Admin activates / deactivates vendor                    | No          | No          | No         |       |
 | VEN-03   | Admin creates long-lived VendorSession                  | No          | No          | No         |       |
 | VEN-04   | CRUD VendorBrand (prices with/without exchange)         | No          | No          | No         |       |
@@ -42,7 +42,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | SYS-04   | Pilot KPI queries                                       | No          | No          | No         |       |
 | AUD-01   | Every status change written to order_events             | No          | No          | No         | Mandatory |
 
-## Sprint 0 task status
+## Sprint 0 and Sprint 1 task status
 
 | ID | Task | Status |
 |----|------|--------|
@@ -57,6 +57,11 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-009 | Admin user model & repository | Done |
 | PXG-010 | Admin JWT/session auth | Done |
 | PXG-011 | Seed data | Done |
+| PXG-012 | Vendor create/update | Create/update baseline implemented; current User/Vendor model alignment completed under PXG-012B |
+| PXG-012A | Reconcile User aggregate and vendor profile | Superseded by PXG-012B |
+| PXG-012B | Separate Vendor identity and issue onboarding credentials | Implementation complete; user reports unit, data, and E2E suites pass; review follow-ups remain |
+| PXG-012C | Docker image and sprint release automation | Planned before the next sprint release |
+| PXG-013 | Vendor activate/deactivate | After PXG-012B |
 
 ## Reference Scaffold (PXG-001)
 
@@ -96,8 +101,11 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - PXG-010 implements AUTH-01 with credential lookup policy in the application and generic password/token ports. Unit, PostGIS data, and E2E suites passed.
 - PXG-010 follow-up consolidates `proxigaz.*` binding in `Configurations` port and `ConfigurationsImpl`, keeps admin bootstrap opt-in and password-hashed, and confirms the disabled runner is not registered.
 - PXG-011 adds a local-only Liquibase seed with a BCrypt-backed development admin and five fictional vendor records with PostGIS locations in central Douala. The changeset is selected only by the local, `data_test`, or `e2e` contexts; the production context excludes it.
-- Seed data does not implement vendor management: Vendor and VendorBrand domain entities and persistence adapters remain future work. Only the schema, GeoPoint/Availability value objects, and seed rows exist.
-- Architecture review gaps remain in committed code: Demo retrieval use cases still consume REST constants and extraction strings, Demo value objects do not enforce the documented column bounds, `AdminUser.id()` exposes a UUID, and `SecurityConfig` contains bean definitions despite the `*Beans` naming convention.
+- PXG-012 added VEN-01 create/update using the vendor schema and PostGIS geography; activation/deactivation remains PXG-013.
+- PXG-012A's former assessment was premature and is superseded. PXG-012B now uses nullable User email/password fields, separate User and Vendor identities linked by `t_vendors.c_user_id`, matching controller/OpenAPI DTO names, and an atomic onboarding adapter for User, Vendor, and the initial VendorSession. User reports all unit, data, and E2E suites pass; this agent did not rerun them.
+- There is no Dockerfile, Compose application deployment, image-publishing job, or deployment workflow. Sprint release requirements are documented in `docs/RELEASE_AND_DEPLOYMENT.md`; PXG-012C is planned to automate the image and staging path.
+- Current review follow-ups: vendor session tokens have no validation/rotation/revocation flow; REST request validation is not consistently enforced at the controller boundary; `JpaVendorRepository.update` silently does nothing if the row disappears between use-case lookup and adapter update; and `User` retains a caller-supplied mutable roles set instead of defensively copying it.
+- The local profile retains a shared development JWT secret fallback. Staging and production require `JWT_SECRET` and reject weak or placeholder secrets; never deploy using the local profile.
 - PXG-002 documents Java/Spring runtime (not Nest); adds `.env.example`, gitignores secrets, `docs/RUNTIME.md`, root `README.md`.
 - `SECURITY.md` filled for pre-release support + private vulnerability reporting (was GitHub placeholder).
 - Guideline requires Commitizen (`cz c`) and legitimate-only README updates.
@@ -110,12 +118,15 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 
 ## Architecture notes relevant to next task
 
-- PostgreSQL + PostGIS ready; core domain tables exist (`t_*` schema), including `t_admin_users`. Local startup seeds a development admin and five central Douala sample vendors.
-- Domain VOs/state machine, outbound ports, base adapters, admin user persistence, and AUTH-01 admin login/JWT are implemented. Generic password/token ports and the JWT settings port are wired through infrastructure beans. All `proxigaz.*` settings bind through the `Configurations` port implemented by `ConfigurationsImpl`. Demo projection selection still passes REST wire codes into application use cases and needs a follow-up boundary cleanup.
+- PostgreSQL + PostGIS are ready. Liquibase v3 consolidates identity in `t_users`; PXG-012B adds the explicit unique `t_vendors.c_user_id` foreign key in v4 while preserving vendor IDs and downstream foreign keys.
+- Domain VOs/state machine, ports, base adapters, and AUTH-01 login/JWT exist. PXG-012B's User/Vendor repositories, domain mapping, and API edits pass the user-reported test suites. Vendor onboarding persists User, Vendor, and VendorSession through one transactional adapter. Generic password/token ports and JWT settings use infrastructure beans; `proxigaz.*` settings bind through `Configurations`/`ConfigurationsImpl`. Demo projection selection still passes REST wire codes into application use cases and remains a separate architecture gap.
 - Admin bootstrap is opt-in through environment properties; it hashes the supplied password and skips an existing email. PXG-010 owns login/JWT; Sprint 1 PXG-020 owns production PostGIS nearby search.
 - Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
-- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; branch from `main`).
+- PXG-012 provides vendor create/update on `working/PXG-012`, branched from PXG-011 as directed; implementation and tests are committed as `5a03e48` and the branch is not merged yet.
+- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; PXG-012 was based on PXG-011 by user direction).
 
 ## Next recommended action
 
-1. PXG-012 — create/update Vendor and location management.
+1. Address the review follow-ups before closing PXG-012B, especially boundary validation and the intended vendor-session lifecycle.
+2. PXG-012C — package the service as a Docker image and automate sprint release/deployment to staging.
+3. PXG-013 — implement admin-controlled vendor activation/deactivation and ensure inactive vendors are excluded from nearby search.

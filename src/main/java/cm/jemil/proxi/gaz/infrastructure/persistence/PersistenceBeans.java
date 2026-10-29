@@ -4,10 +4,12 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
-import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
 import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
+import cm.jemil.proxi.gaz.application.outbound.UserRepository;
+import cm.jemil.proxi.gaz.application.outbound.VendorOnboardingRepository;
+import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
@@ -27,9 +29,24 @@ public class PersistenceBeans {
   }
 
   @Bean
-  AdminUserRepository adminUserRepository(
-      AdminUserSpringRepository adminUserSpringRepository, JpaMapper jpaMapper) {
-    return new JpaAdminUserRepository(adminUserSpringRepository, jpaMapper);
+  UserRepository userRepository(UserSpringRepository userSpringRepository, JpaMapper jpaMapper) {
+    return new JpaUserRepository(userSpringRepository, jpaMapper);
+  }
+
+  @Bean
+  VendorRepository vendorRepository(
+      VendorSpringRepository vendorSpringRepository, JpaMapper jpaMapper) {
+    return new JpaVendorRepository(vendorSpringRepository, jpaMapper);
+  }
+
+  @Bean
+  VendorOnboardingRepository vendorOnboardingRepository(
+      UserSpringRepository userSpringRepository,
+      VendorSpringRepository vendorSpringRepository,
+      VendorSessionSpringRepository vendorSessionSpringRepository,
+      JpaMapper jpaMapper) {
+    return new JpaVendorOnboardingRepository(
+        userSpringRepository, vendorSpringRepository, vendorSessionSpringRepository, jpaMapper);
   }
 
   @Bean
@@ -38,11 +55,10 @@ public class PersistenceBeans {
       name = "enabled",
       havingValue = "true")
   ApplicationRunner adminUserBootstrapRunner(
-      AdminUserRepository adminUserRepository,
+      UserRepository userRepository,
       Configurations configurations,
       PasswordEncoder passwordEncoder,
       Clock clock) {
-    return new AdminUserBootstrapRunner(
-        adminUserRepository, configurations, passwordEncoder, clock);
+    return new AdminUserBootstrapRunner(userRepository, configurations, passwordEncoder, clock);
   }
 }

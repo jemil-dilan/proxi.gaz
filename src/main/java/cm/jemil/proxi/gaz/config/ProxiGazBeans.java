@@ -5,18 +5,25 @@
 package cm.jemil.proxi.gaz.config;
 
 import cm.jemil.proxi.gaz.application.outbound.AccessTokenIssuer;
-import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
+import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
 import cm.jemil.proxi.gaz.application.outbound.DomainEventPublisher;
 import cm.jemil.proxi.gaz.application.outbound.PasswordVerifier;
 import cm.jemil.proxi.gaz.application.outbound.ReferenceGenerator;
+import cm.jemil.proxi.gaz.application.outbound.UserRepository;
+import cm.jemil.proxi.gaz.application.outbound.VendorOnboardingRepository;
+import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
+import cm.jemil.proxi.gaz.application.outbound.VendorSessionTokenGenerator;
+import cm.jemil.proxi.gaz.application.outbound.VendorSessionTokenHasher;
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
+import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.DeleteDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetDemoByIdUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase;
+import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,12 +31,27 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class ProxiGazBeans {
+
   @Bean
   public LoginAdminUseCase loginAdminUseCase(
-      AdminUserRepository adminUserRepository,
+      UserRepository userRepository,
       PasswordVerifier passwordVerifier,
       AccessTokenIssuer accessTokenIssuer) {
-    return new LoginAdminUseCase(adminUserRepository, passwordVerifier, accessTokenIssuer);
+    return new LoginAdminUseCase(userRepository, passwordVerifier, accessTokenIssuer);
+  }
+
+  @Bean
+  public CreateVendorUseCase createVendorUseCase(
+      VendorOnboardingRepository onboardingRepository,
+      VendorSessionTokenGenerator tokenGenerator,
+      VendorSessionTokenHasher tokenHasher,
+      Clock clock) {
+    return new CreateVendorUseCase(onboardingRepository, tokenGenerator, tokenHasher, clock);
+  }
+
+  @Bean
+  public UpdateVendorUseCase updateVendorUseCase(VendorRepository vendorRepository) {
+    return new UpdateVendorUseCase(vendorRepository);
   }
 
   @Bean

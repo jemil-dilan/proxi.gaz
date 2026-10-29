@@ -10,5 +10,9 @@
 		relativeToChangelogFile="true" />
 	<include file="internal/v-2-local-seed.xml"
 		relativeToChangelogFile="true" />
+	<include file="internal/v-3-user-aggregate.xml"
+		relativeToChangelogFile="true" />
+	<include file="internal/v-4-vendor-user-link.xml"
+		relativeToChangelogFile="true" />
 </databaseChangeLog>
 

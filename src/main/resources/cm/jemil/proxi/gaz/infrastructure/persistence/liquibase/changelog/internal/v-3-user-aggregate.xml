@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd">
+	<changeSet id="PROXIGAZ-12A:1" author="Jemil-Dilan">
+		<comment>Consolidate admin and vendor identities under users while
+			preserving IDs</comment>
+		<createTable tableName="t_users">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_users" />
+			</column>
+			<column name="c_email" type="varchar(255)" />
+			<column name="c_password_hash" type="varchar(255)" />
+			<column name="c_created_at" type="timestamptz">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addUniqueConstraint tableName="t_users"
+			columnNames="c_email" constraintName="uq_users_email" />
+		<createTable tableName="t_user_roles">
+			<column name="c_user_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_user_roles" foreignKeyName="fk_user_roles_user"
+					references="t_users(c_id)" />
+			</column>
+			<column name="c_role" type="varchar(32)">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_user_roles" />
+			</column>
+		</createTable>
+		<sql>
+			INSERT INTO t_users (c_id, c_email, c_password_hash,
+			c_created_at)
+			SELECT c_id, c_email, c_password_hash, c_created_at FROM
+			t_admin_users;
+		</sql>
+		<sql>
+			INSERT INTO t_users (c_id, c_email, c_password_hash,
+			c_created_at)
+			SELECT c_id, NULL, NULL, c_created_at FROM t_vendors
+			ON
+			CONFLICT (c_id) DO NOTHING;
+		</sql>
+		<sql>
+			INSERT INTO t_user_roles (c_user_id, c_role)
+			SELECT c_id, 'ADMIN'
+			FROM t_admin_users;
+		</sql>
+		<sql>
+			INSERT INTO t_user_roles (c_user_id, c_role)
+			SELECT c_id, 'VENDOR'
+			FROM t_vendors
+			ON CONFLICT (c_user_id, c_role) DO NOTHING;
+		</sql>
+		<addForeignKeyConstraint
+			baseTableName="t_vendors" baseColumnNames="c_id"
+			referencedTableName="t_users" referencedColumnNames="c_id"
+			constraintName="fk_vendors_user" />
+		<dropTable tableName="t_admin_users" />
+	</changeSet>
+</databaseChangeLog>

@@ -8,11 +8,16 @@ import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.GeoQueryPort;
 import cm.jemil.proxi.gaz.application.outbound.NotificationChannel;
 import cm.jemil.proxi.gaz.application.outbound.OtpProvider;
+import cm.jemil.proxi.gaz.application.outbound.VendorSessionTokenGenerator;
+import cm.jemil.proxi.gaz.application.outbound.VendorSessionTokenHasher;
 import cm.jemil.proxi.gaz.infrastructure.geo.InMemoryGeoQueryPort;
 import cm.jemil.proxi.gaz.infrastructure.notifications.LoggingNotificationChannel;
 import cm.jemil.proxi.gaz.infrastructure.otp.NullOtpProvider;
+import cm.jemil.proxi.gaz.infrastructure.security.SecureVendorSessionTokenGenerator;
+import cm.jemil.proxi.gaz.infrastructure.security.Sha256VendorSessionTokenHasher;
 import cm.jemil.proxi.gaz.infrastructure.time.FakeClock;
 import cm.jemil.proxi.gaz.infrastructure.time.SystemClock;
+import java.security.SecureRandom;
 import java.time.Instant;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +56,16 @@ public class InfrastructureBeans {
   @Bean
   NotificationChannel notificationChannel() {
     return new LoggingNotificationChannel();
+  }
+
+  @Bean
+  VendorSessionTokenGenerator vendorSessionTokenGenerator() {
+    return new SecureVendorSessionTokenGenerator(new SecureRandom());
+  }
+
+  @Bean
+  VendorSessionTokenHasher vendorSessionTokenHasher() {
+    return new Sha256VendorSessionTokenHasher();
   }
 
   // ==================== Geo Query Port Beans ====================
