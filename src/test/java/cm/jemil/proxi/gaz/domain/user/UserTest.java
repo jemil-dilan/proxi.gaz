@@ -5,11 +5,14 @@
 package cm.jemil.proxi.gaz.domain.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class UserTest {
@@ -44,5 +47,36 @@ class UserTest {
 
     assertThat(user.email()).contains(email);
     assertThat(user.getPasswordHash()).isNull();
+  }
+
+  @Test
+  void constructor_shouldDefensivelyCopyRoles() {
+    var roles = new HashSet<>(java.util.Set.of(UserRole.VENDOR));
+    var user =
+        User.reconstitute(
+            cm.jemil.proxi.gaz.domain.shared.UserId.from(UUID.randomUUID()),
+            roles,
+            null,
+            null,
+            CreatedAt.from(Instant.EPOCH));
+
+    roles.add(UserRole.ADMIN);
+    var returnedRoles = user.getRoles();
+
+    assertThat(returnedRoles).containsExactly(UserRole.VENDOR);
+    assertThat(user.roles()).containsExactly(UserRole.VENDOR);
+  }
+
+  @Test
+  void constructor_shouldRejectEmptyRoles() {
+    assertThatThrownBy(
+            () ->
+                User.reconstitute(
+                    cm.jemil.proxi.gaz.domain.shared.UserId.from(UUID.randomUUID()),
+                    java.util.Set.of(),
+                    null,
+                    null,
+                    CreatedAt.from(Instant.EPOCH)))
+        .isInstanceOf(cm.jemil.proxi.gaz.domain.InvalidDomainValueException.class);
   }
 }

@@ -13,6 +13,8 @@ import static org.mockito.Mockito.when;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.RevokeVendorSessionUseCase;
+import cm.jemil.proxi.gaz.application.usecase.RotateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import cm.jemil.proxi.gaz.application.views.VendorView;
@@ -38,13 +40,19 @@ class VendorControllerTest {
   private final UpdateVendorUseCase updateVendorUseCase = mock(UpdateVendorUseCase.class);
   private final SetVendorStatusUseCase setVendorStatusUseCase = mock(SetVendorStatusUseCase.class);
   private final ListVendorsUseCase listVendorsUseCase = mock(ListVendorsUseCase.class);
+  private final RotateVendorSessionUseCase rotateVendorSessionUseCase =
+      mock(RotateVendorSessionUseCase.class);
+  private final RevokeVendorSessionUseCase revokeVendorSessionUseCase =
+      mock(RevokeVendorSessionUseCase.class);
   private final VendorController controller =
       new VendorController(
           restMapper,
           createVendorUseCase,
           updateVendorUseCase,
           setVendorStatusUseCase,
-          listVendorsUseCase);
+          listVendorsUseCase,
+          rotateVendorSessionUseCase,
+          revokeVendorSessionUseCase);
 
   @Test
   void createVendor_shouldReturnOneTimeSessionTokenWithoutCaching() {

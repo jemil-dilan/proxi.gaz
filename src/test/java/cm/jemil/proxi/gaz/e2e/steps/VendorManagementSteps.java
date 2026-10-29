@@ -56,6 +56,32 @@ public class VendorManagementSteps implements En {
           }
         });
 
+    When(
+        "I create a vendor without the required active flag",
+        () -> {
+          var request =
+              Map.of(
+                  "name",
+                  "Missing active",
+                  "phone",
+                  "+237699002024",
+                  "latitude",
+                  4.05,
+                  "longitude",
+                  9.70,
+                  "address",
+                  "Akwa",
+                  "isStation",
+                  false);
+          var response =
+              given()
+                  .contentType(ContentType.JSON)
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .body(request)
+                  .post(VENDORS_PATH);
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
     Then(
         "the vendor create request succeeds",
         () -> assertThat(httpClient.getLastResponse().status().value()).isEqualTo(201));
@@ -147,6 +173,52 @@ public class VendorManagementSteps implements En {
     Then(
         "the generated vendor session tokens are distinct",
         () -> assertThat(issuedSessionTokens).doesNotHaveDuplicates());
+
+    When(
+        "I access the vendor session using the issued token",
+        () -> accessVendorSession(sessionToken));
+
+    When(
+        "I access the vendor session using the previous token",
+        () -> accessVendorSession(issuedSessionTokens.get(issuedSessionTokens.size() - 1)));
+
+    When(
+        "I rotate the vendor session as admin",
+        () -> {
+          var previousToken = sessionToken;
+          var response =
+              given()
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .pathParam("vendorId", vendorId)
+                  .post(VENDORS_PATH + "/{vendorId}/session");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+          if (response.statusCode() == 200) {
+            sessionToken = response.jsonPath().getString("sessionToken");
+            issuedSessionTokens.add(previousToken);
+          }
+        });
+
+    Then(
+        "the vendor session token is rotated",
+        () -> {
+          assertThat(httpClient.getLastResponse().status().value()).isEqualTo(200);
+          assertThat(sessionToken).isNotBlank();
+        });
+
+    When(
+        "I revoke the vendor session as admin",
+        () -> {
+          var response =
+              given()
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .pathParam("vendorId", vendorId)
+                  .delete(VENDORS_PATH + "/{vendorId}/session");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    Then(
+        "the vendor session is accepted",
+        () -> assertThat(httpClient.getLastResponse().status().value()).isEqualTo(200));
 
     When(
         "I update that vendor with the following data",
@@ -245,6 +317,11 @@ public class VendorManagementSteps implements En {
     var request = commonRequest(values);
     request.put("address", values.get("addressText"));
     return request;
+  }
+
+  private void accessVendorSession(String token) {
+    var response = given().header("Authorization", "Bearer " + token).get("/vendor/session");
+    httpClient.recordResponse(response.statusCode(), response.asString());
   }
 
   private static Map<String, Object> toUpdateRequest(Map<String, String> values) {

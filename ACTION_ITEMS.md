@@ -1,7 +1,7 @@
 # Action Items - ProxiGaz Backend Code Review
 
 **Source**: [`CODE_REVIEW.md`](CODE_REVIEW.md), current review (2026-10-29)  
-**Status**: Review backlog; implementation deferred until PXG-012B review/merge is agreed
+**Status**: PXG-015 implementation is on `working/PXG-015`; code and test sources compile, but test suites have not been executed and the branch is not merged.
 
 ---
 
@@ -18,7 +18,7 @@
 
 ### 🔴 Item #1: Complete Vendor Session Authentication
 
-**Problem**: Vendor onboarding creates a session token but there's no way for vendors to use it.
+**Problem**: On main, vendor onboarding creates a session token but there is no way for vendors to use it. PXG-015 adds session authentication and management on its task branch.
 
 **Impact**: Vendors cannot authenticate or access vendor-specific endpoints.
 
@@ -26,15 +26,16 @@
 - `specs/openapi/main.yaml` - Add vendor session endpoints
 - `src/main/java/cm/jemil/proxi/gaz/application/outbound/VendorSessionRepository.java` - Add findByTokenHash method
 - `src/main/java/cm/jemil/proxi/gaz/application/usecase/ValidateVendorSessionUseCase.java` - New use case
-- `src/main/java/cm/jemil/proxi/gaz/interfaces/rest/VendorSessionController.java` - New controller
-- `src/main/java/cm/jemil/proxi/gaz/interfaces/rest/RestMapper.java` - Add mapping methods
+- `src/main/java/cm/jemil/proxi/gaz/config/VendorSessionAuthenticationFilter.java` - Bearer validation and authorization
+- `src/main/java/cm/jemil/proxi/gaz/interfaces/rest/VendorController.java` - Vendor identity and admin session operations
 
 **Acceptance Criteria**:
-- [ ] POST `/vendor/sessions/validate` endpoint exists
-- [ ] Validates vendor session token against stored hash
-- [ ] Returns vendor ID and scopes on success
-- [ ] Returns 401 for invalid/expired tokens
-- [ ] Vendor-specific endpoints secured with session validation
+- [x] GET `/vendor/session` validates the bearer token and returns vendor ID
+- [x] Token lookup hashes the presented token and compares it with the stored hash
+- [x] Admin rotation replaces the prior token; the previous token is invalidated
+- [x] Admin can revoke the active vendor token
+- [x] Vendor session endpoint requires a valid vendor bearer token
+- [ ] Unit, persistence, and E2E suites executed successfully
 
 **Effort**: 2-3 days  
 **Priority**: P0 - BLOCKER  

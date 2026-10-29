@@ -32,6 +32,11 @@ Feature: Admin vendor management
       |      |       | 95       | 190       |             | false     |                 |                   | true     |
     Then the vendor request is rejected with status 400
 
+  Scenario: Missing required vendor flags are rejected at the request boundary
+    Given I am connected with the scopes 'admin'
+    When I create a vendor without the required active flag
+    Then the vendor request is rejected with status 400
+
   Scenario: An admin cannot update a missing vendor
     Given I am connected with the scopes 'admin'
     When I update a missing vendor with the following data
@@ -67,3 +72,22 @@ Feature: Admin vendor management
       | Token B | +237699002022 | 4.0510   | 9.7010    | Deido       | false     | true     |
     Then the vendor create request succeeds
     And the generated vendor session tokens are distinct
+
+  Scenario: Vendor can authenticate, and admin rotation and revocation invalidate old tokens
+    Given I am connected with the scopes 'admin'
+    When I create a vendor with the following data
+      | name        | phone         | latitude | longitude | addressText | isStation | isActive |
+      | Session E2E | +237699002023 | 4.0520   | 9.7020    | Akwa        | false     | true     |
+    Then the vendor create request succeeds
+    When I access the vendor session using the issued token
+    Then the vendor session is accepted
+    When I rotate the vendor session as admin
+    Then the vendor session token is rotated
+    When I access the vendor session using the previous token
+    Then the vendor request is rejected with status 401
+    When I access the vendor session using the issued token
+    Then the vendor session is accepted
+    When I revoke the vendor session as admin
+    Then the vendor request is rejected with status 204
+    When I access the vendor session using the issued token
+    Then the vendor request is rejected with status 401

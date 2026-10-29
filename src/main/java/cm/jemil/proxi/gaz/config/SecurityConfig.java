@@ -6,16 +6,19 @@ package cm.jemil.proxi.gaz.config;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+import cm.jemil.proxi.gaz.application.usecase.ValidateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.interfaces.rest.Constants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -32,8 +35,27 @@ public class SecurityConfig {
   @SuppressWarnings("java:S4502")
   @Order(1)
   @Bean
+  public SecurityFilterChain vendorSecurityFilterChain(
+      HttpSecurity http, ValidateVendorSessionUseCase validateVendorSessionUseCase) {
+    http.securityMatcher(Constants.PATH_VENDOR_SESSION)
+        .csrf(csrf -> csrf.requireCsrfProtectionMatcher(_ -> false))
+        .authorizeHttpRequests(authorize -> authorize.anyRequest().hasAuthority(Scopes.VENDOR))
+        .addFilterBefore(
+            new VendorSessionAuthenticationFilter(validateVendorSessionUseCase),
+            AnonymousAuthenticationFilter.class)
+        .exceptionHandling(
+            exceptions ->
+                exceptions.authenticationEntryPoint(
+                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+        .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
+    return http.build();
+  }
+
+  @SuppressWarnings("java:S4502")
+  @Order(2)
+  @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) {
-    http.csrf(AbstractHttpConfigurer::disable)
+    http.csrf(csrf -> csrf.requireCsrfProtectionMatcher(_ -> false))
         .authorizeHttpRequests(
             authorize ->
                 authorize

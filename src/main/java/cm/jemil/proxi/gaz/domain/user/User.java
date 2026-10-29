@@ -4,10 +4,12 @@
  */
 package cm.jemil.proxi.gaz.domain.user;
 
+import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -30,8 +32,11 @@ public final class User {
       @Nullable Email email,
       @Nullable PasswordHash passwordHash,
       CreatedAt createdAt) {
-    this.id = id;
-    this.roles = roles;
+    this.id = Objects.requireNonNull(id);
+    this.roles = Set.copyOf(Objects.requireNonNull(roles));
+    if (this.roles.isEmpty()) {
+      throw new InvalidDomainValueException("user must have at least one role");
+    }
     this.email = email;
     this.passwordHash = passwordHash;
     this.createdAt = createdAt;
@@ -59,6 +64,11 @@ public final class User {
   }
 
   public Set<UserRole> roles() {
+    return Set.copyOf(roles);
+  }
+
+  /** Returns a defensive copy of the role set. */
+  public Set<UserRole> getRoles() {
     return Set.copyOf(roles);
   }
 

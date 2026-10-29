@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-29 (`working/PXG-014` implementation; sources compile, tests not executed)
+Last updated: 2026-10-29 (working/PXG-015 implementation; tests added and compiled, not executed)
 
 ## Critical Gate
 
@@ -12,7 +12,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
 | 0 — Foundations & Core Infrastructure | Done | PXG-001–011 complete; manual-test gate explicitly waived |
-| 1 — Vendor & Catalog Management       | In progress | PXG-013, PXG-014, and PXG-015 are implemented on separate task branches; test suites are not run and none are merged. Catalog/geo work and sprint release remain |
+| 1 — Vendor & Catalog Management       | In progress | PXG-013, PXG-014, and PXG-015 are implemented on separate task branches; their test suites are not run and none are merged. Catalog/availability/geo work and sprint release remain |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -22,10 +22,10 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | ID       | Name / Description                                      | Implemented | Unit tested | E2E tested | Notes |
 |----------|---------------------------------------------------------|-------------|-------------|------------|-------|
 | AUTH-01  | Admin login (JWT / session)                             | Implemented | Yes (user-reported) | Yes (user-reported) | Generic invalid-credential response; JWT settings and token ports |
-| AUTH-02  | Vendor session validation (long-lived token by admin)   | Partial     | Onboarding tests pass (user-reported) | Onboarding E2E passes (user-reported) | PXG-012B issues an initial one-time token; validation, rotation, expiry, and revocation remain unimplemented |
-| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Implemented | Yes (user-reported) | Yes (user-reported) | JPA persists separate Vendor aggregate and PostGIS location; review follow-ups remain |
-| VEN-02   | Admin activates / deactivates vendor                    | Implemented | Added, not run | Added, not run | Dedicated admin status endpoint; inactive-vendor exclusion will be enforced with production nearby search in PXG-020 |
-| VEN-03   | Admin creates long-lived VendorSession                  | No          | No          | No         |       |
+| AUTH-02  | Vendor session validation (long-lived token by admin)   | Implemented | Added, not run | Added, not run | PXG-015 validates hashed bearer tokens; admin rotation/revocation replace or remove the active session. No automatic expiry is configured for long-lived pilot sessions |
+| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Implemented | Yes (PXG-012B, user-reported) | Yes (PXG-012B, user-reported) | JPA persists separate Vendor aggregate and PostGIS location; PXG-014 adds paginated admin listing on its branch |
+| VEN-02   | Admin activates / deactivates vendor                    | Partial     | Added on PXG-013, not run | Added on PXG-013, not run | PXG-013 moves status to a dedicated admin endpoint; production nearby-search exclusion remains in PXG-020 |
+| VEN-03   | Admin creates long-lived VendorSession                  | Implemented | Added, not run | Added, not run | Rotation replaces the prior session; revocation removes active token record |
 | VEN-04   | CRUD VendorBrand (prices with/without exchange)         | No          | No          | No         |       |
 | VEN-05   | Availability rule (`is_available AND available_until > now() AND is_open_now`) | Partial | Yes | No | Domain `Availability` VO; query wiring later |
 | GEO-01   | Nearby vendors (ST_DWithin + distance sort)             | No          | No          | No         |       |
@@ -106,7 +106,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - PXG-012 added VEN-01 create/update using the vendor schema and PostGIS geography; activation/deactivation remains PXG-013.
 - PXG-012A's former assessment was premature and is superseded. PXG-012B now uses nullable User email/password fields, separate User and Vendor identities linked by `t_vendors.c_user_id`, matching controller/OpenAPI DTO names, and an atomic onboarding adapter for User, Vendor, and the initial VendorSession. User reports all unit, data, and E2E suites pass; this agent did not rerun them.
 - There is no Dockerfile, Compose application deployment, image-publishing job, or deployment workflow. Sprint release requirements are documented in `docs/RELEASE_AND_DEPLOYMENT.md`; PXG-012C is planned to automate the image and staging path.
-- Current review follow-ups: vendor session tokens have no validation/rotation/revocation flow; REST request validation is not consistently enforced at the controller boundary; `JpaVendorRepository.update` silently does nothing if the row disappears between use-case lookup and adapter update; and `User` retains a caller-supplied mutable roles set instead of defensively copying it.
+- PXG-015 implements vendor session validation, rotation, and revocation; adds a runtime Bean Validation provider and vendor request bounds; makes missing vendor updates fail with 404; and defensively copies User roles. New tests were added and compile, but were not run.
 - The local profile retains a shared development JWT secret fallback. Staging and production require `JWT_SECRET` and reject weak or placeholder secrets; never deploy using the local profile.
 - PXG-002 documents Java/Spring runtime (not Nest); adds `.env.example`, gitignores secrets, `docs/RUNTIME.md`, root `README.md`.
 - `SECURITY.md` filled for pre-release support + private vulnerability reporting (was GitHub placeholder).
@@ -130,5 +130,5 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 ## Next recommended action
 
 1. Run unit, data, and E2E suites for `working/PXG-013`, `working/PXG-014`, and `working/PXG-015` before merging.
-2. Complete PXG-016–021, including catalog/availability and PostGIS nearby search with inactive vendors excluded.
+2. Complete the remaining Sprint 1 tasks: PXG-016–021, including catalog/availability and PostGIS nearby search with inactive vendors excluded.
 3. PXG-012C — package the service as a Docker image and automate sprint release/deployment to staging.
