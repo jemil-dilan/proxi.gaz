@@ -8,10 +8,10 @@ import cm.jemil.proxi.gaz.domain.DomainException;
 import cm.jemil.proxi.gaz.domain.ErrorCodes;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
-import cm.jemil.proxi.gaz.domain.admin.InvalidAdminCredentialsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
+import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ class DomainExceptionTranslator {
         switch (ex) {
           case DemoNotFoundException _, VendorNotFoundException _ -> HttpStatus.NOT_FOUND;
           case DemoAlreadyExistsException _ -> HttpStatus.CONFLICT;
-          case InvalidAdminCredentialsException _ -> HttpStatus.UNAUTHORIZED;
+          case InvalidCredentialsException _ -> HttpStatus.UNAUTHORIZED;
           case FieldsExtractionCodeNotSupported _,
               InvalidOrderStatusTransitionException _,
               InvalidDomainValueException _ ->

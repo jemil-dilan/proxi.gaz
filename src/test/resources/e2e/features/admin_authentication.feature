@@ -34,11 +34,5 @@ Feature: Admin authentication
 
   Scenario: Protected admin profile rejects an authenticated token with a malformed subject
     Given I am connected with an admin token with subject 'not-a-user-id'
-    Given I am connected with the scopes ''
     When I try to access the protected admin profile
-    Then The last request failed with the http status 'UNAUTHORIZED' and error code ''
-
-  Scenario: Protected admin profile rejects an authenticated token with a malformed subject
-    Given I am connected with an admin token with subject 'not-a-user-id'
-    When I access the protected admin profile
     Then The last request failed with the http status 'UNAUTHORIZED' and error code ''

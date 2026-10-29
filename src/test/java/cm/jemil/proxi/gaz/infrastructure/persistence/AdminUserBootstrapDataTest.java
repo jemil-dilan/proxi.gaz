@@ -6,8 +6,9 @@ package cm.jemil.proxi.gaz.infrastructure.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
+import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.domain.shared.Email;
+import cm.jemil.proxi.gaz.domain.user.UserRole;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,15 +26,16 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("data_test")
 class AdminUserBootstrapDataTest {
 
-  @Autowired private AdminUserRepository adminUserRepository;
+  @Autowired private UserRepository userRepository;
   @Autowired private PasswordEncoder passwordEncoder;
 
   @Test
   void bootstrap_shouldPersistAdminWithEncodedPassword() {
     var admin =
-        adminUserRepository.findByEmail(Email.from("bootstrap-admin@example.test")).orElseThrow();
+        userRepository.findByEmail(Email.from("bootstrap-admin@example.test")).orElseThrow();
 
     assertThat(admin.getPasswordHash().value()).isNotEqualTo("PXG009-test-only-password");
+    assertThat(admin.roles()).containsExactly(UserRole.ADMIN);
     assertThat(
             passwordEncoder.matches("PXG009-test-only-password", admin.getPasswordHash().value()))
         .isTrue();

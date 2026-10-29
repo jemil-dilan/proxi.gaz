@@ -6,8 +6,9 @@ package cm.jemil.proxi.gaz.domain.vendor;
 
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
-public record DeliveryFeeType(String value) {
+public record DeliveryFeeType(@Nullable String value) {
   public DeliveryFeeType {
     if (value == null || value.isBlank() || value.trim().length() > 32) {
       throw new InvalidDomainValueException(

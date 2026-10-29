@@ -11,7 +11,7 @@ import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
-import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.AdminAuthApi;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.UserApi;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-class AdminAuthController implements AdminAuthApi {
+class UserController implements UserApi {
 
   private final RestMapper restMapper;
   private final LoginAdminUseCase loginAdminUseCase;
@@ -57,15 +57,12 @@ class AdminAuthController implements AdminAuthApi {
     }
 
     String emailClaim = token.getClaimAsString("email");
-    if (emailClaim == null || emailClaim.isBlank()) {
-      return ResponseEntity.status(UNAUTHORIZED).build();
-    }
     var userId = UserId.from(subjectId);
 
     Email email;
     try {
       email = Email.from(emailClaim);
-    } catch (InvalidDomainValueException exception) {
+    } catch (InvalidDomainValueException _) {
       return ResponseEntity.status(UNAUTHORIZED).build();
     }
     return ResponseEntity.ok(restMapper.fromDomain(userId, email));

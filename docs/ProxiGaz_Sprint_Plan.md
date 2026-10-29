@@ -1,6 +1,6 @@
 # ProxiGaz — Backend Sprint Plan (MVP)
 
-**Version:** 1.1  
+**Version:** 1.4
 **Based on:** Cadrage v1.5 + MVP Specification v1.2 + Manual Test Plan  
 **Language:** English  
 **Scope:** Backend only (API, domain, persistence, jobs, admin endpoints). Frontend / PWA is out of scope of this plan.  
@@ -30,11 +30,15 @@ src/
 - `Clock` (for testable time)
 
 **Core aggregates / entities:**
-- Vendor, VendorBrand (availability + prices)
+- User (identity, credentials, and roles; Admin is a role)
+- Vendor (vendor profile and lifecycle; references its owning User by `user_id`)
+- VendorBrand (availability + prices)
 - Order, OrderOffer, OrderEvent, OrderReport
 - Review
-- AdminUser, VendorSession
+- VendorSession
 - PushSubscription
+
+**API resource naming:** OpenAPI tags identify the aggregate/resource being managed, not the role of the caller. Admin-authorized vendor operations are tagged `Vendor`; their paths and security still express the admin action and authorization.
 
 **Database:** PostgreSQL + PostGIS extension mandatory.
 
@@ -42,6 +46,7 @@ src/
 
 ## Global Non-Functional Requirements
 
+- Every sprint closes with a staging deployment, release notes, and an annotated SemVer tag; production promotion follows acceptance. See `docs/RELEASE_AND_DEPLOYMENT.md`.
 - All order status changes must be recorded in `order_events` (audit trail).
 - Tracking links use `tracking_token` (UUID or secure random), never sequential IDs.
 - Max 2 active orders per phone number (enforced at application + DB level if possible).
@@ -98,9 +103,12 @@ src/
 | ID | Task | Details | Acceptance |
 |----|------|---------|------------|
 | PXG-012 | Create / update Vendor | Name, phone, location (lat/lng → PostGIS), address_text, is_station, delivery_fee_type, delivery_fee_amount, is_active | Admin endpoints work; location stored as geography |
+| PXG-012A | Reconcile User aggregate and vendor profile | Historical design task; superseded by PXG-012B after review identified Vendor's independent lifecycle and current implementation gaps. | Replaced by PXG-012B |
+| PXG-012B | Separate Vendor aggregate and issue onboarding session | Keep User as identity/role root; model Vendor as its own aggregate with VendorId and unique UserId; issue a generated, one-time VendorSession token during onboarding and store only its hash. | Atomic onboarding; `t_vendors.c_user_id` unique FK; optional email remains nullable; unique hashed session credential disclosed once; `Vendor` API tag; tests written for migrations, rollback, and credential handling |
+| PXG-012C | Docker image and sprint release automation | Build and publish immutable Docker images; automate staging deployment and release tagging/notes. | Staging deployment uses tagged image digest; release notes and annotated SemVer tag produced; production promotion is approval-gated |
 | PXG-013 | Activate / deactivate Vendor | `is_active` flag controlled by Admin only | Inactive vendors never appear in nearby search |
 | PXG-014 | List / filter Vendors | Pagination, filter by is_active, text search on name | Admin list endpoint returns correct data |
-| PXG-015 | VendorSession creation | Admin creates long-lived session token for a vendor (pilot onboarding). Token stored hashed or secure. | Vendor can later be authenticated with that token |
+| PXG-015 | VendorSession management and validation | Admin can rotate/revoke vendor sessions; validate opaque bearer tokens against stored hashes. Initial session is issued during PXG-012B onboarding. | Only active sessions authenticate the owning vendor; raw tokens are never stored |
 
 ### Epic 1.2 — Vendor Brands & Availability
 | ID | Task | Details | Acceptance |
@@ -262,7 +270,7 @@ Backend must expose the data needed to calculate these (via `order_events`, `ord
 ## Suggested Order of First Tasks (after manual test success)
 
 1. PXG-001 → PXG-011 (Sprint 0 complete)
-2. PXG-012 → PXG-021 (Sprint 1)
+2. PXG-012 → PXG-012B → PXG-012C → PXG-021 (Sprint 1; PXG-013 follows the model refactor)
 3. PXG-022 → PXG-034 (Sprint 2 – vertical slice – highest risk)
 4. Then Sprint 3 and 4
 
@@ -276,3 +284,6 @@ Backend must expose the data needed to calculate these (via `order_events`, `ord
 |---------|------|---------|
 | 1.0 | 2026-10-05 | Initial detailed backend sprint plan derived from Cadrage v1.4 + MVP Spec v1.2 |
 | 1.1 | 2026-10-05 | Aligned with Cadrage v1.5. Sprints marked Blocked until manual test. Fallback price decision moved before expiry worker (PXG-033). Basic rate limiting + concurrent test added to PXG-023 (Sprint 2). Offer duration marked configurable/open. |
+| 1.2 | 2026-10-28 | Define User as shared identity aggregate root, Admin as role, vendor profile inside User, clarify User-oriented API tags, and add PXG-012A before PXG-013. |
+| 1.3 | 2026-10-28 | Split Vendor as an aggregate linked to User, issue an initial VendorSession during onboarding, add release/deployment gates to every sprint, and plan Docker staging delivery. |
+| 1.4 | 2026-10-29 | Reconcile PXG-012B scope and acceptance with the implemented User/Vendor link, one-time hashed onboarding session, and review/release follow-ups. |

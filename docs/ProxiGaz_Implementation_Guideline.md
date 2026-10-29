@@ -83,6 +83,8 @@ Only begin this phase after the plan is approved.
      (Commitizen’s documentation type is `docs`, not `doc`.)
 8. **README.md:** keep the root `README.md` accurate as work lands. After a completed task, update the README **only when the change is legitimate** — i.e. the project’s runnable state, documented capabilities, setup steps, or sprint progress actually changed. Do not edit the README for cosmetic rewrites, speculative future work, or filler. If nothing user-facing or setup-related changed, leave the README untouched.
 
+9. **Sprint release and deployment:** every completed sprint must be deployed to staging and accompanied by release notes and an annotated version tag. Follow `docs/RELEASE_AND_DEPLOYMENT.md`. Production deployment follows product acceptance and approval; deploy the exact image digest that passed staging. Keep migration and rollback impact in the release notes.
+
 ### Task file template
 
 ```markdown
@@ -138,6 +140,14 @@ These rules come from the final specification (Cadrage v1.5 + MVP Spec v1.2). An
 8. **Vendor auth in pilot**: long-lived sessions created manually by Admin (no magic-link dependency on a messaging channel).
 9. **Distance / proximity** queries must use PostGIS (`ST_DWithin`, `ST_Distance`). Ranking is strictly local.
 
+## Domain Modeling Rules
+
+1. **Identify aggregate roots before implementing a use case.** State each aggregate's identity, invariants, lifecycle, and transaction boundary. Repository ports should load and persist aggregate roots, not expose persistence rows as domain objects.
+2. **User identity is shared across roles.** Admin and vendor are users. Model identity, credentials, and roles as user concepts; admin is a role, not a separate identity. Vendor-specific contract data belongs to a vendor profile associated with that user. Do not create parallel admin/vendor identities for the same person.
+3. **Confirm the vendor-profile boundary from invariants.** Keep vendor profile data inside the User aggregate when its invariants and lifecycle must be consistent with the user. Make it a separate aggregate only when it has an independently consistent lifecycle, and retain a reference to the owning User. Record the reasoning in the task plan before coding.
+4. **Keep actor, resource, and aggregate distinct in the API.** Paths and security describe the operation and who may perform it; OpenAPI tags identify the aggregate/resource being managed. For example, `PUT /admin/vendors/{vendorId}` is performed by an admin and updates a Vendor aggregate, so it belongs under the `Vendor` tag. Do not use an `Admin` tag merely because the caller has the admin role.
+5. **Align boundaries across layers.** Domain aggregates, application commands and repository ports, persistence mapping, authorization, and API schemas must agree on identity and ownership. Avoid duplicate user IDs or role-specific models that bypass the shared User model.
+
 ---
 
 ## Summary checklist (pin this)
@@ -151,5 +161,6 @@ These rules come from the final specification (Cadrage v1.5 + MVP Spec v1.2). An
 - [ ] Full test suite run and green
 - [ ] Commits created with `cz c`, suitable type, scope `PXG-<n>` (e.g. `docs(PXG-002): …`)
 - [ ] `README.md` updated only if the task changed setup, capabilities, or accurate project status
+- [ ] Sprint staging deployment, release notes, and annotated version tag completed per `docs/RELEASE_AND_DEPLOYMENT.md`
 - [ ] Task file deleted after completion
 - [ ] `../status.md` updated to reflect the newly completed work, ready for the next task’s Phase 1

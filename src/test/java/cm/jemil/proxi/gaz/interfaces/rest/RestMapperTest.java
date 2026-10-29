@@ -9,10 +9,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
+import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase.Command;
 import cm.jemil.proxi.gaz.application.views.DemoView;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView2;
+import cm.jemil.proxi.gaz.domain.shared.Email;
+import cm.jemil.proxi.gaz.domain.vendor.VendorId;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreationResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoCreateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoDTO;
@@ -112,5 +116,51 @@ class RestMapperTest {
     assertThat(command.demoId()).isEqualTo(DEMO_ID);
     assertThat(command.name()).isEqualTo("Demo");
     assertThat(command.description()).isEqualTo("Description");
+  }
+
+  @Test
+  void toCreateVendorCommand_shouldAllowMissingEmail() {
+    var dto =
+        new CreateVendorDTO()
+            .name("Vendor")
+            .phone("+237699002001")
+            .latitude(4.05)
+            .longitude(9.70)
+            .address("Akwa")
+            .isStation(false)
+            .isActive(true);
+
+    var command = restMapper.toCommand(dto);
+
+    assertThat(command.email()).isNull();
+  }
+
+  @Test
+  void toCreateVendorCommand_shouldNormalizeOptionalEmail() {
+    var dto =
+        new CreateVendorDTO()
+            .email("  Vendor@Example.Test ")
+            .name("Vendor")
+            .phone("+237699002001")
+            .latitude(4.05)
+            .longitude(9.70)
+            .address("Akwa")
+            .isStation(false)
+            .isActive(true);
+
+    var command = restMapper.toCommand(dto);
+
+    assertThat(command.email()).isEqualTo(Email.from("vendor@example.test"));
+  }
+
+  @Test
+  void fromDomain_shouldMapVendorIdAndOneTimeSessionToken() {
+    var vendorId = VendorId.generate();
+    var result = new CreateVendorUseCase.Response(vendorId, "one-time-token");
+
+    var dto = restMapper.fromDomain(result);
+
+    assertThat(dto.getVendorId()).isEqualTo(vendorId.value());
+    assertThat(dto.getSessionToken()).isEqualTo("one-time-token");
   }
 }

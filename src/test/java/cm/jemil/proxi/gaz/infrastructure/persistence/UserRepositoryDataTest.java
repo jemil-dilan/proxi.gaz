@@ -7,13 +7,15 @@ package cm.jemil.proxi.gaz.infrastructure.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
-import cm.jemil.proxi.gaz.domain.admin.AdminUser;
+import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
+import cm.jemil.proxi.gaz.domain.user.User;
+import cm.jemil.proxi.gaz.domain.user.UserRole;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,61 +27,61 @@ import org.springframework.test.context.ActiveProfiles;
 @Tag("data")
 @SpringBootTest
 @ActiveProfiles("data_test")
-class AdminUserRepositoryDataTest {
+class UserRepositoryDataTest {
 
-  @Autowired private AdminUserRepository adminUserRepository;
+  @Autowired private UserRepository repository;
 
   @Test
-  void insert_thenFindByEmail_shouldPersistAdminUser() {
+  void insert_thenFindByEmail_shouldPersistAdminUserRoleAndCredentials() {
     var email = Email.from("roundtrip-" + UUID.randomUUID() + "@example.test");
-    var admin = newAdmin(email);
+    var user = newAdmin(email);
 
-    adminUserRepository.insert(admin);
+    repository.insert(user);
 
-    assertThat(adminUserRepository.findByEmail(email)).contains(admin);
-    assertThat(adminUserRepository.findAll()).contains(admin);
+    assertThat(repository.findAll()).contains(user);
   }
 
   @Test
   void insert_shouldRejectDuplicateEmail() {
     var email = Email.from("duplicate-" + UUID.randomUUID() + "@example.test");
-    adminUserRepository.insert(newAdmin(email));
+    repository.insert(newAdmin(email));
 
-    assertThatThrownBy(() -> adminUserRepository.insert(newAdmin(email)))
+    assertThatThrownBy(() -> repository.insert(newAdmin(email)))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 
   @Test
-  void update_shouldUpdateTheExistingAdmin() {
+  void update_shouldUpdateTheExistingUser() {
     var existingEmail = Email.from("before-" + UUID.randomUUID() + "@example.test");
     var updatedEmail = Email.from("after-" + UUID.randomUUID() + "@example.test");
-    var existingAdmin = newAdmin(existingEmail);
-    adminUserRepository.insert(existingAdmin);
-    var updatedAdmin =
-        AdminUser.reconstitute(
-            existingAdmin.getId(),
+    var existing = newAdmin(existingEmail);
+    repository.insert(existing);
+    var updated =
+        User.reconstitute(
+            existing.getId(),
+            Set.of(UserRole.ADMIN),
             updatedEmail,
             PasswordHash.from("updated-encoded-password"),
-            existingAdmin.getCreatedAt());
+            existing.createdAt());
 
-    adminUserRepository.update(updatedAdmin);
+    repository.update(updated);
 
-    assertThat(adminUserRepository.findByEmail(updatedEmail)).contains(updatedAdmin);
-    assertThat(adminUserRepository.findByEmail(existingEmail)).isEmpty();
+    assertThat(repository.findByEmail(updatedEmail)).contains(updated);
+    assertThat(repository.findByEmail(existingEmail)).isEmpty();
   }
 
   @Test
-  void deleteById_shouldRemoveTheAdmin() {
-    var admin = newAdmin(Email.from("delete-" + UUID.randomUUID() + "@example.test"));
-    adminUserRepository.insert(admin);
+  void deleteById_shouldRemoveTheUser() {
+    var user = newAdmin(Email.from("delete-" + UUID.randomUUID() + "@example.test"));
+    repository.insert(user);
 
-    adminUserRepository.deleteById(admin.getId());
+    repository.deleteById(user.getId());
 
-    assertThat(adminUserRepository.findById(admin.getId())).isEmpty();
+    assertThat(repository.findById(user.getId())).isEmpty();
   }
 
-  private AdminUser newAdmin(Email email) {
-    return AdminUser.of(
+  private User newAdmin(Email email) {
+    return User.createAdmin(
         email,
         PasswordHash.from("encoded-password"),
         CreatedAt.from(Instant.now().truncatedTo(ChronoUnit.MICROS)));

@@ -10,14 +10,15 @@ servers:
 tags:
   - name: "Demo"
     description: "Demo operations"
-  - name: "AdminAuth"
-    description: "Admin login and identity operations"
-  - name: "AdminVendor"
-    description: "Admin vendor management"
+  - name: "User"
+    description: "User identity and account operations"
+  - name: "Vendor"
+    description: "Vendor profile and onboarding operations"
 paths:
   /admin/vendors:
     post:
-      tags: ["AdminVendor"]
+      tags:
+        - "Vendor"
       summary: "Create a vendor"
       operationId: "createVendor"
       security:
@@ -27,19 +28,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VendorDetailsDTO"
+              $ref: "#/components/schemas/CreateVendorDTO"
       responses:
         "201":
           description: "Vendor created"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CreationResponseDTO"
+                $ref: "#/components/schemas/VendorOnboardingResponseDTO"
         "400":
           description: "Invalid vendor details"
   /admin/vendors/{vendorId}:
     put:
-      tags: ["AdminVendor"]
+      tags:
+        - "Vendor"
       summary: "Replace vendor details"
       operationId: "updateVendor"
       security:
@@ -56,7 +58,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VendorDetailsDTO"
+              $ref: "#/components/schemas/VendorUpdateDTO"
       responses:
         "204":
           description: "Vendor updated"
@@ -67,7 +69,7 @@ paths:
   /admin/auth/login:
     post:
       tags:
-        - "AdminAuth"
+        - "User"
       summary: "Authenticate an admin user"
       operationId: "adminLogin"
       security: []
@@ -91,7 +93,7 @@ paths:
   /admin/auth/me:
     get:
       tags:
-        - "AdminAuth"
+        - "User"
       summary: "Return the authenticated admin identity"
       operationId: "getAdminProfile"
       security:
@@ -343,16 +345,80 @@ components:
           type: "string"
         description:
           type: "string"
-    VendorDetailsDTO:
+    CreateVendorDTO:
       type: "object"
-      required: ["name", "phone", "latitude", "longitude", "isStation", "isActive"]
+      required:
+        - "name"
+        - "phone"
+        - "latitude"
+        - "longitude"
+        - "address"
+        - "isStation"
+        - "isActive"
       properties:
-        name: { type: "string" }
-        phone: { type: "string" }
-        latitude: { type: "number", format: "double" }
-        longitude: { type: "number", format: "double" }
-        addressText: { type: "string" }
-        isStation: { type: "boolean" }
-        deliveryFeeType: { type: "string" }
-        deliveryFeeAmount: { type: "integer", format: "int32" }
-        isActive: { type: "boolean" }
+        email:
+          type: "string"
+          format: "email"
+        name:
+          type: "string"
+        phone:
+          type: "string"
+        latitude:
+          type: "number"
+          format: "double"
+        longitude:
+          type: "number"
+          format: "double"
+        address:
+          type: "string"
+        isStation:
+          type: "boolean"
+        deliveryFeeType:
+          type: "string"
+        deliveryFeeAmount:
+          type: "integer"
+          format: "int32"
+        isActive:
+          type: "boolean"
+    VendorUpdateDTO:
+      type: "object"
+      required:
+        - "name"
+        - "phone"
+        - "latitude"
+        - "longitude"
+        - "isStation"
+      properties:
+        name:
+          type: "string"
+        phone:
+          type: "string"
+        latitude:
+          type: "number"
+          format: "double"
+        longitude:
+          type: "number"
+          format: "double"
+        addressText:
+          type: "string"
+        isStation:
+          type: "boolean"
+        deliveryFeeType:
+          type: "string"
+        deliveryFeeAmount:
+          type: "integer"
+          format: "int32"
+        isActive:
+          type: "boolean"
+    VendorOnboardingResponseDTO:
+      type: "object"
+      required:
+        - "vendorId"
+        - "sessionToken"
+      properties:
+        vendorId:
+          type: "string"
+          format: "uuid"
+        sessionToken:
+          type: "string"
+          description: "One-time bearer credential; it is not returned again after onboarding."

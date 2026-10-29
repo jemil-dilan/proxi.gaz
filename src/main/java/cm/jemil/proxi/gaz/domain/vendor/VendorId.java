@@ -9,7 +9,9 @@ import java.util.UUID;
 
 public record VendorId(UUID value) {
   public VendorId {
-    if (value == null) throw new InvalidDomainValueException("vendor id is required");
+    if (value == null) {
+      throw new InvalidDomainValueException("vendor id must not be null");
+    }
   }
 
   public static VendorId generate() {

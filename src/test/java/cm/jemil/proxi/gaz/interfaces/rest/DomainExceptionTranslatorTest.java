@@ -10,11 +10,11 @@ import cm.jemil.proxi.gaz.domain.DomainException;
 import cm.jemil.proxi.gaz.domain.ErrorCodes;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
-import cm.jemil.proxi.gaz.domain.admin.InvalidAdminCredentialsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
 import cm.jemil.proxi.gaz.domain.order.OrderStatus;
+import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -45,7 +45,7 @@ class DomainExceptionTranslatorTest {
 
   @Test
   void handleDomainException_shouldReturnUnauthorized_forInvalidAdminCredentials() {
-    var response = translator.handleDomainException(new InvalidAdminCredentialsException());
+    var response = translator.handleDomainException(new InvalidCredentialsException());
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-401-000");

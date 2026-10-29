@@ -6,6 +6,7 @@ package cm.jemil.proxi.gaz.config;
 
 import cm.jemil.proxi.gaz.application.outbound.AccessTokenIssuer;
 import cm.jemil.proxi.gaz.application.outbound.Clock;
+import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.JwtSettings;
 import cm.jemil.proxi.gaz.application.outbound.PasswordVerifier;
 import cm.jemil.proxi.gaz.infrastructure.security.BCryptPasswordVerifier;
@@ -33,8 +34,8 @@ public class SecurityBeans {
   }
 
   @Bean
-  public JwtSettings jwtSettings(ProxigazProperties properties) {
-    return new ProxigazJwtSettings(properties.security().jwt());
+  public JwtSettings jwtSettings(Configurations configurations) {
+    return new ProxigazJwtSettings(configurations);
   }
 
   @Bean

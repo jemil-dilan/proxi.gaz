@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.2.xsd">
+	<changeSet id="PROXIGAZ-12B:1" author="Jemil-Dilan">
+		<comment>Link independent vendor identities to user accounts</comment>
+		<addColumn tableName="t_vendors">
+			<column name="c_user_id" type="uuid" />
+		</addColumn>
+		<update tableName="t_vendors">
+			<column name="c_user_id" valueComputed="c_id" />
+		</update>
+		<addNotNullConstraint tableName="t_vendors"
+			columnName="c_user_id" columnDataType="uuid" />
+		<addUniqueConstraint tableName="t_vendors"
+			columnNames="c_user_id" constraintName="uq_vendors_user_id" />
+		<addForeignKeyConstraint
+			baseTableName="t_vendors" baseColumnNames="c_user_id"
+			referencedTableName="t_users" referencedColumnNames="c_id"
+			constraintName="fk_vendors_user_id" />
+		<dropForeignKeyConstraint
+			baseTableName="t_vendors" constraintName="fk_vendors_user" />
+	</changeSet>
+</databaseChangeLog>

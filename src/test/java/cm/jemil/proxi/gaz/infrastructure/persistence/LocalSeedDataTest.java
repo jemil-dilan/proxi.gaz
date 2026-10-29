@@ -26,7 +26,8 @@ class LocalSeedDataTest {
   void localSeed_shouldCreateDevelopmentAdminAndFiveDoualaVendors() {
     Integer adminCount =
         jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM t_admin_users WHERE c_email = 'admin@proxigaz.local'",
+            "SELECT COUNT(*) FROM t_users u JOIN t_user_roles r ON r.c_user_id = u.c_id "
+                + "WHERE u.c_email = 'admin@proxigaz.local' AND r.c_role = 'ADMIN'",
             Integer.class);
     Integer vendorCount =
         jdbcTemplate.queryForObject(
@@ -42,12 +43,35 @@ class LocalSeedDataTest {
             Integer.class);
     String passwordHash =
         jdbcTemplate.queryForObject(
-            "SELECT c_password_hash FROM t_admin_users WHERE c_email = 'admin@proxigaz.local'",
+            "SELECT c_password_hash FROM t_users WHERE c_email = 'admin@proxigaz.local'",
             String.class);
+    Integer vendorRoleCount =
+        jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM t_user_roles WHERE c_role = 'VENDOR' "
+                + "AND c_user_id::text LIKE '01100000-%'",
+            Integer.class);
 
     assertThat(adminCount).isEqualTo(1);
     assertThat(passwordEncoder.matches("password", passwordHash)).isTrue();
     assertThat(vendorCount).isBetween(5, 10);
+    assertThat(vendorRoleCount).isEqualTo(vendorCount);
     assertThat(vendorsInCentralDouala).isEqualTo(vendorCount);
+  }
+
+  @Test
+  void userMigration_shouldPreserveSeededVendorIdentityAndAssignAdminRole() {
+    Integer matchingUserCount =
+        jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM t_users u JOIN t_vendors v ON v.c_user_id = u.c_id "
+                + "WHERE v.c_id::text LIKE '01100000-%'",
+            Integer.class);
+    Integer adminRoleCount =
+        jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM t_user_roles WHERE c_user_id = "
+                + "'01100000-0000-0000-0000-000000000001' AND c_role = 'ADMIN'",
+            Integer.class);
+
+    assertThat(matchingUserCount).isEqualTo(5);
+    assertThat(adminRoleCount).isEqualTo(1);
   }
 }

@@ -8,9 +8,9 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-interface AdminUserSpringRepository extends JpaRepository<AdminUserJpa, UUID> {
+interface VendorSpringRepository extends JpaRepository<VendorJpa, UUID> {
 
-  Optional<AdminUserJpa> findByEmail(String email);
+  Optional<VendorJpa> findAggregateById(UUID id);
 
-  boolean existsByEmail(String email);
+  Optional<VendorJpa> findAggregateByUserId(UUID userId);
 }

@@ -18,7 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-class AdminAuthControllerTest {
+class UserControllerTest {
 
   @AfterEach
   void clearSecurityContext() {
@@ -36,7 +36,7 @@ class AdminAuthControllerTest {
         new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+    var controller = controller();
 
     assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
@@ -53,7 +53,7 @@ class AdminAuthControllerTest {
         new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+    var controller = controller();
 
     assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
@@ -67,7 +67,7 @@ class AdminAuthControllerTest {
         new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+    var controller = controller();
 
     assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
@@ -85,7 +85,7 @@ class AdminAuthControllerTest {
         new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+    var controller = controller();
 
     assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
@@ -103,8 +103,12 @@ class AdminAuthControllerTest {
         new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("SCOPE_admin")));
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    var controller = new AdminAuthController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+    var controller = controller();
 
     assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+  }
+
+  private UserController controller() {
+    return new UserController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
   }
 }

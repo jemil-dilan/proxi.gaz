@@ -21,7 +21,8 @@ class CoreSchemaDataTest {
 
   private static final List<String> REQUIRED_TABLES =
       List.of(
-          "t_admin_users",
+          "t_users",
+          "t_user_roles",
           "t_vendors",
           "t_vendor_brands",
           "t_vendor_sessions",
@@ -68,11 +69,18 @@ class CoreSchemaDataTest {
   @Test
   void vendorsLocation_shouldAcceptGeographyPoint() {
     jdbcTemplate.update(
+        "INSERT INTO t_users (c_id, c_created_at) VALUES (?, NOW())",
+        java.util.UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
+    jdbcTemplate.update(
+        "INSERT INTO t_user_roles (c_user_id, c_role) VALUES (?, 'VENDOR')",
+        java.util.UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
+    jdbcTemplate.update(
         """
         INSERT INTO t_vendors (
-          c_id, c_name, c_phone, c_location, c_address_text, c_is_station,
+          c_id, c_user_id, c_name, c_phone, c_location, c_address_text, c_is_station,
           c_delivery_fee_type, c_delivery_fee_amount, c_is_active, c_reliability_score
         ) VALUES (
+          'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
           'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
           'Schema Smoke Vendor',
           '+237600000001',
@@ -95,7 +103,7 @@ class CoreSchemaDataTest {
               100
             )
             FROM t_vendors
-            WHERE c_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            WHERE c_user_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
             """,
             Boolean.class);
 

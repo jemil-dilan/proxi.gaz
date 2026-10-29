@@ -6,6 +6,7 @@ Feature: Admin vendor management
       | name             | phone         | latitude | longitude | addressText       | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
       | E2E Vendor North | +237699002001 | 4.0483   | 9.7048    | E2E address, Akwa | false     | flat            | 1250              | true     |
     Then the vendor create request succeeds
+    And the created user is linked to the vendor and has a stored session hash
     And the vendor is persisted with the following data
       | name             | phone         | latitude | longitude | addressText       | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
       | E2E Vendor North | +237699002001 | 4.0483   | 9.7048    | E2E address, Akwa | false     | flat            | 1250              | true     |
@@ -13,6 +14,7 @@ Feature: Admin vendor management
       | name           | phone         | latitude | longitude | addressText        | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
       | E2E Vendor Hub | +237699002002 | 4.0601   | 9.7112    | E2E address, Deido | true      | flat            | 1500              | false    |
     Then the vendor update request succeeds
+    And the user and vendor remain linked after update
     And the vendor is persisted with the following data
       | name           | phone         | latitude | longitude | addressText        | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
       | E2E Vendor Hub | +237699002002 | 4.0601   | 9.7112    | E2E address, Deido | true      | flat            | 1500              | false    |
@@ -37,3 +39,15 @@ Feature: Admin vendor management
       | name        | phone         | latitude | longitude | addressText | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
       | Denied user | +237699002004 | 4.0500   | 9.7000    | Address     | false     | flat            | 1000              | true     |
     Then the vendor request is rejected with status 403
+
+  Scenario: Each created vendor receives a distinct one-time session token
+    Given I am connected with the scopes 'admin'
+    When I create a vendor with the following data
+      | name    | phone         | latitude | longitude | addressText | isStation | isActive |
+      | Token A | +237699002021 | 4.0500   | 9.7000    | Akwa        | false     | true     |
+    Then the vendor create request succeeds
+    When I create a vendor with the following data
+      | name    | phone         | latitude | longitude | addressText | isStation | isActive |
+      | Token B | +237699002022 | 4.0510   | 9.7010    | Deido       | false     | true     |
+    Then the vendor create request succeeds
+    And the generated vendor session tokens are distinct

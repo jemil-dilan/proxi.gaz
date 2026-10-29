@@ -4,13 +4,13 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
-import cm.jemil.proxi.gaz.application.outbound.AdminUserRepository;
 import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
-import cm.jemil.proxi.gaz.domain.admin.AdminUser;
+import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.PasswordHash;
+import cm.jemil.proxi.gaz.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -20,7 +20,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class AdminUserBootstrapRunner implements ApplicationRunner {
 
-  private final AdminUserRepository adminUserRepository;
+  private final UserRepository userRepository;
   private final Configurations configurations;
   private final PasswordEncoder passwordEncoder;
   private final Clock clock;
@@ -34,15 +34,15 @@ public class AdminUserBootstrapRunner implements ApplicationRunner {
     }
 
     var email = Email.from(configurations.bootstrapEmail());
-    if (adminUserRepository.existsByEmail(email)) {
+    if (userRepository.existsByEmail(email)) {
       return;
     }
 
     var adminUser =
-        AdminUser.of(
+        User.createAdmin(
             email,
             PasswordHash.from(passwordEncoder.encode(configurations.bootstrapPassword())),
             CreatedAt.from(clock.now()));
-    adminUserRepository.insert(adminUser);
+    userRepository.insert(adminUser);
   }
 }

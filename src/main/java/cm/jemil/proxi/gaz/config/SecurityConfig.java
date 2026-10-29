@@ -7,9 +7,6 @@ package cm.jemil.proxi.gaz.config;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 import cm.jemil.proxi.gaz.interfaces.rest.Constants;
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
-import java.nio.charset.StandardCharsets;
-import javax.crypto.spec.SecretKeySpec;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
