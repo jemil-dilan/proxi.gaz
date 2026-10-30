@@ -16,6 +16,50 @@ tags:
     description: "Vendor profile and onboarding operations"
 paths:
   /admin/vendors:
+    get:
+      tags:
+        - "Vendor"
+      summary: "List and filter vendors"
+      operationId: "listVendors"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "page"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            minimum: 0
+            default: 0
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: "isActive"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+        - name: "name"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            minLength: 1
+            maxLength: 255
+      responses:
+        "200":
+          description: "Page of vendors matching the filters"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorPaginationDTO"
+        "400":
+          description: "Invalid pagination or filter value"
     post:
       tags:
         - "Vendor"
@@ -455,3 +499,60 @@ components:
       properties:
         isActive:
           type: "boolean"
+    VendorDTO:
+      type: "object"
+      required:
+        - "vendorId"
+        - "name"
+        - "phone"
+        - "latitude"
+        - "longitude"
+        - "isStation"
+        - "isActive"
+      properties:
+        vendorId:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        phone:
+          type: "string"
+        latitude:
+          type: "number"
+          format: "double"
+        longitude:
+          type: "number"
+          format: "double"
+        addressText:
+          type: "string"
+        isStation:
+          type: "boolean"
+        deliveryFeeType:
+          type: "string"
+        deliveryFeeAmount:
+          type: "integer"
+          format: "int32"
+        isActive:
+          type: "boolean"
+    VendorPaginationDTO:
+      type: "object"
+      required:
+        - "content"
+        - "page"
+        - "size"
+        - "totalElements"
+        - "totalPages"
+      properties:
+        content:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/VendorDTO"
+        page:
+          type: "integer"
+        size:
+          type: "integer"
+        totalElements:
+          type: "integer"
+          format: "int64"
+        totalPages:
+          type: "integer"

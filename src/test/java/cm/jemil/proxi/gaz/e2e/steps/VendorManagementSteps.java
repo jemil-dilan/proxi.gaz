@@ -12,6 +12,7 @@ import cm.jemil.proxi.gaz.e2e.HttpClient;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java8.En;
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -58,6 +59,42 @@ public class VendorManagementSteps implements En {
     Then(
         "the vendor create request succeeds",
         () -> assertThat(httpClient.getLastResponse().status().value()).isEqualTo(201));
+
+    When(
+        "I list vendors at page {int} with size {int}, active {string}, and name {string}",
+        (Integer page, Integer size, String active, String name) -> {
+          var request = given().header("Authorization", httpClient.authorizationHeader());
+          request.queryParam("page", page).queryParam("size", size);
+          if (!"any".equals(active)) {
+            request.queryParam("isActive", active);
+          }
+          if (!"any".equals(name)) {
+            request.queryParam("name", name);
+          }
+          var response = request.get(VENDORS_PATH);
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    Then(
+        "the vendor page metadata is page {int}, size {int}, total elements {int}, total pages"
+            + " {int}",
+        (Integer page, Integer size, Integer totalElements, Integer totalPages) -> {
+          var response = httpClient.getLastResponse();
+          var body = JsonPath.from(httpClient.getLastResponseBody());
+          assertThat(response.status().value()).isEqualTo(200);
+          assertThat(body.getInt("page")).isEqualTo(page);
+          assertThat(body.getInt("size")).isEqualTo(size);
+          assertThat(body.getInt("totalElements")).isEqualTo(totalElements);
+          assertThat(body.getInt("totalPages")).isEqualTo(totalPages);
+        });
+
+    Then(
+        "the vendor list contains only the name {string}",
+        (String name) ->
+            assertThat(
+                    JsonPath.from(httpClient.getLastResponseBody())
+                        .getList("content.name", String.class))
+                .containsExactly(name));
 
     Then(
         "the created user is linked to the vendor and has a stored session hash",

@@ -5,28 +5,33 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
+import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.VendorApi;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorStatusUpdateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 class VendorController implements VendorApi {
 
   private final RestMapper restMapper;
   private final CreateVendorUseCase createVendorUseCase;
   private final UpdateVendorUseCase updateVendorUseCase;
   private final SetVendorStatusUseCase setVendorStatusUseCase;
+  private final ListVendorsUseCase listVendorsUseCase;
 
   @Override
   public ResponseEntity<VendorOnboardingResponseDTO> createVendor(CreateVendorDTO request) {
@@ -34,6 +39,16 @@ class VendorController implements VendorApi {
     return ResponseEntity.status(201)
         .cacheControl(CacheControl.noStore())
         .body(restMapper.fromDomain(result));
+  }
+
+  @Override
+  public ResponseEntity<VendorPaginationDTO> listVendors(
+      Integer page, Integer size, Boolean isActive, String name) {
+    var result =
+        listVendorsUseCase.execute(
+            new ListVendorsUseCase.Query(
+                page == null ? 0 : page, size == null ? 20 : size, isActive, name));
+    return ResponseEntity.ok().body(restMapper.fromDomain(result));
   }
 
   @Override

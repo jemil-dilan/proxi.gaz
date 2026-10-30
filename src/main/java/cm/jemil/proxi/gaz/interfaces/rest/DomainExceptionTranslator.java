@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 @RestControllerAdvice
 @Slf4j
@@ -35,6 +36,18 @@ class DomainExceptionTranslator {
             .orElse("request contains invalid fields");
     return ResponseEntity.badRequest()
         .body(Map.of("errorCode", ErrorCodes.PROXIGAZ_400_002.value(), "message", detail));
+  }
+
+  @ExceptionHandler(HandlerMethodValidationException.class)
+  public ResponseEntity<Map<String, String>> handleInvalidMethodRequest(
+      HandlerMethodValidationException ex) {
+    return ResponseEntity.badRequest()
+        .body(
+            Map.of(
+                "errorCode",
+                ErrorCodes.PROXIGAZ_400_002.value(),
+                "message",
+                "request contains invalid query parameters"));
   }
 
   @ExceptionHandler(DomainException.class)

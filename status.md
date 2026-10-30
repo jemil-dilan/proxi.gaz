@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-29 (`working/PXG-013` implementation; tests added and compiled, not executed)
+Last updated: 2026-10-29 (`working/PXG-014` implementation; sources compile, tests not executed)
 
 ## Critical Gate
 
