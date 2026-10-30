@@ -49,6 +49,19 @@ class VendorTest {
     assertThat(updated.isActive()).isFalse();
   }
 
+  @Test
+  void activateAndDeactivate_shouldSetTheRequestedStatusIdempotently() {
+    var vendor = vendor(UserId.generate(), "Vendor", false);
+
+    vendor.activate();
+    vendor.activate();
+    assertThat(vendor.isActive()).isTrue();
+
+    vendor.deactivate();
+    vendor.deactivate();
+    assertThat(vendor.isActive()).isFalse();
+  }
+
   private Vendor vendor(UserId userId, String name, boolean active) {
     return Vendor.of(
         userId,

@@ -151,6 +151,28 @@ public class VendorManagementSteps implements En {
                     status, httpClient.getLastResponseBody())
                 .isEqualTo(status));
 
+    When(
+        "I set that vendor's active status to {string}",
+        (String active) -> setVendorStatus(vendorId, Boolean.parseBoolean(active)));
+
+    When(
+        "I set a missing vendor's active status to {string}",
+        (String active) -> setVendorStatus(UUID.randomUUID(), Boolean.parseBoolean(active)));
+
+    Then(
+        "the vendor status request succeeds with status {int}",
+        (Integer status) ->
+            assertThat(httpClient.getLastResponse().status().value()).isEqualTo(status));
+
+    Then(
+        "the vendor active status is {word}",
+        (String active) -> {
+          var persistedStatus =
+              jdbcTemplate.queryForObject(
+                  "SELECT c_is_active FROM t_vendors WHERE c_id = ?", Boolean.class, vendorId);
+          assertThat(persistedStatus).isEqualTo(Boolean.parseBoolean(active));
+        });
+
     Then(
         "the vendor is persisted with the following data",
         (DataTable dataTable) -> {
@@ -190,8 +212,20 @@ public class VendorManagementSteps implements En {
 
   private static Map<String, Object> toUpdateRequest(Map<String, String> values) {
     var request = commonRequest(values);
+    request.remove("isActive");
     request.put("addressText", values.get("addressText"));
     return request;
+  }
+
+  private void setVendorStatus(UUID targetVendorId, boolean isActive) {
+    var response =
+        given()
+            .contentType(ContentType.JSON)
+            .header("Authorization", httpClient.authorizationHeader())
+            .pathParam("vendorId", targetVendorId)
+            .body(Map.of("isActive", isActive))
+            .put(VENDORS_PATH + "/{vendorId}/status");
+    httpClient.recordResponse(response.statusCode(), response.asString());
   }
 
   private static Map<String, Object> commonRequest(Map<String, String> values) {

@@ -63,7 +63,6 @@ interface RestMapper {
   @Mapping(target = "isStation", source = "createVendorDTO.isStation")
   @Mapping(target = "deliveryFeeType", source = "createVendorDTO.deliveryFeeType")
   @Mapping(target = "deliveryFeeAmount", source = "createVendorDTO.deliveryFeeAmount")
-  @Mapping(target = "isActive", source = "createVendorDTO.isActive")
   UpdateVendorUseCase.Command toCommand(UUID vendorId, VendorUpdateDTO createVendorDTO);
 
   @BeanMapping(ignoreByDefault = true)

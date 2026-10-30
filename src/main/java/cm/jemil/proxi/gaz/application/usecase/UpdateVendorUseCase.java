@@ -32,7 +32,7 @@ public class UpdateVendorUseCase {
             command.isStation(),
             command.deliveryFeeType(),
             command.deliveryFeeAmount(),
-            command.isActive());
+            vendor.isActive());
     repository.update(updatedVendor);
   }
 
@@ -44,6 +44,5 @@ public class UpdateVendorUseCase {
       AddressText addressText,
       Boolean isStation,
       DeliveryFeeType deliveryFeeType,
-      Money deliveryFeeAmount,
-      Boolean isActive) {}
+      Money deliveryFeeAmount) {}
 }

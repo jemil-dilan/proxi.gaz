@@ -11,13 +11,19 @@ Feature: Admin vendor management
       | name             | phone         | latitude | longitude | addressText       | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
       | E2E Vendor North | +237699002001 | 4.0483   | 9.7048    | E2E address, Akwa | false     | flat            | 1250              | true     |
     When I update that vendor with the following data
-      | name           | phone         | latitude | longitude | addressText        | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
-      | E2E Vendor Hub | +237699002002 | 4.0601   | 9.7112    | E2E address, Deido | true      | flat            | 1500              | false    |
+      | name           | phone         | latitude | longitude | addressText        | isStation | deliveryFeeType | deliveryFeeAmount |
+      | E2E Vendor Hub | +237699002002 | 4.0601   | 9.7112    | E2E address, Deido | true      | flat            | 1500              |
     Then the vendor update request succeeds
     And the user and vendor remain linked after update
     And the vendor is persisted with the following data
       | name           | phone         | latitude | longitude | addressText        | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
-      | E2E Vendor Hub | +237699002002 | 4.0601   | 9.7112    | E2E address, Deido | true      | flat            | 1500              | false    |
+      | E2E Vendor Hub | +237699002002 | 4.0601   | 9.7112    | E2E address, Deido | true      | flat            | 1500              | true     |
+    When I set that vendor's active status to 'false'
+    Then the vendor status request succeeds with status 204
+    And the vendor active status is false
+    When I set that vendor's active status to 'true'
+    Then the vendor status request succeeds with status 204
+    And the vendor active status is true
 
   Scenario: Invalid vendor data is rejected
     Given I am connected with the scopes 'admin'
@@ -32,6 +38,16 @@ Feature: Admin vendor management
       | name       | phone         | latitude | longitude | addressText | isStation | deliveryFeeType | deliveryFeeAmount | isActive |
       | Missing ID | +237699002003 | 4.0500   | 9.7000    | Address     | false     | flat            | 1000              | true     |
     Then the vendor request is rejected with status 404
+
+  Scenario: An admin cannot change the status of a missing vendor
+    Given I am connected with the scopes 'admin'
+    When I set a missing vendor's active status to 'true'
+    Then the vendor request is rejected with status 404
+
+  Scenario: A non-admin cannot change vendor status
+    Given I am connected with the scopes 'demo:create'
+    When I set a missing vendor's active status to 'true'
+    Then the vendor request is rejected with status 403
 
   Scenario: A non-admin cannot create a vendor
     Given I am connected with the scopes 'demo:create'

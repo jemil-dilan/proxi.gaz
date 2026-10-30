@@ -46,8 +46,7 @@ class UpdateVendorUseCaseTest {
             AddressText.from("Akwa"),
             false,
             DeliveryFeeType.from("flat"),
-            Money.fcfa(1500),
-            false));
+            Money.fcfa(1500)));
 
     var updatedCaptor = ArgumentCaptor.forClass(Vendor.class);
     verify(repository).update(updatedCaptor.capture());
@@ -55,7 +54,7 @@ class UpdateVendorUseCaseTest {
     assertThat(updated.getId()).isEqualTo(vendor.getId());
     assertThat(updated.getUserId()).isEqualTo(userId);
     assertThat(updated.getName()).isEqualTo(VendorName.from("After"));
-    assertThat(updated.isActive()).isFalse();
+    assertThat(updated.isActive()).isTrue();
   }
 
   @Test
@@ -74,8 +73,7 @@ class UpdateVendorUseCaseTest {
                         AddressText.from("Akwa"),
                         false,
                         DeliveryFeeType.from("flat"),
-                        Money.fcfa(1500),
-                        true)))
+                        Money.fcfa(1500))))
         .isInstanceOf(VendorNotFoundException.class);
     verify(repository, never()).update(any(Vendor.class));
   }

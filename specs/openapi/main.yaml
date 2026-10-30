@@ -66,6 +66,34 @@ paths:
           description: "Invalid vendor details"
         "404":
           description: "Vendor not found"
+  /admin/vendors/{vendorId}/status:
+    put:
+      tags:
+        - "Vendor"
+      summary: "Set vendor activation status"
+      operationId: "setVendorStatus"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "vendorId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VendorStatusUpdateDTO"
+      responses:
+        "204":
+          description: "Vendor activation status updated"
+        "400":
+          description: "Invalid vendor status"
+        "404":
+          description: "Vendor not found"
   /admin/auth/login:
     post:
       tags:
@@ -408,8 +436,6 @@ components:
         deliveryFeeAmount:
           type: "integer"
           format: "int32"
-        isActive:
-          type: "boolean"
     VendorOnboardingResponseDTO:
       type: "object"
       required:
@@ -422,3 +448,10 @@ components:
         sessionToken:
           type: "string"
           description: "One-time bearer credential; it is not returned again after onboarding."
+    VendorStatusUpdateDTO:
+      type: "object"
+      required:
+        - "isActive"
+      properties:
+        isActive:
+          type: "boolean"
