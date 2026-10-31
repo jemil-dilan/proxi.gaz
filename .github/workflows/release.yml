@@ -134,7 +134,7 @@ jobs:
       - name: Build and publish to GHCR
         run: ./gradlew jib -Pjib.to.image=ghcr.io/jemil-dilan/proxi.gaz -Pjib.to.tags=${{ needs.verify.outputs.version }},latest
 
-publish-release:
+  publish-release:
     name: Create annotated tag and GitHub Release
     needs: [verify, publish-image]
     runs-on: ubuntu-latest
