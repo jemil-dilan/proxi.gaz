@@ -4,6 +4,7 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
+import cm.jemil.proxi.gaz.application.views.VendorView.VendorView1;
 import cm.jemil.proxi.gaz.domain.demo.Demo;
 import cm.jemil.proxi.gaz.domain.demo.DemoDescription;
 import cm.jemil.proxi.gaz.domain.demo.DemoId;
@@ -148,5 +149,60 @@ interface JpaMapper {
 
   default Point toPoint(GeoPoint value) {
     return GEOMETRY_FACTORY.createPoint(new Coordinate(value.longitude(), value.latitude()));
+  }
+
+  default VendorView1 toView(VendorJpa entity) {
+    return new VendorView1() {
+      @Override
+      public VendorId getVendorId() {
+        return VendorId.from(entity.getId());
+      }
+
+      @Override
+      public UserId getUserId() {
+        return UserId.from(entity.getUserId());
+      }
+
+      @Override
+      public VendorName getName() {
+        return new VendorName(entity.getName());
+      }
+
+      @Override
+      public PhoneNumber getPhone() {
+        return new PhoneNumber(entity.getPhone());
+      }
+
+      @Override
+      public GeoPoint getLocation() {
+        Point location = entity.getLocation();
+        return location != null ? GeoPoint.of(location.getY(), location.getX()) : null;
+      }
+
+      @Override
+      public AddressText getAddressText() {
+        return AddressText.fromOptional(entity.getAddressText()).orElse(null);
+      }
+
+      @Override
+      public boolean getIsStation() {
+        return entity.isStation();
+      }
+
+      @Override
+      public DeliveryFeeType getDeliveryFeeType() {
+        return DeliveryFeeType.fromOptional(entity.getDeliveryFeeType()).orElse(null);
+      }
+
+      @Override
+      public Money getDeliveryFeeAmount() {
+        return Optional.ofNullable(entity.getDeliveryFeeAmount()).map(Money::fcfa).orElse(null);
+      }
+
+      @Override
+      public boolean getIsActive() {
+        return entity.isActive();
+      }
+    };
   }
 }

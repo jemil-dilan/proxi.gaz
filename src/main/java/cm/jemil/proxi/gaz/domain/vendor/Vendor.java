@@ -24,7 +24,7 @@ public class Vendor {
   private PhoneNumber phone;
   private GeoPoint location;
   private AddressText addressText;
-  private boolean station;
+  private boolean isStation;
   private @Nullable DeliveryFeeType deliveryFeeType;
   private @Nullable Money deliveryFeeAmount;
   private boolean active;
@@ -36,7 +36,7 @@ public class Vendor {
       PhoneNumber phone,
       GeoPoint location,
       AddressText addressText,
-      boolean station,
+      boolean isStation,
       @Nullable DeliveryFeeType deliveryFeeType,
       @Nullable Money deliveryFeeAmount,
       boolean active) {
@@ -46,7 +46,7 @@ public class Vendor {
     this.phone = phone;
     this.location = location;
     this.addressText = addressText;
-    this.station = station;
+    this.isStation = isStation;
     this.deliveryFeeType = deliveryFeeType;
     this.deliveryFeeAmount = deliveryFeeAmount;
     this.active = active;

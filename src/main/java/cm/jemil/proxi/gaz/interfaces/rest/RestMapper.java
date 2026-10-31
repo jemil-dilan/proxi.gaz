@@ -6,12 +6,14 @@ package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
+import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase.Command;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import cm.jemil.proxi.gaz.application.views.DemoView;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView2;
+import cm.jemil.proxi.gaz.application.views.VendorView;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.Money;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
@@ -24,7 +26,9 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoCreateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoUpdateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -137,4 +141,25 @@ interface RestMapper {
   @Mapping(target = "name", source = "dto.name")
   @Mapping(target = "description", source = "dto.description")
   Command toCommand(UUID demoId, DemoUpdateDTO dto);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "content", source = "vendors")
+  @Mapping(target = "page", source = "pageNumber")
+  @Mapping(target = "size", source = "pageSize")
+  @Mapping(target = "totalElements", source = "totalElements")
+  @Mapping(target = "totalPages", source = "totalPages")
+  VendorPaginationDTO fromDomain(ListVendorsUseCase.Response response);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "vendorId", source = "vendorId.value")
+  @Mapping(target = "addressText", source = "addressText.value")
+  @Mapping(target = "deliveryFeeAmount", source = "deliveryFeeAmount.amountFcfa")
+  @Mapping(target = "deliveryFeeType", source = "deliveryFeeType.value")
+  @Mapping(target = "isActive", source = "isActive")
+  @Mapping(target = "isStation", source = "isStation")
+  @Mapping(target = "latitude", source = "location.latitude")
+  @Mapping(target = "longitude", source = "location.longitude")
+  @Mapping(target = "phone", source = "phone.value")
+  @Mapping(target = "name", source = "name.value")
+  VendorDTO toDTO(VendorView.VendorView1 vendorView1);
 }

@@ -21,6 +21,7 @@ import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.DeleteDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetDemoByIdUseCase;
+import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase;
@@ -58,6 +59,11 @@ public class ProxiGazBeans {
   @Bean
   public SetVendorStatusUseCase setVendorStatusUseCase(VendorRepository vendorRepository) {
     return new SetVendorStatusUseCase(vendorRepository);
+  }
+
+  @Bean
+  public ListVendorsUseCase listVendorsUseCase(VendorRepository vendorRepository) {
+    return new ListVendorsUseCase(vendorRepository);
   }
 
   @Bean
