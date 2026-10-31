@@ -1,4 +1,4 @@
-name: Release to staging and publish
+name: Build, publish, and release
 
 on:
   workflow_dispatch:
@@ -144,60 +144,9 @@ jobs:
       - name: Build and publish with Jib to both registries
         run: ./gradlew jib -Pjib.to.image=${{ steps.image.outputs.dockerhub_image }} -Pjib.to.tags=${{ steps.image.outputs.version }},latest -Pjib.to.additionalImages=${{ steps.image.outputs.ghcr_image }}:${{ steps.image.outputs.version }},${{ steps.image.outputs.ghcr_image }}:latest
 
-  deploy-staging:
-    name: Deploy image digest to staging
-    needs: [verify, publish-image]
-    runs-on: ubuntu-latest
-    environment:
-      name: staging
-    permissions:
-      contents: read
-    steps:
-      - name: Check out verified release commit
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.sha }}
-
-      - name: Configure SSH
-        env:
-          STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
-          STAGING_KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
-        run: |
-          set -euo pipefail
-          test -n "$STAGING_SSH_PRIVATE_KEY"
-          test -n "$STAGING_KNOWN_HOSTS"
-          install -d -m 700 "$HOME/.ssh"
-          printf '%s\n' "$STAGING_SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
-          printf '%s\n' "$STAGING_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
-          chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
-
-      - name: Copy deployment files and deploy with Jib image
-        env:
-          STAGING_HOST: ${{ secrets.STAGING_HOST }}
-          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
-          VERSION: ${{ needs.publish-image.outputs.version }}
-        run: |
-          set -euo pipefail
-          test -n "$STAGING_HOST"
-          test -n "$STAGING_SSH_USER"
-          REMOTE="${STAGING_SSH_USER}@${STAGING_HOST}"
-          SSH_OPTIONS=(-i "$HOME/.ssh/id_ed25519" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
-          # Use Docker Hub image (same as GHCR, built by Jib)
-          IMAGE_REF="docker.io/jemildilan/proxi.gaz:${VERSION}"
-          ssh "${SSH_OPTIONS[@]}" "$REMOTE" 'mkdir -p /opt/proxi-gaz/staging'
-          scp "${SSH_OPTIONS[@]}" compose.staging.yaml scripts/deploy-staging.sh scripts/staging-smoke.sh \
-            "$REMOTE:/opt/proxi-gaz/staging/"
-          ssh "${SSH_OPTIONS[@]}" "$REMOTE" \
-            "chmod 750 /opt/proxi-gaz/staging/deploy-staging.sh /opt/proxi-gaz/staging/staging-smoke.sh && /opt/proxi-gaz/staging/deploy-staging.sh '${IMAGE_REF}'"
-
-      - name: Record deployed image
-        env:
-          VERSION: ${{ needs.publish-image.outputs.version }}
-        run: echo "Staging passed smoke checks for docker.io/jemildilan/proxi.gaz:${VERSION}" >> "$GITHUB_STEP_SUMMARY"
-
-  publish-release:
+publish-release:
     name: Create annotated tag and GitHub Release
-    needs: [verify, publish-image, deploy-staging]
+    needs: [verify, publish-image]
     runs-on: ubuntu-latest
     environment:
       name: release-approval
