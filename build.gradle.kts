@@ -9,7 +9,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.openapi.generator") version "7.20.0"
     id("com.diffplug.spotless") version "8.9.0"
-    id("com.google.cloud.tools.jib") version "3.4.0"
+    id("com.google.cloud.tools.jib") version "3.5.4"
 }
 
 group = "cm.jemil"
@@ -237,7 +237,7 @@ jib {
         image = "eclipse-temurin:25-jre"
     }
     to {
-        image = "docker.io/jemildilan/proxi.gaz"
+        image = "docker.io/mohamednfonka/proxi.gaz"
         tags = setOf(project.version.toString(), "latest")
     }
     container {
