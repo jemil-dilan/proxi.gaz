@@ -12,7 +12,7 @@ plugins {
 }
 
 group = "cm.jemil"
-version = "0.0.0-SNAPSHOT"
+version = providers.gradleProperty("appVersion").getOrElse("0.0.0-SNAPSHOT")
 
 java {
     toolchain {

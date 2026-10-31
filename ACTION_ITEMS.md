@@ -1,7 +1,7 @@
 # Action Items - ProxiGaz Backend Code Review
 
 **Source**: [`CODE_REVIEW.md`](CODE_REVIEW.md), current review (2026-10-29)  
-**Status (2026-10-31)**: PXG-013 and PXG-014 are merged to `main`. PXG-015 is implemented on `working/PXG-015`; code and test sources compile, but test suites have not been executed and the branch is pending merge.
+**Status (2026-10-31)**: PXG-013–015 are merged to `main`; user confirms CI is green. PXG-012C is implementing the missing Docker/GitHub staging release path.
 
 ---
 
@@ -18,7 +18,7 @@
 
 ### 🔴 Item #1: Complete Vendor Session Authentication
 
-**Problem**: Vendor onboarding creates a session token; vendors need to authenticate with it and administrators need to manage it. PXG-015 implements session authentication and management, pending merge.
+**Problem**: Vendor onboarding creates a session token; vendors need to authenticate with it and administrators need to manage it. PXG-015 implements session authentication and management and is merged to `main`.
 
 **Impact**: Vendors cannot authenticate or access vendor-specific endpoints.
 
@@ -35,9 +35,9 @@
 - [x] Admin rotation replaces the prior token; the previous token is invalidated
 - [x] Admin can revoke the active vendor token
 - [x] Vendor session endpoint requires a valid vendor bearer token
-- [ ] Unit, persistence, and E2E suites executed successfully
+- [x] Unit, persistence, and E2E suites executed successfully (CI green, user-confirmed)
 
-**Implementation status**: Acceptance criteria are implemented on `working/PXG-015`; source and test compilation succeeded. The test suites have not been run. Merge PXG-015 after review and the agreed verification gate.
+**Implementation status**: Acceptance criteria are implemented and merged to `main`; CI is green per user confirmation.
 
 **Effort**: 2-3 days  
 **Priority**: P0 - BLOCKER  
@@ -69,7 +69,7 @@ Keep the current fallback limited to isolated local development, or require a un
 
 ### 🟡 Item #3: Add Bean Validation
 
-**Status**: Implemented in PXG-015 (runtime provider and request bounds); test suites have not been executed.
+**Status**: Implemented in PXG-015 and merged to `main`; CI is green per user confirmation.
 
 **Problem**: Generated API interfaces already use `@Valid` and DTOs have `@NotNull` for required fields, but the build declared only `jakarta.validation-api` and no runtime validation provider. The OpenAPI schemas also lacked useful length/range constraints, so API-boundary enforcement was incomplete.
 
@@ -81,10 +81,10 @@ Keep the current fallback limited to isolated local development, or require a un
 - Generated API/DTO sources - Regenerate and confirm validation annotations are present
 
 **Acceptance Criteria**:
-- [ ] All DTO fields have appropriate validation annotations
-- [ ] Runtime rejects invalid request bodies with 400 responses
-- [ ] Validation errors return 400 with clear field-level messages
-- [ ] Existing tests updated to handle validation exceptions
+- [x] All DTO fields have appropriate validation annotations
+- [x] Runtime rejects invalid request bodies with 400 responses
+- [x] Validation errors return 400 with clear field-level messages
+- [x] Existing tests updated to handle validation exceptions (CI green, user-confirmed)
 
 **Effort**: 2-3 days  
 **Priority**: P1 - HIGH  
@@ -165,9 +165,9 @@ These items were **incorrectly flagged** and have been **VERIFIED as non-issues*
 ## Implementation Roadmap
 
 ### Sprint 1 follow-up
-- [ ] **P0 #1**: Review and merge PXG-015; execute the agreed test suites
+- [x] **P0 #1**: Complete vendor session authentication; PXG-015 is merged and CI is green
 - [ ] **P2 #2**: Confine local JWT secret fallback (1 hour)
-- [x] **P1 #3**: Add Bean Validation (implemented in PXG-015; suites not run)
+- [x] **P1 #3**: Add Bean Validation (implemented in PXG-015; CI green)
 
 ### Remaining review items
 - [ ] **P2 #4**: Add pagination to `GET /demo` (vendor listing pagination is complete)
@@ -200,4 +200,4 @@ For each action item:
 
 **Document Owner**: Backend Team Lead  
 **Last Updated**: 2026-10-31
-**Next Review**: After PXG-015 merge and verification
+**Next Review**: After the alpha staging deployment

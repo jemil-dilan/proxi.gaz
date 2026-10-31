@@ -1,0 +1,248 @@
+name: Release to staging and publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "SemVer without the leading v (for example 0.1.0-alpha.1)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify release commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: proxigaz
+          POSTGRES_PASSWORD: proxigaz
+          POSTGRES_DB: proxigaz
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U proxigaz"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=10
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      tag: ${{ steps.validate.outputs.tag }}
+    steps:
+      - name: Check out selected release commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Require main and validate release metadata
+        id: validate
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Dispatch this workflow from main." >&2
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^0\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]]; then
+            echo "Version must be pre-1.0 SemVer without a leading v." >&2
+            exit 1
+          fi
+          TAG="v${VERSION}"
+          NOTES="docs/releases/${TAG}.md"
+          if [[ ! -s "$NOTES" ]]; then
+            echo "Release notes are required at ${NOTES}." >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists." >&2
+            exit 1
+          else
+            lookup_status=$?
+            if [[ "$lookup_status" -ne 2 ]]; then
+              echo "Could not verify whether tag ${TAG} already exists." >&2
+              exit "$lookup_status"
+            fi
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Check formatting
+        run: ./gradlew spotlessJavaCheck --parallel
+
+      - name: Run unit tests
+        run: ./gradlew test --parallel
+
+      - name: Run data tests
+        run: ./gradlew dataTest
+
+      - name: Run end-to-end tests
+        run: ./gradlew e2eTest
+
+  publish-image:
+    name: Build and publish image
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Set lower-case GHCR image name
+        id: image
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: echo "name=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate image tags and labels
+        id: metadata
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=raw,value=${{ needs.verify.outputs.version }}
+            type=sha,format=long,prefix=sha-
+
+      - name: Build and publish multi-platform image
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: APP_VERSION=${{ needs.verify.outputs.version }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          cache-from: type=gha,scope=proxigaz-release
+          cache-to: type=gha,mode=max,scope=proxigaz-release
+          provenance: true
+          sbom: true
+
+  deploy-staging:
+    name: Deploy image digest to staging
+    needs: [verify, publish-image]
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    permissions:
+      contents: read
+    steps:
+      - name: Check out verified release commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Configure SSH
+        env:
+          STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          STAGING_KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$STAGING_SSH_PRIVATE_KEY"
+          test -n "$STAGING_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$STAGING_SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$STAGING_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
+
+      - name: Copy deployment files and deploy immutable image
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          IMAGE_NAME: ${{ needs.publish-image.outputs.image }}
+          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          test -n "$STAGING_HOST"
+          test -n "$STAGING_SSH_USER"
+          REMOTE="${STAGING_SSH_USER}@${STAGING_HOST}"
+          SSH_OPTIONS=(-i "$HOME/.ssh/id_ed25519" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+          IMAGE_REF="${IMAGE_NAME}@${IMAGE_DIGEST}"
+          ssh "${SSH_OPTIONS[@]}" "$REMOTE" 'mkdir -p /opt/proxi-gaz/staging'
+          scp "${SSH_OPTIONS[@]}" compose.staging.yaml scripts/deploy-staging.sh scripts/staging-smoke.sh \
+            "$REMOTE:/opt/proxi-gaz/staging/"
+          ssh "${SSH_OPTIONS[@]}" "$REMOTE" \
+            "chmod 750 /opt/proxi-gaz/staging/deploy-staging.sh /opt/proxi-gaz/staging/staging-smoke.sh && /opt/proxi-gaz/staging/deploy-staging.sh '${IMAGE_REF}'"
+
+      - name: Record deployed image digest
+        env:
+          IMAGE_NAME: ${{ needs.publish-image.outputs.image }}
+          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
+        run: echo "Staging passed smoke checks for \`${IMAGE_NAME}@${IMAGE_DIGEST}\`." >> "$GITHUB_STEP_SUMMARY"
+
+  publish-release:
+    name: Create annotated tag and GitHub Release
+    needs: [verify, publish-image, deploy-staging]
+    runs-on: ubuntu-latest
+    environment:
+      name: release-approval
+    permissions:
+      contents: write
+    steps:
+      - name: Check out verified release commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Create annotated tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.verify.outputs.version }}
+          IMAGE_NAME: ${{ needs.publish-image.outputs.image }}
+          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          TAG="v${VERSION}"
+          NOTES="docs/releases/${TAG}.md"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" "$GITHUB_SHA" -m "Release ${TAG}"
+          git push origin "$TAG"
+          {
+            cat "$NOTES"
+            printf '\n## Published container image\n\n`%s@%s`\n' "$IMAGE_NAME" "$IMAGE_DIGEST"
+          } > /tmp/release-notes.md
+          RELEASE_FLAGS=()
+          if [[ "$VERSION" == *-* ]]; then
+            RELEASE_FLAGS+=(--prerelease)
+          fi
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "$TAG" \
+            --notes-file /tmp/release-notes.md \
+            "${RELEASE_FLAGS[@]}"

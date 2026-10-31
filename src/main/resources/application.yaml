@@ -2,7 +2,7 @@
 spring:
   application:
     name: "proxi.gaz"
-    version: "0.0.0-SNAPSHOT"
+    version: "${APP_VERSION:0.0.0-SNAPSHOT}"
   profiles:
     default: "local"
   liquibase:
