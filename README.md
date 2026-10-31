@@ -8,7 +8,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
 | Sprint 0 — Foundations | Done (`PXG-001`–`PXG-011`) |
-| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`, `PXG-014`, and `PXG-015` are implemented on separate branches; tests not run; remaining catalog/geo work and release remain) |
+| Sprint 1 — Vendor & Catalog | In progress (`PXG-013` and `PXG-014` are merged to `main`; `PXG-015` is ready on `working/PXG-015`; remaining catalog/geo work and release remain) |
 | Sprints 2–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
@@ -19,9 +19,10 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - PostgreSQL **+ PostGIS** (Liquibase enables the extension; CI/tests use `postgis/postgis:17-3.5`).
 - Core domain tables migrated, including the shared `t_users` identity and role tables, vendor profiles with GIST-indexed locations, orders/offers, and related records.
 - The User aggregate owns account identity, roles, optional normalized email, and admin password hashes. Vendor is a separate aggregate linked one-to-one to User by `t_vendors.c_user_id`.
-- Admins can create and update vendors through `POST /admin/vendors` and `PUT /admin/vendors/{vendorId}`. Onboarding returns a one-time, cryptographically random vendor session token; only its SHA-256 hash is stored. Vendor locations persist as PostGIS geography points. Vendor session authentication, rotation, and revocation are not implemented yet, so the token cannot currently authorize vendor requests.
-- `working/PXG-013` moves activation changes to `PUT /admin/vendors/{vendorId}/status`, separate from profile updates. `working/PXG-014` adds paginated vendor listing at `GET /admin/vendors` with active-status and name filters. `working/PXG-015` adds vendor session lifecycle support. The branches are unmerged and their tests have not been run.
-- On `working/PXG-013`, vendor activation is a separate admin operation: `PUT /admin/vendors/{vendorId}/status` sets `isActive`; profile updates no longer change activation state. PXG-020 will apply the active filter to production nearby search.
+- Admins can create and update vendors through `POST /admin/vendors` and `PUT /admin/vendors/{vendorId}`. Onboarding returns a one-time, cryptographically random vendor session token; only its SHA-256 hash is stored. Vendor locations persist as PostGIS geography points.
+- Admins can activate vendors separately from profile updates through `PUT /admin/vendors/{vendorId}/status`. `GET /admin/vendors` supports pagination and active-status/name filters. These PXG-013 and PXG-014 changes are merged to `main`; nearby-search filtering remains PXG-020 work.
+- PXG-015 (pending merge) adds opaque vendor bearer-token validation through `GET /vendor/session` and admin rotation/revocation through `/admin/vendors/{vendorId}/session`. Sessions are long-lived until revoked or rotated; raw tokens are returned only once and only their hashes are stored.
+- `working/PXG-015` adds vendor session lifecycle support and is pending merge. Its source and test code compile; the test suites have not been run.
 - Domain VOs: order status state machine, Money (FCFA), GeoPoint, ConfirmationCode, TrackingToken, Availability.
 - Config profiles: `local` (default, development defaults allowed), `staging`, `production` (secrets required via env); see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).

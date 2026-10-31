@@ -14,6 +14,7 @@ import cm.jemil.proxi.gaz.application.outbound.ReferenceGenerator;
 import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorOnboardingRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
+import cm.jemil.proxi.gaz.application.outbound.VendorSessionRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorSessionTokenGenerator;
 import cm.jemil.proxi.gaz.application.outbound.VendorSessionTokenHasher;
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
@@ -23,9 +24,12 @@ import cm.jemil.proxi.gaz.application.usecase.GetAllDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetDemoByIdUseCase;
 import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
+import cm.jemil.proxi.gaz.application.usecase.RevokeVendorSessionUseCase;
+import cm.jemil.proxi.gaz.application.usecase.RotateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
+import cm.jemil.proxi.gaz.application.usecase.ValidateVendorSessionUseCase;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -64,6 +68,29 @@ public class ProxiGazBeans {
   @Bean
   public ListVendorsUseCase listVendorsUseCase(VendorRepository vendorRepository) {
     return new ListVendorsUseCase(vendorRepository);
+  }
+
+  @Bean
+  public ValidateVendorSessionUseCase validateVendorSessionUseCase(
+      VendorSessionRepository repository, VendorSessionTokenHasher tokenHasher) {
+    return new ValidateVendorSessionUseCase(repository, tokenHasher);
+  }
+
+  @Bean
+  public RotateVendorSessionUseCase rotateVendorSessionUseCase(
+      VendorRepository vendorRepository,
+      VendorSessionRepository sessionRepository,
+      VendorSessionTokenGenerator tokenGenerator,
+      VendorSessionTokenHasher tokenHasher,
+      Clock clock) {
+    return new RotateVendorSessionUseCase(
+        vendorRepository, sessionRepository, tokenGenerator, tokenHasher, clock);
+  }
+
+  @Bean
+  public RevokeVendorSessionUseCase revokeVendorSessionUseCase(
+      VendorRepository vendorRepository, VendorSessionRepository sessionRepository) {
+    return new RevokeVendorSessionUseCase(vendorRepository, sessionRepository);
   }
 
   @Bean

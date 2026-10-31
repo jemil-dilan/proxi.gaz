@@ -62,10 +62,11 @@ class JpaVendorRepository implements VendorRepository {
   public void update(Vendor vendor) {
     vendorSpringRepository
         .findAggregateById(vendor.id())
-        .ifPresent(
+        .map(
             vendorJpa -> {
               jpaMapper.fromDomain(vendor, vendorJpa);
-              vendorSpringRepository.save(vendorJpa);
-            });
+              return vendorSpringRepository.save(vendorJpa);
+            })
+        .orElseThrow(VendorNotFoundException::new);
   }
 }

@@ -10,6 +10,7 @@ import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
 import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorOnboardingRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
+import cm.jemil.proxi.gaz.application.outbound.VendorSessionRepository;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
@@ -47,6 +48,12 @@ public class PersistenceBeans {
       JpaMapper jpaMapper) {
     return new JpaVendorOnboardingRepository(
         userSpringRepository, vendorSpringRepository, vendorSessionSpringRepository, jpaMapper);
+  }
+
+  @Bean
+  VendorSessionRepository vendorSessionRepository(
+      VendorSessionSpringRepository vendorSessionSpringRepository, JpaMapper jpaMapper) {
+    return new JpaVendorSessionRepository(vendorSessionSpringRepository, jpaMapper);
   }
 
   @Bean

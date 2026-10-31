@@ -6,19 +6,25 @@ package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.RevokeVendorSessionUseCase;
+import cm.jemil.proxi.gaz.application.usecase.RotateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
+import cm.jemil.proxi.gaz.config.VendorPrincipal;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.VendorApi;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorSessionIdentityDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorSessionTokenDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorStatusUpdateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,6 +38,8 @@ class VendorController implements VendorApi {
   private final UpdateVendorUseCase updateVendorUseCase;
   private final SetVendorStatusUseCase setVendorStatusUseCase;
   private final ListVendorsUseCase listVendorsUseCase;
+  private final RotateVendorSessionUseCase rotateVendorSessionUseCase;
+  private final RevokeVendorSessionUseCase revokeVendorSessionUseCase;
 
   @Override
   public ResponseEntity<VendorOnboardingResponseDTO> createVendor(CreateVendorDTO request) {
@@ -61,5 +69,31 @@ class VendorController implements VendorApi {
   public ResponseEntity<Void> setVendorStatus(UUID vendorId, VendorStatusUpdateDTO request) {
     setVendorStatusUseCase.execute(VendorId.from(vendorId), request.getIsActive());
     return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<VendorSessionIdentityDTO> getVendorSession() {
+    var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    var vendorId =
+        authentication != null && authentication.getPrincipal() instanceof VendorPrincipal(UUID id)
+            ? id
+            : null;
+
+    return ResponseEntity.ok(new VendorSessionIdentityDTO(vendorId));
+  }
+
+  @Override
+  public ResponseEntity<Void> revokeVendorSession(UUID vendorId) {
+    revokeVendorSessionUseCase.execute(vendorId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<VendorSessionTokenDTO> rotateVendorSession(UUID vendorId) {
+    var token = rotateVendorSessionUseCase.execute(vendorId);
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.noStore())
+        .body(new VendorSessionTokenDTO(token));
   }
 }

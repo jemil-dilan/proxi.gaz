@@ -12,7 +12,7 @@ public final class Constants {
   public static final String PATH_ADMIN_LOGIN = "/admin/auth/login";
   public static final String PATH_ADMIN_AUTH = "/admin/auth/**";
   public static final String PATH_ADMIN_VENDORS = "/admin/vendors/**";
-  public static final String PATH_ADMIN_PROFILE = "/admin/auth/me";
+  public static final String PATH_VENDOR_SESSION = "/vendor/**";
   public static final String FIELDS_TO_EXTRACT_CODE = "fieldsToExtractCode";
   public static final String FIELDS_TO_EXTRACT_1 = "fieldsToExtract_1";
   public static final String FIELDS_TO_EXTRACT_2 = "fieldsToExtract_2";

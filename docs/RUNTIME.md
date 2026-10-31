@@ -74,6 +74,8 @@ The `local` Liquibase context seeds a development admin and five fictional centr
 
 Admin bootstrap is opt-in and idempotent: enable it with credentials supplied through the process environment, start the app once, then disable it and remove the credentials from the environment. No environment-provided default admin credentials are configured.
 
+Vendor authentication uses the opaque token returned once during onboarding (or session rotation). Send it as `Authorization: Bearer <token>` to `/vendor/session`; tokens are stored as SHA-256 hashes and remain active until an administrator rotates or revokes the vendor's session with `POST` or `DELETE /admin/vendors/{vendorId}/session`. Admin operations continue to use the admin JWT.
+
 ## Related docs
 
 - Sprint plan: `docs/ProxiGaz_Sprint_Plan.md`
