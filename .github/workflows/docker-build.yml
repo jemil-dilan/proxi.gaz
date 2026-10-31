@@ -65,7 +65,7 @@ jobs:
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push to Docker Hub
-        run: ./gradlew jib -Pjib.to.image=docker.io/jemildilan/proxi.gaz -Pjib.to.tags=${{ steps.tag.outputs.tag }}
+        run: ./gradlew jib -Pjib.to.image=docker.io/mohamednfonka/proxi.gaz -Pjib.to.tags=${{ steps.tag.outputs.tag }}
 
       - name: Build and push to GHCR
         run: ./gradlew jib -Pjib.to.image=ghcr.io/jemil-dilan/proxi.gaz -Pjib.to.tags=${{ steps.tag.outputs.tag }}
@@ -73,5 +73,5 @@ jobs:
       - name: Output image info
         run: |
           echo "Built and pushed images:"
-          echo "  Docker Hub: docker.io/jemildilan/proxi.gaz:${{ steps.tag.outputs.tag }}"
+          echo "  Docker Hub: docker.io/mohamednfonka/proxi.gaz:${{ steps.tag.outputs.tag }}"
           echo "  GHCR: ghcr.io/jemil-dilan/proxi.gaz:${{ steps.tag.outputs.tag }}"
