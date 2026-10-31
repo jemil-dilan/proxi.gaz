@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
+import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import cm.jemil.proxi.gaz.domain.shared.AddressText;
 import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
@@ -27,8 +28,10 @@ class VendorControllerTest {
   private final RestMapper restMapper = mock(RestMapper.class);
   private final CreateVendorUseCase createVendorUseCase = mock(CreateVendorUseCase.class);
   private final UpdateVendorUseCase updateVendorUseCase = mock(UpdateVendorUseCase.class);
+  private final SetVendorStatusUseCase setVendorStatusUseCase = mock(SetVendorStatusUseCase.class);
   private final VendorController controller =
-      new VendorController(restMapper, createVendorUseCase, updateVendorUseCase);
+      new VendorController(
+          restMapper, createVendorUseCase, updateVendorUseCase, setVendorStatusUseCase);
 
   @Test
   void createVendor_shouldReturnOneTimeSessionTokenWithoutCaching() {

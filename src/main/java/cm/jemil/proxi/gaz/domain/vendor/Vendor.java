@@ -103,6 +103,14 @@ public class Vendor {
     return id.value();
   }
 
+  public void activate() {
+    active = true;
+  }
+
+  public void deactivate() {
+    active = false;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) return false;

@@ -5,10 +5,13 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
+import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
+import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.VendorApi;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorStatusUpdateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ class VendorController implements VendorApi {
   private final RestMapper restMapper;
   private final CreateVendorUseCase createVendorUseCase;
   private final UpdateVendorUseCase updateVendorUseCase;
+  private final SetVendorStatusUseCase setVendorStatusUseCase;
 
   @Override
   public ResponseEntity<VendorOnboardingResponseDTO> createVendor(CreateVendorDTO request) {
@@ -35,6 +39,12 @@ class VendorController implements VendorApi {
   @Override
   public ResponseEntity<Void> updateVendor(UUID vendorId, VendorUpdateDTO request) {
     updateVendorUseCase.execute(restMapper.toCommand(vendorId, request));
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public ResponseEntity<Void> setVendorStatus(UUID vendorId, VendorStatusUpdateDTO request) {
+    setVendorStatusUseCase.execute(VendorId.from(vendorId), request.getIsActive());
     return ResponseEntity.noContent().build();
   }
 }

@@ -22,6 +22,7 @@ import cm.jemil.proxi.gaz.application.usecase.DeleteDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetDemoByIdUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
+import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import java.time.Duration;
@@ -52,6 +53,11 @@ public class ProxiGazBeans {
   @Bean
   public UpdateVendorUseCase updateVendorUseCase(VendorRepository vendorRepository) {
     return new UpdateVendorUseCase(vendorRepository);
+  }
+
+  @Bean
+  public SetVendorStatusUseCase setVendorStatusUseCase(VendorRepository vendorRepository) {
+    return new SetVendorStatusUseCase(vendorRepository);
   }
 
   @Bean
