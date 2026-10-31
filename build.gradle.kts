@@ -9,6 +9,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.openapi.generator") version "7.20.0"
     id("com.diffplug.spotless") version "8.9.0"
+    id("com.google.cloud.tools.jib") version "3.4.0"
 }
 
 group = "cm.jemil"
@@ -222,6 +223,37 @@ tasks.register("e2eTest") {
                     "cm.jemil.proxi.gaz.e2e.steps",
                     "src/test/resources/e2e/features",
                 )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Jib configuration for container builds (Docker Hub + GHCR)
+// ---------------------------------------------------------------------------
+jib {
+    from {
+        image = "eclipse-temurin:25-jre"
+    }
+    to {
+        // Primary: Docker Hub for frontend testing
+        image = "docker.io/jemildilan/proxi.gaz"
+        tags = listOf(project.version)
+        // Secondary: GHCR for official releases
+        additionalImages = listOf(
+            "ghcr.io/jemil-dilan/proxi.gaz:${project.version}"
+        )
+    }
+    container {
+        jvmFlags = listOf("-XX:MaxRAMPercentage=75.0")
+        user = "10001:10001"
+        creationTime = "USE_CURRENT_TIMESTAMP"
+        ports = listOf("8080")
+        healthCheck {
+            test = listOf("CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/actuator/health || exit 1")
+            interval = "30s"
+            timeout = "5s"
+            startPeriod = "120s"
+            retries = 5
         }
     }
 }

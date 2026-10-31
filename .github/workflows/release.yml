@@ -99,7 +99,7 @@ jobs:
         run: ./gradlew e2eTest
 
   publish-image:
-    name: Build and publish image
+    name: Build and publish image with Jib
     needs: verify
     runs-on: ubuntu-latest
     permissions:
@@ -107,50 +107,42 @@ jobs:
       packages: write
     outputs:
       image: ${{ steps.image.outputs.name }}
-      digest: ${{ steps.build.outputs.digest }}
+      version: ${{ needs.verify.outputs.version }}
     steps:
-      - name: Set lower-case GHCR image name
+      - name: Set image names
         id: image
         env:
           REPOSITORY: ${{ github.repository }}
-        run: echo "name=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          echo "dockerhub_image=docker.io/jemildilan/proxi.gaz" >> "$GITHUB_OUTPUT"
+          echo "ghcr_image=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+      - name: Set up Java 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
 
-      - name: Log in to GitHub Container Registry
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate image tags and labels
-        id: metadata
-        uses: docker/metadata-action@v6
-        with:
-          images: ${{ steps.image.outputs.name }}
-          tags: |
-            type=raw,value=${{ needs.verify.outputs.version }}
-            type=sha,format=long,prefix=sha-
-
-      - name: Build and publish multi-platform image
-        id: build
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          build-args: APP_VERSION=${{ needs.verify.outputs.version }}
-          tags: ${{ steps.metadata.outputs.tags }}
-          labels: ${{ steps.metadata.outputs.labels }}
-          cache-from: type=gha,scope=proxigaz-release
-          cache-to: type=gha,mode=max,scope=proxigaz-release
-          provenance: true
-          sbom: true
+      - name: Build and publish with Jib to both registries
+        run: ./gradlew jib -Pjib.to.image=${{ steps.image.outputs.dockerhub_image }} -Pjib.to.tags=${{ steps.image.outputs.version }},latest -Pjib.to.additionalImages=${{ steps.image.outputs.ghcr_image }}:${{ steps.image.outputs.version }},${{ steps.image.outputs.ghcr_image }}:latest
 
   deploy-staging:
     name: Deploy image digest to staging
@@ -179,30 +171,29 @@ jobs:
           printf '%s\n' "$STAGING_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
 
-      - name: Copy deployment files and deploy immutable image
+      - name: Copy deployment files and deploy with Jib image
         env:
           STAGING_HOST: ${{ secrets.STAGING_HOST }}
           STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
-          IMAGE_NAME: ${{ needs.publish-image.outputs.image }}
-          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
+          VERSION: ${{ needs.publish-image.outputs.version }}
         run: |
           set -euo pipefail
           test -n "$STAGING_HOST"
           test -n "$STAGING_SSH_USER"
           REMOTE="${STAGING_SSH_USER}@${STAGING_HOST}"
           SSH_OPTIONS=(-i "$HOME/.ssh/id_ed25519" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
-          IMAGE_REF="${IMAGE_NAME}@${IMAGE_DIGEST}"
+          # Use Docker Hub image (same as GHCR, built by Jib)
+          IMAGE_REF="docker.io/jemildilan/proxi.gaz:${VERSION}"
           ssh "${SSH_OPTIONS[@]}" "$REMOTE" 'mkdir -p /opt/proxi-gaz/staging'
           scp "${SSH_OPTIONS[@]}" compose.staging.yaml scripts/deploy-staging.sh scripts/staging-smoke.sh \
             "$REMOTE:/opt/proxi-gaz/staging/"
           ssh "${SSH_OPTIONS[@]}" "$REMOTE" \
             "chmod 750 /opt/proxi-gaz/staging/deploy-staging.sh /opt/proxi-gaz/staging/staging-smoke.sh && /opt/proxi-gaz/staging/deploy-staging.sh '${IMAGE_REF}'"
 
-      - name: Record deployed image digest
+      - name: Record deployed image
         env:
-          IMAGE_NAME: ${{ needs.publish-image.outputs.image }}
-          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
-        run: echo "Staging passed smoke checks for \`${IMAGE_NAME}@${IMAGE_DIGEST}\`." >> "$GITHUB_STEP_SUMMARY"
+          VERSION: ${{ needs.publish-image.outputs.version }}
+        run: echo "Staging passed smoke checks for docker.io/jemildilan/proxi.gaz:${VERSION}" >> "$GITHUB_STEP_SUMMARY"
 
   publish-release:
     name: Create annotated tag and GitHub Release
@@ -223,8 +214,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.verify.outputs.version }}
-          IMAGE_NAME: ${{ needs.publish-image.outputs.image }}
-          IMAGE_DIGEST: ${{ needs.publish-image.outputs.digest }}
         run: |
           set -euo pipefail
           TAG="v${VERSION}"
@@ -235,7 +224,9 @@ jobs:
           git push origin "$TAG"
           {
             cat "$NOTES"
-            printf '\n## Published container image\n\n`%s@%s`\n' "$IMAGE_NAME" "$IMAGE_DIGEST"
+            printf '\n## Published container images\n\n'
+            printf 'Docker Hub: `docker.io/jemildilan/proxi.gaz:%s`\n' "${VERSION}"
+            printf 'GHCR: `ghcr.io/jemil-dilan/proxi.gaz:%s`\n' "${VERSION}"
           } > /tmp/release-notes.md
           RELEASE_FLAGS=()
           if [[ "$VERSION" == *-* ]]; then
