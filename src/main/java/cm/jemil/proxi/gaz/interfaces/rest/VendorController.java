@@ -73,9 +73,14 @@ class VendorController implements VendorApi {
 
   @Override
   public ResponseEntity<VendorSessionIdentityDTO> getVendorSession() {
-    var principal =
-        (VendorPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    return ResponseEntity.ok(new VendorSessionIdentityDTO(principal.vendorId()));
+    var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    var vendorId =
+        authentication != null && authentication.getPrincipal() instanceof VendorPrincipal(UUID id)
+            ? id
+            : null;
+
+    return ResponseEntity.ok(new VendorSessionIdentityDTO(vendorId));
   }
 
   @Override

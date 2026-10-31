@@ -1,7 +1,7 @@
 # Action Items - ProxiGaz Backend Code Review
 
 **Source**: [`CODE_REVIEW.md`](CODE_REVIEW.md), current review (2026-10-29)  
-**Status**: PXG-015 implementation is on `working/PXG-015`; code and test sources compile, but test suites have not been executed and the branch is not merged.
+**Status (2026-10-31)**: PXG-013 and PXG-014 are merged to `main`. PXG-015 is implemented on `working/PXG-015`; code and test sources compile, but test suites have not been executed and the branch is pending merge.
 
 ---
 
@@ -18,7 +18,7 @@
 
 ### 🔴 Item #1: Complete Vendor Session Authentication
 
-**Problem**: On main, vendor onboarding creates a session token but there is no way for vendors to use it. PXG-015 adds session authentication and management on its task branch.
+**Problem**: Vendor onboarding creates a session token; vendors need to authenticate with it and administrators need to manage it. PXG-015 implements session authentication and management, pending merge.
 
 **Impact**: Vendors cannot authenticate or access vendor-specific endpoints.
 
@@ -36,6 +36,8 @@
 - [x] Admin can revoke the active vendor token
 - [x] Vendor session endpoint requires a valid vendor bearer token
 - [ ] Unit, persistence, and E2E suites executed successfully
+
+**Implementation status**: Acceptance criteria are implemented on `working/PXG-015`; source and test compilation succeeded. The test suites have not been run. Merge PXG-015 after review and the agreed verification gate.
 
 **Effort**: 2-3 days  
 **Priority**: P0 - BLOCKER  
@@ -67,7 +69,9 @@ Keep the current fallback limited to isolated local development, or require a un
 
 ### 🟡 Item #3: Add Bean Validation
 
-**Problem**: Generated API interfaces already use `@Valid` and DTOs have `@NotNull` for required fields, but the build declares only `jakarta.validation-api` and no runtime validation provider. The OpenAPI schemas also lack useful length/range constraints, so API-boundary enforcement is incomplete.
+**Status**: Implemented in PXG-015 (runtime provider and request bounds); test suites have not been executed.
+
+**Problem**: Generated API interfaces already use `@Valid` and DTOs have `@NotNull` for required fields, but the build declared only `jakarta.validation-api` and no runtime validation provider. The OpenAPI schemas also lacked useful length/range constraints, so API-boundary enforcement was incomplete.
 
 **Impact**: Invalid requests may reach domain layer with unclear error messages.
 
@@ -92,7 +96,9 @@ Keep the current fallback limited to isolated local development, or require a un
 
 ### 🟢 Item #4: Add Pagination to List Endpoints
 
-**Problem**: `GET /demo` and other list endpoints return all records without pagination.
+**Status**: Vendor listing pagination was implemented in PXG-014 and merged to `main`. `GET /demo` remains unpaginated.
+
+**Problem**: `GET /demo` and other unpaged list endpoints return all records.
 
 **Impact**: Performance and memory issues as data grows.
 
@@ -158,13 +164,13 @@ These items were **incorrectly flagged** and have been **VERIFIED as non-issues*
 
 ## Implementation Roadmap
 
-### Week 1 (Sprint Completion)
-- [ ] **P0 #1**: Complete vendor session authentication (2-3 days)
+### Sprint 1 follow-up
+- [ ] **P0 #1**: Review and merge PXG-015; execute the agreed test suites
 - [ ] **P2 #2**: Confine local JWT secret fallback (1 hour)
-- [ ] **P1 #3**: Add Bean Validation (2-3 days)
+- [x] **P1 #3**: Add Bean Validation (implemented in PXG-015; suites not run)
 
-### Week 2 (Next Sprint)
-- [ ] **P2 #4**: Add pagination (1-2 days)
+### Remaining review items
+- [ ] **P2 #4**: Add pagination to `GET /demo` (vendor listing pagination is complete)
 - [ ] **P2 #5**: Improve email validation (1-2 hours)
 
 ---
@@ -193,5 +199,5 @@ For each action item:
 ---
 
 **Document Owner**: Backend Team Lead  
-**Last Updated**: 2026-10-29  
-**Next Review**: After P0 items completed
+**Last Updated**: 2026-10-31
+**Next Review**: After PXG-015 merge and verification
