@@ -1,0 +1,18 @@
+services:
+  app:
+    image: ${IMAGE_REF:?Set IMAGE_REF to a versioned GHCR image digest}
+    env_file:
+      - ${STAGING_ENV_FILE:-/etc/proxi-gaz/staging.env}
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777,uid=10001,gid=10001
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

@@ -9,10 +9,11 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.openapi.generator") version "7.20.0"
     id("com.diffplug.spotless") version "8.9.0"
+    id("com.google.cloud.tools.jib") version "3.5.4"
 }
 
 group = "cm.jemil"
-version = "0.0.0-SNAPSHOT"
+version = providers.gradleProperty("appVersion").getOrElse("0.0.0-SNAPSHOT")
 
 java {
     toolchain {
@@ -223,5 +224,26 @@ tasks.register("e2eTest") {
                     "src/test/resources/e2e/features",
                 )
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Jib configuration for container builds (Docker Hub)
+// Note: Health check is defined in docker-compose files, not in the image
+// To push to GHCR, run: ./gradlew jib -Djib.to.image=ghcr.io/jemil-dilan/proxi.gaz
+// ---------------------------------------------------------------------------
+jib {
+    from {
+        image = "eclipse-temurin:25-jre"
+    }
+    to {
+        image = "docker.io/mohamednfonka/proxi.gaz"
+        tags = setOf(project.version.toString(), "latest")
+    }
+    container {
+        jvmFlags = listOf("-XX:MaxRAMPercentage=75.0")
+        user = "10001:10001"
+        creationTime = "USE_CURRENT_TIMESTAMP"
+        ports = listOf("8080")
     }
 }

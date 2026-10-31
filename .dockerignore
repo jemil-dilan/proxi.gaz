@@ -1,0 +1,14 @@
+.git
+.gradle
+build
+**/build
+.idea
+.vscode
+.env
+.env.*
+*.pem
+*.p12
+*.jks
+src/test
+docs
+*.md
