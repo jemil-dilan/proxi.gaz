@@ -1,4 +1,4 @@
-name: Build and push Docker image to Docker Hub
+name: Build and push Docker images to Docker Hub and GHCR
 
 on:
   push:
@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   build-and-push:
-    name: Build with Jib and push to Docker Hub
+    name: Build with Jib and push to both registries
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -64,8 +64,11 @@ jobs:
           fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
-      - name: Build and push with Jib
-        run: ./gradlew jib -Pjib.to.image=docker.io/jemildilan/proxi.gaz -Pjib.to.tags=${{ steps.tag.outputs.tag }} -Pjib.to.additionalImages=ghcr.io/jemil-dilan/proxi.gaz:${{ steps.tag.outputs.tag }}
+      - name: Build and push to Docker Hub
+        run: ./gradlew jib -Pjib.to.image=docker.io/jemildilan/proxi.gaz -Pjib.to.tags=${{ steps.tag.outputs.tag }}
+
+      - name: Build and push to GHCR
+        run: ./gradlew jib -Pjib.to.image=ghcr.io/jemil-dilan/proxi.gaz -Pjib.to.tags=${{ steps.tag.outputs.tag }}
 
       - name: Output image info
         run: |

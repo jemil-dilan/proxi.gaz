@@ -228,32 +228,22 @@ tasks.register("e2eTest") {
 }
 
 // ---------------------------------------------------------------------------
-// Jib configuration for container builds (Docker Hub + GHCR)
+// Jib configuration for container builds (Docker Hub)
+// Note: Health check is defined in docker-compose files, not in the image
+// To push to GHCR, run: ./gradlew jib -Djib.to.image=ghcr.io/jemil-dilan/proxi.gaz
 // ---------------------------------------------------------------------------
 jib {
     from {
         image = "eclipse-temurin:25-jre"
     }
     to {
-        // Primary: Docker Hub for frontend testing
         image = "docker.io/jemildilan/proxi.gaz"
-        tags = listOf(project.version)
-        // Secondary: GHCR for official releases
-        additionalImages = listOf(
-            "ghcr.io/jemil-dilan/proxi.gaz:${project.version}"
-        )
+        tags = setOf(project.version.toString(), "latest")
     }
     container {
         jvmFlags = listOf("-XX:MaxRAMPercentage=75.0")
         user = "10001:10001"
         creationTime = "USE_CURRENT_TIMESTAMP"
         ports = listOf("8080")
-        healthCheck {
-            test = listOf("CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/actuator/health || exit 1")
-            interval = "30s"
-            timeout = "5s"
-            startPeriod = "120s"
-            retries = 5
-        }
     }
 }
