@@ -129,7 +129,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish to Docker Hub
-        run: ./gradlew jib -Pjib.to.image=docker.io/jemildilan/proxi.gaz -Pjib.to.tags=${{ needs.verify.outputs.version }},latest
+        run: ./gradlew jib -Pjib.to.image=docker.io/mohamednfonka/proxi.gaz -Pjib.to.tags=${{ needs.verify.outputs.version }},latest
 
       - name: Build and publish to GHCR
         run: ./gradlew jib -Pjib.to.image=ghcr.io/jemil-dilan/proxi.gaz -Pjib.to.tags=${{ needs.verify.outputs.version }},latest
@@ -164,7 +164,7 @@ jobs:
           {
             cat "$NOTES"
             printf '\n## Published container images\n\n'
-            printf 'Docker Hub: `docker.io/jemildilan/proxi.gaz:%s`\n' "${VERSION}"
+            printf 'Docker Hub: `docker.io/mohamednfonka/proxi.gaz:%s`\n' "${VERSION}"
             printf 'GHCR: `ghcr.io/jemil-dilan/proxi.gaz:%s`\n' "${VERSION}"
           } > /tmp/release-notes.md
           RELEASE_FLAGS=()
