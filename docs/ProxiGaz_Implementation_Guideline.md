@@ -140,6 +140,24 @@ These rules come from the final specification (Cadrage v1.5 + MVP Spec v1.2). An
 8. **Vendor auth in pilot**: long-lived sessions created manually by Admin (no magic-link dependency on a messaging channel).
 9. **Distance / proximity** queries must use PostGIS (`ST_DWithin`, `ST_Distance`). Ranking is strictly local.
 
+---
+
+## Demo Slice as Architecture Reference
+
+The Demo vertical slice (`domain/demo/`, `interfaces/rest/DemoController.java`, `application/usecase/*Demo*.java`, `infrastructure/persistence/*Demo*.java`, and related tests) is **intentionally preserved** as a living reference implementation. It demonstrates:
+
+- Hexagonal architecture patterns (domain → application → infrastructure → interfaces)
+- Port/adapter usage (repositories, domain event publisher, reference generator)
+- OpenAPI contract-first approach with generated DTOs and APIs
+- Liquibase migrations and JPA mapping
+- REST controller wiring and validation
+- Test patterns (unit tests, data/Testcontainers tests, E2E/Cucumber tests)
+- Application event publishing and domain event handling
+
+**Use Demo as a template and pathway** when implementing new aggregates and use cases. It provides a concrete, working example of all architectural layers that AI agents and developers can follow. Do not remove it unless explicitly directed by the project owner.
+
+---
+
 ## Domain Modeling Rules
 
 1. **Identify aggregate roots before implementing a use case.** State each aggregate's identity, invariants, lifecycle, and transaction boundary. Repository ports should load and persist aggregate roots, not expose persistence rows as domain objects.
