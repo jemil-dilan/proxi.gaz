@@ -1,28 +1,29 @@
-name: Build and push Docker images to Docker Hub and GHCR
+
+name: Build and publish Docker images
 
 on:
   push:
     branches:
       - main
-      - working/*
-    tags:
-      - v*
+      - working/**
   pull_request:
     branches:
       - main
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: docker-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-and-push:
-    name: Build with Jib and push to both registries
+  validate:
+    name: Validate pull request
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -36,42 +37,138 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Build container image archive
+        run: |
+          ./gradlew --no-daemon jibBuildTar \
+            -PappVersion=0.0.0-SNAPSHOT \
+            --console=plain
+
+  publish:
+    name: Build and publish development images
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Determine image tags
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SHORT_SHA="${GITHUB_SHA::12}"
+
+          if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+            BRANCH_TAG="main"
+          else
+            BRANCH_SLUG="$(
+              printf '%s' "$GITHUB_REF_NAME" |
+              tr '[:upper:]' '[:lower:]' |
+              sed -E 's/[^a-z0-9_.-]+/-/g'
+            )"
+
+            BRANCH_TAG="branch-${BRANCH_SLUG:0:100}"
+          fi
+
+          TAGS="${BRANCH_TAG},sha-${SHORT_SHA}"
+
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
+          echo "Image tags: ${TAGS}"
+
       - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GHCR
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine image tag
-        id: tag
+      - name: Build and publish to Docker Hub
+        env:
+          IMAGE: docker.io/mohamednfonka/proxi.gaz
+          TAGS: ${{ steps.metadata.outputs.tags }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            # For tags: v0.1.0 -> 0.1.0
-            TAG=${GITHUB_REF#refs/tags/v}
-          elif [[ "$GITHUB_REF" == refs/heads/main ]]; then
-            # For main branch: use latest
-            TAG="latest"
-          else
-            # For feature branches: use branch name sanitized
-            TAG=$(echo "${GITHUB_REF#refs/heads/}" | tr '/' '-' | tr '.' '-' | tr '[:upper:]' '[:lower:]')
-          fi
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
 
-      - name: Build and push to Docker Hub
-        run: ./gradlew jib -Pjib.to.image=docker.io/mohamednfonka/proxi.gaz -Pjib.to.tags=${{ steps.tag.outputs.tag }}
+          ./gradlew --no-daemon jib \
+            -PappVersion=0.0.0-SNAPSHOT \
+            -Djib.to.image="$IMAGE" \
+            -Djib.to.tags="$TAGS" \
+            --console=plain
 
-      - name: Build and push to GHCR
-        run: ./gradlew jib -Pjib.to.image=ghcr.io/jemil-dilan/proxi.gaz -Pjib.to.tags=${{ steps.tag.outputs.tag }}
-
-      - name: Output image info
+      - name: Verify Docker Hub images
+        env:
+          IMAGE: docker.io/mohamednfonka/proxi.gaz
+          TAGS: ${{ steps.metadata.outputs.tags }}
         run: |
-          echo "Built and pushed images:"
-          echo "  Docker Hub: docker.io/mohamednfonka/proxi.gaz:${{ steps.tag.outputs.tag }}"
-          echo "  GHCR: ghcr.io/jemil-dilan/proxi.gaz:${{ steps.tag.outputs.tag }}"
+          set -euo pipefail
+
+          IFS=',' read -ra IMAGE_TAGS <<< "$TAGS"
+
+          for tag in "${IMAGE_TAGS[@]}"; do
+            echo "Verifying $IMAGE:$tag"
+            docker pull "$IMAGE:$tag"
+          done
+
+      - name: Build and publish to GHCR
+        env:
+          IMAGE: ghcr.io/jemil-dilan/proxi.gaz
+          TAGS: ${{ steps.metadata.outputs.tags }}
+        run: |
+          set -euo pipefail
+
+          ./gradlew --no-daemon jib \
+            -PappVersion=0.0.0-SNAPSHOT \
+            -Djib.to.image="$IMAGE" \
+            -Djib.to.tags="$TAGS" \
+            --console=plain
+
+      - name: Verify GHCR images
+        env:
+          IMAGE: ghcr.io/jemil-dilan/proxi.gaz
+          TAGS: ${{ steps.metadata.outputs.tags }}
+        run: |
+          set -euo pipefail
+
+          IFS=',' read -ra IMAGE_TAGS <<< "$TAGS"
+
+          for tag in "${IMAGE_TAGS[@]}"; do
+            echo "Verifying $IMAGE:$tag"
+            docker pull "$IMAGE:$tag"
+          done
+
+      - name: Display published images
+        env:
+          TAGS: ${{ steps.metadata.outputs.tags }}
+        run: |
+          echo "Development images published successfully."
+          echo ""
+          echo "Docker Hub:"
+          echo "  docker.io/mohamednfonka/proxi.gaz"
+          echo ""
+          echo "GitHub Container Registry:"
+          echo "  ghcr.io/jemil-dilan/proxi.gaz"
+          echo ""
+          echo "Tags: $TAGS"

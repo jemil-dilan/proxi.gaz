@@ -1,10 +1,11 @@
+
 name: Build, publish, and release
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "SemVer without the leading v (for example 0.1.0-alpha.1)"
+        description: "SemVer without leading v (example: 0.1.0-alpha.1)"
         required: true
         type: string
 
@@ -12,14 +13,15 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ inputs.version }}
+  group: proxigaz-production-release
   cancel-in-progress: false
 
 jobs:
   verify:
-    name: Verify release commit
+    name: Verify release candidate
     runs-on: ubuntu-latest
     timeout-minutes: 40
+
     services:
       postgres:
         image: postgis/postgis:17-3.5
@@ -34,9 +36,11 @@ jobs:
           --health-interval=5s
           --health-timeout=3s
           --health-retries=10
+
     outputs:
       version: ${{ steps.validate.outputs.version }}
       tag: ${{ steps.validate.outputs.tag }}
+
     steps:
       - name: Check out selected release commit
         uses: actions/checkout@v6
@@ -44,36 +48,56 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Require main and validate release metadata
+      - name: Validate release metadata
         id: validate
         env:
           VERSION: ${{ inputs.version }}
+        shell: bash
         run: |
           set -euo pipefail
+
           if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
             echo "Dispatch this workflow from main." >&2
             exit 1
           fi
-          if [[ ! "$VERSION" =~ ^0\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]]; then
-            echo "Version must be pre-1.0 SemVer without a leading v." >&2
+
+          if [[ ! "$VERSION" =~ ^0\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "Invalid version: $VERSION" >&2
+            echo "Expected a pre-1.0 version such as 0.1.0 or 0.1.0-alpha.1." >&2
             exit 1
           fi
+
           TAG="v${VERSION}"
           NOTES="docs/releases/${TAG}.md"
+
           if [[ ! -s "$NOTES" ]]; then
-            echo "Release notes are required at ${NOTES}." >&2
+            echo "Release notes are missing or empty: $NOTES" >&2
             exit 1
           fi
+
           if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
-            echo "Tag ${TAG} already exists." >&2
-            exit 1
-          else
-            lookup_status=$?
-            if [[ "$lookup_status" -ne 2 ]]; then
-              echo "Could not verify whether tag ${TAG} already exists." >&2
-              exit "$lookup_status"
+            git fetch origin "refs/tags/${TAG}"
+
+            EXISTING_COMMIT="$(git rev-parse 'FETCH_HEAD^{commit}')"
+
+            if [[ "$EXISTING_COMMIT" != "$GITHUB_SHA" ]]; then
+              echo "Tag $TAG already exists on another commit." >&2
+              exit 1
             fi
+
+            echo "Tag $TAG already exists on the selected commit."
+
+          else
+            LOOKUP_STATUS=$?
+
+            if [[ "$LOOKUP_STATUS" -ne 2 ]]; then
+              echo "Could not verify whether tag $TAG exists." >&2
+              exit "$LOOKUP_STATUS"
+            fi
+
+            echo "Tag $TAG is available."
           fi
+
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
@@ -87,28 +111,44 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Check formatting
-        run: ./gradlew spotlessJavaCheck --parallel
+        run: |
+          ./gradlew --no-daemon spotlessJavaCheck \
+            -PappVersion="${{ inputs.version }}" \
+            --parallel --console=plain
 
       - name: Run unit tests
-        run: ./gradlew test --parallel
+        run: |
+          ./gradlew --no-daemon test \
+            -PappVersion="${{ inputs.version }}" \
+            --parallel --console=plain
 
       - name: Run data tests
-        run: ./gradlew dataTest
+        run: |
+          ./gradlew --no-daemon dataTest \
+            -PappVersion="${{ inputs.version }}" \
+            --console=plain
 
       - name: Run end-to-end tests
-        run: ./gradlew e2eTest
+        run: |
+          ./gradlew --no-daemon e2eTest \
+            -PappVersion="${{ inputs.version }}" \
+            --console=plain
 
   publish-image:
-    name: Build and publish image with Jib
+    name: Build and publish production images
     needs: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
     permissions:
       contents: read
       packages: write
+
     steps:
-      - name: Check out code
+      - name: Check out verified release commit
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Set up Java 25
@@ -134,19 +174,80 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish to Docker Hub
-        run: ./gradlew jib -Pjib.to.image=docker.io/mohamednfonka/proxi.gaz -Pjib.to.tags=${{ needs.verify.outputs.version }},latest
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          IMAGE: docker.io/mohamednfonka/proxi.gaz
+        run: |
+          set -euo pipefail
+
+          ./gradlew --no-daemon jib \
+            -PappVersion="$VERSION" \
+            -Djib.to.image="$IMAGE" \
+            -Djib.to.tags="$VERSION,latest" \
+            --console=plain
+
+      - name: Verify Docker Hub images
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          IMAGE: docker.io/mohamednfonka/proxi.gaz
+        run: |
+          set -euo pipefail
+
+          docker pull "$IMAGE:$VERSION"
+          docker pull "$IMAGE:latest"
 
       - name: Build and publish to GHCR
-        run: ./gradlew jib -Pjib.to.image=ghcr.io/jemil-dilan/proxi.gaz -Pjib.to.tags=${{ needs.verify.outputs.version }},latest
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          IMAGE: ghcr.io/jemil-dilan/proxi.gaz
+        run: |
+          set -euo pipefail
+
+          ./gradlew --no-daemon jib \
+            -PappVersion="$VERSION" \
+            -Djib.to.image="$IMAGE" \
+            -Djib.to.tags="$VERSION,latest" \
+            --console=plain
+
+      - name: Verify GHCR images
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          IMAGE: ghcr.io/jemil-dilan/proxi.gaz
+        run: |
+          set -euo pipefail
+
+          docker pull "$IMAGE:$VERSION"
+          docker pull "$IMAGE:latest"
+
+      - name: Display production images
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          echo "Production images published and verified."
+          echo ""
+          echo "Docker Hub:"
+          echo "  docker.io/mohamednfonka/proxi.gaz:$VERSION"
+          echo "  docker.io/mohamednfonka/proxi.gaz:latest"
+          echo ""
+          echo "GHCR:"
+          echo "  ghcr.io/jemil-dilan/proxi.gaz:$VERSION"
+          echo "  ghcr.io/jemil-dilan/proxi.gaz:latest"
 
   publish-release:
-    name: Create annotated tag and GitHub Release
-    needs: [verify, publish-image]
+    name: Create Git tag and GitHub Release
+    needs:
+      - verify
+      - publish-image
+
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     environment:
       name: release-approval
+
     permissions:
       contents: write
+
     steps:
       - name: Check out verified release commit
         uses: actions/checkout@v6
@@ -154,30 +255,78 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Create annotated tag and GitHub Release
+      - name: Create annotated Git tag and GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.verify.outputs.version }}
+          TAG: ${{ needs.verify.outputs.tag }}
+          GITHUB_SHA: ${{ github.sha }}
+        shell: bash
         run: |
           set -euo pipefail
-          TAG="v${VERSION}"
+
           NOTES="docs/releases/${TAG}.md"
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$TAG" "$GITHUB_SHA" -m "Release ${TAG}"
-          git push origin "$TAG"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            git fetch origin "refs/tags/${TAG}"
+
+            EXISTING_COMMIT="$(git rev-parse 'FETCH_HEAD^{commit}')"
+
+            if [[ "$EXISTING_COMMIT" != "$GITHUB_SHA" ]]; then
+              echo "Existing tag points to another commit." >&2
+              exit 1
+            fi
+
+            echo "Using existing tag $TAG."
+
+          else
+            LOOKUP_STATUS=$?
+
+            if [[ "$LOOKUP_STATUS" -ne 2 ]]; then
+              echo "Unable to verify remote tag." >&2
+              exit "$LOOKUP_STATUS"
+            fi
+
+            git tag -a "$TAG" "$GITHUB_SHA" -m "Release ${TAG}"
+            git push origin "$TAG"
+
+            echo "Created and pushed tag $TAG."
+          fi
+
           {
             cat "$NOTES"
-            printf '\n## Published container images\n\n'
-            printf 'Docker Hub: `docker.io/mohamednfonka/proxi.gaz:%s`\n' "${VERSION}"
-            printf 'GHCR: `ghcr.io/jemil-dilan/proxi.gaz:%s`\n' "${VERSION}"
+
+            printf '\n\n## Published container images\n\n'
+
+            printf '%s\n' \
+              "### Docker Hub" \
+              "\`docker.io/mohamednfonka/proxi.gaz:${VERSION}\`" \
+              "\`docker.io/mohamednfonka/proxi.gaz:latest\`" \
+              ""
+
+            printf '%s\n' \
+              "### GitHub Container Registry" \
+              "\`ghcr.io/jemil-dilan/proxi.gaz:${VERSION}\`" \
+              "\`ghcr.io/jemil-dilan/proxi.gaz:latest\`"
           } > /tmp/release-notes.md
+
           RELEASE_FLAGS=()
+
           if [[ "$VERSION" == *-* ]]; then
             RELEASE_FLAGS+=(--prerelease)
           fi
-          gh release create "$TAG" \
-            --verify-tag \
-            --title "$TAG" \
-            --notes-file /tmp/release-notes.md \
-            "${RELEASE_FLAGS[@]}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release $TAG already exists."
+          else
+            gh release create "$TAG" \
+              --verify-tag \
+              --title "$TAG" \
+              --notes-file /tmp/release-notes.md \
+              "${RELEASE_FLAGS[@]}"
+
+            echo "GitHub Release $TAG successfully created."
+          fi
