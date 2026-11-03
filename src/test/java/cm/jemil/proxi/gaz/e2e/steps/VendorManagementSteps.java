@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 
 public class VendorManagementSteps implements En {
 
@@ -30,6 +31,7 @@ public class VendorManagementSteps implements En {
 
   private final HttpClient httpClient;
   private final JdbcTemplate jdbcTemplate;
+  private final JdbcClient jdbcClient;
   private UUID vendorId;
   private UUID userId;
   private String sessionToken;
@@ -38,6 +40,7 @@ public class VendorManagementSteps implements En {
   public VendorManagementSteps(HttpClient httpClient, JdbcTemplate jdbcTemplate) {
     this.httpClient = httpClient;
     this.jdbcTemplate = jdbcTemplate;
+    this.jdbcClient = JdbcClient.create(jdbcTemplate);
 
     When(
         "I create a vendor with the following data",
@@ -310,6 +313,28 @@ public class VendorManagementSteps implements En {
               .isEqualTo(Integer.parseInt(expected.get("deliveryFeeAmount")));
           assertThat(actual.get("c_is_active"))
               .isEqualTo(Boolean.parseBoolean(expected.get("isActive")));
+        });
+
+    When(
+        "I try to access my vendor session",
+        () -> {
+          var vendorToken = issuedSessionTokens.isEmpty() ? sessionToken : issuedSessionTokens.getFirst();
+          var response = given().header("Authorization", "Bearer " + vendorToken).get("/vendor/session");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I try to access vendor session with the revoked token",
+        () -> {
+          var response = given().header("Authorization", "Bearer " + sessionToken).get("/vendor/session");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I try to list vendors with the vendor session token",
+        () -> {
+          var response = given().header("Authorization", "Bearer " + sessionToken).get("/admin/vendors");
+          httpClient.recordResponse(response.statusCode(), response.asString());
         });
   }
 
