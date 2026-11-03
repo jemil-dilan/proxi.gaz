@@ -20,20 +20,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.simple.JdbcClient;
 
 public class VendorManagementSteps implements En {
 
   private static final String VENDORS_PATH = "/admin/vendors";
 
   private final HttpClient httpClient;
-  private final JdbcTemplate jdbcTemplate;
-  private final JdbcClient jdbcClient;
   private UUID vendorId;
   private UUID userId;
   private String sessionToken;
@@ -41,8 +36,6 @@ public class VendorManagementSteps implements En {
 
   public VendorManagementSteps(HttpClient httpClient, JdbcTemplate jdbcTemplate) {
     this.httpClient = httpClient;
-    this.jdbcTemplate = jdbcTemplate;
-    this.jdbcClient = JdbcClient.create(jdbcTemplate);
 
     Given(
         "I assume that the vendors with the following data are inside the database",
@@ -106,13 +99,6 @@ public class VendorManagementSteps implements En {
                             + " c_id = ?)",
                         vendorId);
                   });
-        });
-
-    Then(
-        "The last request failed with the http status {string}",
-        (String httpStatus) -> {
-          assertThat(httpClient.getLastResponse().status().value())
-              .isEqualTo(HttpStatus.valueOf(httpStatus.toUpperCase(Locale.ROOT)).value());
         });
 
     When(
