@@ -34,6 +34,8 @@ class HttpLoggingFilter extends OncePerRequestFilter {
             ? request.getHeader(CORRELATION_ID_HEADER)
             : UUID.randomUUID().toString();
 
+    CorrelationIdHolder.set(correlationId);
+
     log.info(
         "{{\"eventType\":\"HTTP_REQUEST\",\"correlationId\":\"{}\",\"method\":\"{}\",\"uri\":\"{}\"}}",
         correlationId,
@@ -43,6 +45,7 @@ class HttpLoggingFilter extends OncePerRequestFilter {
     long startTime = System.currentTimeMillis();
     try {
       filterChain.doFilter(request, response);
+      response.setHeader(CORRELATION_ID_HEADER, correlationId);
     } finally {
       long duration = System.currentTimeMillis() - startTime;
       log.info(
@@ -50,6 +53,7 @@ class HttpLoggingFilter extends OncePerRequestFilter {
           correlationId,
           response.getStatus(),
           duration);
+      CorrelationIdHolder.clear();
     }
   }
 }

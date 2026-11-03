@@ -20,8 +20,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 public class VendorManagementSteps implements En {
@@ -38,6 +40,68 @@ public class VendorManagementSteps implements En {
   public VendorManagementSteps(HttpClient httpClient, JdbcTemplate jdbcTemplate) {
     this.httpClient = httpClient;
     this.jdbcTemplate = jdbcTemplate;
+
+    Given(
+        "I assume that the vendors with the following data are inside the database",
+        (DataTable dataTable) -> {
+          dataTable.asMaps().forEach(row -> {
+            var sql =
+                """
+                INSERT INTO t_users (c_id, c_email, c_password_hash, c_created_at) 
+                VALUES (?, NULL, NULL, NOW())
+                ON CONFLICT (c_id) DO NOTHING
+                """;
+            var userId = UUID.randomUUID();
+            jdbcTemplate.update(sql, userId);
+
+            sql =
+                """
+                INSERT INTO t_user_roles (c_user_id, c_role) 
+                VALUES (?, 'VENDOR')
+                ON CONFLICT (c_user_id, c_role) DO NOTHING
+                """;
+            jdbcTemplate.update(sql, userId);
+
+            sql =
+                """
+                INSERT INTO t_vendors (c_id, c_user_id, c_name, c_phone, c_location, c_address_text, 
+                                       c_is_station, c_delivery_fee_type, c_delivery_fee_amount, c_is_active, c_created_at)
+                VALUES (?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?, ?, ?, ?, ?, NOW())
+                ON CONFLICT (c_id) DO NOTHING
+                """;
+            var vendorId = UUID.fromString(row.get("id"));
+            jdbcTemplate.update(
+                sql,
+                vendorId,
+                userId,
+                row.get("name"),
+                row.get("phone"),
+                Double.parseDouble(row.get("longitude")),
+                Double.parseDouble(row.get("latitude")),
+                row.get("addressText"),
+                Boolean.parseBoolean(row.get("isStation")),
+                row.get("deliveryFeeType"),
+                Integer.parseInt(row.get("deliveryFeeAmount")),
+                Boolean.parseBoolean(row.get("isActive")));
+          });
+        });
+
+    Given(
+        "I assume that the vendors with the following data are not inside the database",
+        (DataTable dataTable) -> {
+          dataTable.asMaps().forEach(row -> {
+            var vendorId = UUID.fromString(row.get("id"));
+            jdbcTemplate.update("DELETE FROM t_vendors WHERE c_id = ?", vendorId);
+            jdbcTemplate.update("DELETE FROM t_users WHERE c_id IN (SELECT c_user_id FROM t_vendors WHERE c_id = ?)", vendorId);
+          });
+        });
+
+    Then(
+        "The last request failed with the http status {string}",
+        (String httpStatus) -> {
+          assertThat(httpClient.getLastResponse().status().value())
+              .isEqualTo(HttpStatus.valueOf(httpStatus.toUpperCase(Locale.ROOT)).value());
+        });
 
     When(
         "I create a vendor with the following data",
@@ -85,6 +149,64 @@ public class VendorManagementSteps implements En {
     Then(
         "the vendor create request succeeds",
         () -> assertThat(httpClient.getLastResponse().status().value()).isEqualTo(201));
+
+    When(
+        "I get vendor by id {string}",
+        (String vendorId) -> {
+          var response =
+              given()
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .pathParam("vendorId", vendorId)
+                  .get(VENDORS_PATH + "/{vendorId}");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I try to get vendor by id {string}",
+        (String vendorId) -> {
+          var response =
+              given()
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .pathParam("vendorId", vendorId)
+                  .get(VENDORS_PATH + "/{vendorId}");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I try to list vendors",
+        () -> {
+          var response =
+              given()
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .get(VENDORS_PATH);
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I create a vendor with invalid data",
+        () -> {
+          var request = Map.of("name", "", "phone", "");
+          var response =
+              given()
+                  .contentType(ContentType.JSON)
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .body(request)
+                  .post(VENDORS_PATH);
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I try to create vendor with duplicate phone {string}",
+        (String phone) -> {
+          var request = Map.of("name", "Duplicate Vendor", "phone", phone, "latitude", 4.05, "longitude", 9.7);
+          var response =
+              given()
+                  .contentType(ContentType.JSON)
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .body(request)
+                  .post(VENDORS_PATH);
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
 
     When(
         "I list vendors at page {int} with size {int}, active {string}, and name {string}",
