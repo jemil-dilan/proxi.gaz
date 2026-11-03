@@ -25,10 +25,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
 @Slf4j
@@ -37,8 +44,7 @@ class DomainExceptionTranslator {
   private static final String PROBLEM_MEDIA_TYPE = "application/problem+json";
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ProblemDetail> handleInvalidRequest(
-      MethodArgumentNotValidException ex) {
+  public ResponseEntity<ProblemDetail> handleInvalidRequest(MethodArgumentNotValidException ex) {
     var errors =
         ex.getBindingResult().getFieldErrors().stream()
             .map(error -> Map.of("field", error.getField(), "message", error.getDefaultMessage()))
@@ -49,11 +55,7 @@ class DomainExceptionTranslator {
             .findFirst()
             .orElse("request contains invalid fields");
     return buildProblemResponse(
-        ErrorCodes.PROXIGAZ_400_002,
-        HttpStatus.BAD_REQUEST,
-        "Validation failed",
-        detail,
-        errors);
+        ErrorCodes.PROXIGAZ_400_002, HttpStatus.BAD_REQUEST, "Validation failed", detail, errors);
   }
 
   @ExceptionHandler(HandlerMethodValidationException.class)
@@ -64,6 +66,24 @@ class DomainExceptionTranslator {
         HttpStatus.BAD_REQUEST,
         "Invalid query parameters",
         "request contains invalid query parameters",
+        null);
+  }
+
+  @ExceptionHandler({
+    HttpMessageNotReadableException.class,
+    MissingServletRequestParameterException.class,
+    MethodArgumentTypeMismatchException.class,
+    MissingPathVariableException.class,
+    HttpMediaTypeNotSupportedException.class,
+    HttpRequestMethodNotSupportedException.class,
+    NoHandlerFoundException.class
+  })
+  public ResponseEntity<ProblemDetail> handleSpringMVCClientErrors(Exception ex) {
+    return buildProblemResponse(
+        ErrorCodes.PROXIGAZ_400_002,
+        HttpStatus.BAD_REQUEST,
+        "Invalid request",
+        ex.getMessage(),
         null);
   }
 
@@ -87,19 +107,18 @@ class DomainExceptionTranslator {
     return switch (ex) {
       case DemoNotFoundException _, VendorNotFoundException _ -> HttpStatus.NOT_FOUND;
       case DemoAlreadyExistsException _ -> HttpStatus.CONFLICT;
-      case InvalidCredentialsException _, InvalidVendorSessionException _ -> HttpStatus.UNAUTHORIZED;
+      case InvalidCredentialsException _, InvalidVendorSessionException _ ->
+          HttpStatus.UNAUTHORIZED;
       case FieldsExtractionCodeNotSupported _,
           InvalidOrderStatusTransitionException _,
-          InvalidDomainValueException _ -> HttpStatus.BAD_REQUEST;
+          InvalidDomainValueException _ ->
+          HttpStatus.BAD_REQUEST;
       default -> HttpStatus.INTERNAL_SERVER_ERROR;
     };
   }
 
   private ResponseEntity<ProblemDetail> buildProblemResponse(
-      ErrorCode errorCode,
-      HttpStatusCode status,
-      String detail,
-      List<Map<String, String>> errors) {
+      ErrorCode errorCode, HttpStatusCode status, String detail, List<Map<String, String>> errors) {
     return buildProblemResponse(errorCode, status, null, detail, errors);
   }
 
@@ -109,16 +128,17 @@ class DomainExceptionTranslator {
       String title,
       String detail,
       List<Map<String, String>> errors) {
-    var problem = ProblemDetail.builder()
-        .type(buildProblemType(errorCode))
-        .title(title != null ? title : errorCode.description())
-        .status(status.value())
-        .code(errorCode.value())
-        .correlationId(CorrelationIdHolder.get())
-        .detail(detail)
-        .timestamp(Instant.now())
-        .errors(errors)
-        .build();
+    var problem =
+        ProblemDetail.builder()
+            .type(buildProblemType(errorCode))
+            .title(title != null ? title : errorCode.description())
+            .status(status.value())
+            .code(errorCode.value())
+            .correlationId(CorrelationIdHolder.get())
+            .detail(detail)
+            .timestamp(Instant.now())
+            .errors(errors)
+            .build();
 
     return ResponseEntity.status(status)
         .header(HttpHeaders.CONTENT_TYPE, PROBLEM_MEDIA_TYPE)
@@ -126,9 +146,6 @@ class DomainExceptionTranslator {
   }
 
   private String buildProblemType(ErrorCode errorCode) {
-    var code = errorCode.value();
-    var httpStatus = code.substring(code.indexOf('-') + 1, code.indexOf('-', code.indexOf('-') + 1));
-    var problemCode = code.substring(code.lastIndexOf('-') + 1);
-    return "https://api.proxigaz.cm/probs/" + problemCode.toLowerCase();
+    return "https://api.proxigaz.cm/probs/" + errorCode.value().toLowerCase();
   }
 }

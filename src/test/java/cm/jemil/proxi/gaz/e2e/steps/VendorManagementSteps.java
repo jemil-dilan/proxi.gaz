@@ -44,56 +44,65 @@ public class VendorManagementSteps implements En {
     Given(
         "I assume that the vendors with the following data are inside the database",
         (DataTable dataTable) -> {
-          dataTable.asMaps().forEach(row -> {
-            var sql =
-                """
-                INSERT INTO t_users (c_id, c_email, c_password_hash, c_created_at) 
-                VALUES (?, NULL, NULL, NOW())
-                ON CONFLICT (c_id) DO NOTHING
-                """;
-            var userId = UUID.randomUUID();
-            jdbcTemplate.update(sql, userId);
+          dataTable
+              .asMaps()
+              .forEach(
+                  row -> {
+                    var sql =
+                        """
+                        INSERT INTO t_users (c_id, c_email, c_password_hash, c_created_at)
+                        VALUES (?, NULL, NULL, NOW())
+                        ON CONFLICT (c_id) DO NOTHING
+                        """;
+                    var userId = UUID.randomUUID();
+                    jdbcTemplate.update(sql, userId);
 
-            sql =
-                """
-                INSERT INTO t_user_roles (c_user_id, c_role) 
-                VALUES (?, 'VENDOR')
-                ON CONFLICT (c_user_id, c_role) DO NOTHING
-                """;
-            jdbcTemplate.update(sql, userId);
+                    sql =
+                        """
+                        INSERT INTO t_user_roles (c_user_id, c_role)
+                        VALUES (?, 'VENDOR')
+                        ON CONFLICT (c_user_id, c_role) DO NOTHING
+                        """;
+                    jdbcTemplate.update(sql, userId);
 
-            sql =
-                """
-                INSERT INTO t_vendors (c_id, c_user_id, c_name, c_phone, c_location, c_address_text, 
-                                       c_is_station, c_delivery_fee_type, c_delivery_fee_amount, c_is_active, c_created_at)
-                VALUES (?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?, ?, ?, ?, ?, NOW())
-                ON CONFLICT (c_id) DO NOTHING
-                """;
-            var vendorId = UUID.fromString(row.get("id"));
-            jdbcTemplate.update(
-                sql,
-                vendorId,
-                userId,
-                row.get("name"),
-                row.get("phone"),
-                Double.parseDouble(row.get("longitude")),
-                Double.parseDouble(row.get("latitude")),
-                row.get("addressText"),
-                Boolean.parseBoolean(row.get("isStation")),
-                row.get("deliveryFeeType"),
-                Integer.parseInt(row.get("deliveryFeeAmount")),
-                Boolean.parseBoolean(row.get("isActive")));
-          });
+                    sql =
+                        """
+                        INSERT INTO t_vendors (c_id, c_user_id, c_name, c_phone, c_location, c_address_text,
+                                               c_is_station, c_delivery_fee_type, c_delivery_fee_amount, c_is_active, c_created_at)
+                        VALUES (?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?, ?, ?, ?, ?, NOW())
+                        ON CONFLICT (c_id) DO NOTHING
+                        """;
+                    var vendorId = UUID.fromString(row.get("id"));
+                    jdbcTemplate.update(
+                        sql,
+                        vendorId,
+                        userId,
+                        row.get("name"),
+                        row.get("phone"),
+                        Double.parseDouble(row.get("longitude")),
+                        Double.parseDouble(row.get("latitude")),
+                        row.get("addressText"),
+                        Boolean.parseBoolean(row.get("isStation")),
+                        row.get("deliveryFeeType"),
+                        Integer.parseInt(row.get("deliveryFeeAmount")),
+                        Boolean.parseBoolean(row.get("isActive")));
+                  });
         });
 
     Given(
         "I assume that the vendors with the following data are not inside the database",
         (DataTable dataTable) -> {
-          dataTable.asMaps().forEach(row -> {
-            var vendorId = UUID.fromString(row.get("id"));
-            jdbcTemplate.update("DELETE FROM t_vendors WHERE c_id = ?", vendorId);
-            jdbcTemplate.update("DELETE FROM t_users WHERE c_id IN (SELECT c_user_id FROM t_vendors WHERE c_id = ?)", vendorId);
-          });
+          dataTable
+              .asMaps()
+              .forEach(
+                  row -> {
+                    var vendorId = UUID.fromString(row.get("id"));
+                    jdbcTemplate.update("DELETE FROM t_vendors WHERE c_id = ?", vendorId);
+                    jdbcTemplate.update(
+                        "DELETE FROM t_users WHERE c_id IN (SELECT c_user_id FROM t_vendors WHERE"
+                            + " c_id = ?)",
+                        vendorId);
+                  });
         });
 
     Then(
@@ -173,17 +182,7 @@ public class VendorManagementSteps implements En {
         });
 
     When(
-        "I try to list vendors",
-        () -> {
-          var response =
-              given()
-                  .header("Authorization", httpClient.authorizationHeader())
-                  .get(VENDORS_PATH);
-          httpClient.recordResponse(response.statusCode(), response.asString());
-        });
-
-    When(
-        "I create a vendor with invalid data",
+        "I try create a vendor with invalid data",
         () -> {
           var request = Map.of("name", "", "phone", "");
           var response =
@@ -198,7 +197,9 @@ public class VendorManagementSteps implements En {
     When(
         "I try to create vendor with duplicate phone {string}",
         (String phone) -> {
-          var request = Map.of("name", "Duplicate Vendor", "phone", phone, "latitude", 4.05, "longitude", 9.7);
+          var request =
+              Map.of(
+                  "name", "Duplicate Vendor", "phone", phone, "latitude", 4.05, "longitude", 9.7);
           var response =
               given()
                   .contentType(ContentType.JSON)

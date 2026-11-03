@@ -13,6 +13,7 @@ import lombok.Builder;
 
 /**
  * RFC 7807 Problem Details response structure.
+ *
  * @see <a href="https://datatracker.ietf.org/doc/html/rfc7807">RFC 7807</a>
  */
 @Builder
@@ -89,7 +90,8 @@ public record ProblemDetail(
     }
 
     public ProblemDetail build() {
-      return new ProblemDetail(type, title, status, code, correlationId, detail, instance, timestamp, errors);
+      return new ProblemDetail(
+          type, title, status, code, correlationId, detail, instance, timestamp, errors);
     }
   }
 }

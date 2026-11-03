@@ -59,7 +59,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/VendorPaginationDTO"
         "400":
-          description: "Invalid pagination or filter value"
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags:
         - "Vendor"
@@ -81,7 +85,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/VendorOnboardingResponseDTO"
         "400":
-          description: "Invalid vendor details"
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
   /admin/vendors/{vendorId}:
     put:
       tags:
@@ -107,9 +117,13 @@ paths:
         "204":
           description: "Vendor updated"
         "400":
-          description: "Invalid vendor details"
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
-          description: "Vendor not found"
+          $ref: "#/components/responses/NotFound"
   /admin/vendors/{vendorId}/status:
     put:
       tags:
@@ -135,9 +149,13 @@ paths:
         "204":
           description: "Vendor activation status updated"
         "400":
-          description: "Invalid vendor status"
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
-          description: "Vendor not found"
+          $ref: "#/components/responses/NotFound"
   /admin/vendors/{vendorId}/session:
     post:
       tags:
@@ -160,8 +178,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VendorSessionTokenDTO"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
-          description: "Vendor not found"
+          $ref: "#/components/responses/NotFound"
     delete:
       tags:
         - "Vendor"
@@ -179,8 +201,12 @@ paths:
       responses:
         "204":
           description: "Vendor session revoked"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
-          description: "Vendor not found"
+          $ref: "#/components/responses/NotFound"
   /vendor/session:
     get:
       tags:
@@ -197,7 +223,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/VendorSessionIdentityDTO"
         "401":
-          description: "Vendor session is invalid or revoked"
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /admin/auth/login:
     post:
       tags:
@@ -219,9 +247,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/LoginResponseDTO"
         "400":
-          description: "Invalid login request"
+          $ref: "#/components/responses/BadRequest"
         "401":
-          description: "Email or password is invalid"
+          $ref: "#/components/responses/Unauthorized"
   /admin/auth/me:
     get:
       tags:
@@ -238,7 +266,9 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminProfileDTO"
         "401":
-          description: "Missing or invalid access token"
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /demo:
     get:
       tags:
@@ -265,6 +295,12 @@ paths:
                 type: "array"
                 items:
                   $ref: "#/components/schemas/DemoDTO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags:
         - "Demo"
@@ -287,8 +323,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreationResponseDTO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "409":
-          description: "PROXIGAZ-409-000 – Demo name already exists"
+          $ref: "#/components/responses/Conflict"
   /demo/{demoId}:
     get:
       tags:
@@ -320,8 +362,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DemoDTO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
-          description: "PROXIGAZ-404-000 – Demo not found"
+          $ref: "#/components/responses/NotFound"
     put:
       tags:
         - "Demo"
@@ -347,10 +395,16 @@ paths:
       responses:
         "204":
           description: "Demo updated successfully"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
-          description: "PROXIGAZ-404-000 – Demo not found"
+          $ref: "#/components/responses/NotFound"
         "409":
-          description: "PROXIGAZ-409-000 – Demo name already in use by another demo"
+          $ref: "#/components/responses/Conflict"
     delete:
       tags:
         - "Demo"
@@ -370,8 +424,12 @@ paths:
       responses:
         "204":
           description: "Demo deleted successfully"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
-          description: "PROXIGAZ-404-000 – Demo not found"
+          $ref: "#/components/responses/NotFound"
 components:
   securitySchemes:
     bearerAuth:
@@ -748,6 +806,18 @@ components:
             $ref: "#/components/schemas/ProblemDTO"
     TooManyRequests:
       description: "Too Many Requests - Rate limit exceeded"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDTO"
+    UnprocessableEntity:
+      description: "Unprocessable Entity - Validation failed"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDTO"
+    Locked:
+      description: "Locked - Resource is locked"
       content:
         application/problem+json:
           schema:

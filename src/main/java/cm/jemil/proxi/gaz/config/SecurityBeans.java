@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 public class SecurityBeans {
@@ -63,5 +64,11 @@ public class SecurityBeans {
   private SecretKeySpec jwtSecretKey(JwtSettings jwtSettings) {
     String secret = jwtSettings.signingSecret();
     return new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+  }
+
+  @Bean
+  public ProblemDetailsAuthenticationEntryPoint problemDetailsAuthenticationEntryPoint(
+      ObjectMapper objectMapper) {
+    return new ProblemDetailsAuthenticationEntryPoint(objectMapper);
   }
 }

@@ -5,8 +5,8 @@
 package cm.jemil.proxi.gaz.config;
 
 /**
- * Thread-local holder for the current request's correlation ID.
- * Used to propagate correlation IDs from filters to exception handlers.
+ * Thread-local holder for the current request's correlation ID. Used to propagate correlation IDs
+ * from filters to exception handlers.
  */
 public final class CorrelationIdHolder {
 
