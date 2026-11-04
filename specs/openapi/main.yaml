@@ -275,6 +275,13 @@ paths:
           description: "Invalid login request"
         "401":
           description: "Email or password is invalid"
+        "429":
+          description: "Too many login attempts. Retry after the time specified in Retry-After header."
+          headers:
+            Retry-After:
+              description: "Seconds to wait before retrying"
+              schema:
+                type: "integer"
   /admin/auth/me:
     get:
       tags:
@@ -467,6 +474,7 @@ components:
         password:
           type: "string"
           format: "password"
+          minLength: 8
           writeOnly: true
     LoginResponseDTO:
       type: "object"
@@ -490,6 +498,7 @@ components:
       required:
         - "id"
         - "email"
+        - "roles"
       properties:
         id:
           type: "string"
@@ -497,6 +506,11 @@ components:
         email:
           type: "string"
           format: "email"
+        roles:
+          type: "array"
+          items:
+            type: "string"
+          description: "List of admin roles"
     DemoDTO:
       type: "object"
       required:

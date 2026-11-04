@@ -10,6 +10,7 @@ import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
 import cm.jemil.proxi.gaz.application.outbound.DomainEventPublisher;
 import cm.jemil.proxi.gaz.application.outbound.PasswordVerifier;
+import cm.jemil.proxi.gaz.application.outbound.RateLimiter;
 import cm.jemil.proxi.gaz.application.outbound.ReferenceGenerator;
 import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorOnboardingRepository;
@@ -42,8 +43,11 @@ public class ProxiGazBeans {
   public LoginAdminUseCase loginAdminUseCase(
       UserRepository userRepository,
       PasswordVerifier passwordVerifier,
-      AccessTokenIssuer accessTokenIssuer) {
-    return new LoginAdminUseCase(userRepository, passwordVerifier, accessTokenIssuer);
+      AccessTokenIssuer accessTokenIssuer,
+      RateLimiter rateLimiter,
+      Clock clock) {
+    return new LoginAdminUseCase(
+        userRepository, passwordVerifier, accessTokenIssuer, rateLimiter, clock);
   }
 
   @Bean

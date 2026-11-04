@@ -34,6 +34,7 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingRes
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Named;
@@ -83,6 +84,11 @@ interface RestMapper {
   @Mapping(target = "password", source = "password")
   LoginAdminUseCase.Command toCommand(AdminLoginDTO request);
 
+  default LoginAdminUseCase.Command toCommand(AdminLoginDTO request, String clientIp) {
+    return new LoginAdminUseCase.Command(
+        Email.from(request.getEmail()), request.getPassword(), clientIp);
+  }
+
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "accessToken", source = "accessToken")
   @Mapping(target = "tokenType", expression = "java(LoginResponseDTO.TokenTypeEnum.BEARER)")
@@ -92,7 +98,12 @@ interface RestMapper {
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "id", source = "userId.value")
   @Mapping(target = "email", source = "email.value")
-  AdminProfileDTO fromDomain(UserId userId, Email email);
+  @Mapping(target = "roles", source = "roles")
+  AdminProfileDTO fromDomain(UserId userId, Email email, List<String> roles);
+
+  default AdminProfileDTO fromDomain(UserId userId, Email email) {
+    return fromDomain(userId, email, List.of());
+  }
 
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "name")

@@ -12,6 +12,7 @@ import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
 import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
+import cm.jemil.proxi.gaz.domain.user.TooManyLoginAttemptsException;
 import cm.jemil.proxi.gaz.domain.vendor.InvalidVendorSessionException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorInactiveException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
@@ -61,6 +62,7 @@ class DomainExceptionTranslator {
           case InvalidCredentialsException _ -> HttpStatus.UNAUTHORIZED;
           case InvalidVendorSessionException _, VendorInactiveException _ ->
               HttpStatus.FORBIDDEN;
+          case TooManyLoginAttemptsException _ -> HttpStatus.TOO_MANY_REQUESTS;
           case FieldsExtractionCodeNotSupported _,
               InvalidOrderStatusTransitionException _,
               InvalidDomainValueException _ ->
@@ -68,8 +70,16 @@ class DomainExceptionTranslator {
           default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     var message = ex.getMessage() == null ? "" : ex.getMessage();
-    return ResponseEntity.status(status)
-        .body(Map.of("errorCode", ex.getErrorCode().value(), "message", message));
+    var body = Map.of("errorCode", ex.getErrorCode().value(), "message", message);
+    
+    // Add Retry-After header for rate limiting
+    if (ex instanceof TooManyLoginAttemptsException rateLimitEx) {
+      return ResponseEntity.status(status)
+          .header("Retry-After", String.valueOf(rateLimitEx.getRetryAfterSeconds()))
+          .body(body);
+    }
+    
+    return ResponseEntity.status(status).body(body);
   }
 
   @ExceptionHandler(Exception.class)

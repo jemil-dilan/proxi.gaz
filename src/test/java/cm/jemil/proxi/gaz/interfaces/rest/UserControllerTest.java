@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -109,6 +110,6 @@ class UserControllerTest {
   }
 
   private UserController controller() {
-    return new UserController(mock(RestMapper.class), mock(LoginAdminUseCase.class));
+    return new UserController(mock(RestMapper.class), mock(LoginAdminUseCase.class), mock(HttpServletRequest.class));
   }
 }

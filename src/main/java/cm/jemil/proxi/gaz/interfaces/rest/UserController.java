@@ -12,10 +12,12 @@ import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.UserApi;
+import java.util.List;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
 import java.util.UUID;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -29,11 +31,26 @@ class UserController implements UserApi {
 
   private final RestMapper restMapper;
   private final LoginAdminUseCase loginAdminUseCase;
+  private final HttpServletRequest request;
 
   @Override
   public ResponseEntity<LoginResponseDTO> adminLogin(AdminLoginDTO request) {
-    var result = loginAdminUseCase.execute(restMapper.toCommand(request));
+    String clientIp = extractClientIp();
+    var command = restMapper.toCommand(request, clientIp);
+    var result = loginAdminUseCase.execute(command);
     return ResponseEntity.status(OK).body(restMapper.fromDomain(result));
+  }
+
+  private String extractClientIp() {
+    String ip = request.getHeader("X-Forwarded-For");
+    if (ip == null || ip.isBlank()) {
+      ip = request.getRemoteAddr();
+    }
+    // Handle comma-separated list (e.g., "client, proxy1, proxy2")
+    if (ip != null && ip.contains(",")) {
+      ip = ip.split(",")[0].trim();
+    }
+    return ip;
   }
 
   @Override
@@ -58,6 +75,10 @@ class UserController implements UserApi {
 
     String emailClaim = token.getClaimAsString("email");
     var userId = UserId.from(subjectId);
+    
+    // Extract roles from scopes claim
+    List<String> scopes = token.getClaimAsStringList("scopes");
+    List<String> roles = scopes != null ? scopes : List.of();
 
     Email email;
     try {
@@ -65,6 +86,6 @@ class UserController implements UserApi {
     } catch (InvalidDomainValueException _) {
       return ResponseEntity.status(UNAUTHORIZED).build();
     }
-    return ResponseEntity.ok(restMapper.fromDomain(userId, email));
+    return ResponseEntity.ok(restMapper.fromDomain(userId, email, roles));
   }
 }
