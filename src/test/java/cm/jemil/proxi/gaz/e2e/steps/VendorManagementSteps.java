@@ -60,20 +60,18 @@ public class VendorManagementSteps implements En {
         });
 
     When(
-        "I create a vendor without the required active flag",
+        "I create a vendor without the required addressText flag",
         () -> {
           var request =
               Map.of(
                   "name",
-                  "Missing active",
+                  "Missing addressText",
                   "phone",
                   "+237699002024",
                   "latitude",
                   4.05,
                   "longitude",
                   9.70,
-                  "address",
-                  "Akwa",
                   "isStation",
                   false);
           var response =
@@ -340,7 +338,8 @@ public class VendorManagementSteps implements En {
 
   private static Map<String, Object> toCreateRequest(Map<String, String> values) {
     var request = commonRequest(values);
-    request.put("address", values.get("addressText"));
+    request.put("addressText", values.get("addressText"));
+    request.remove("isActive");
     return request;
   }
 
@@ -377,9 +376,15 @@ public class VendorManagementSteps implements En {
     request.put("latitude", parseDouble(values.get("latitude")));
     request.put("longitude", parseDouble(values.get("longitude")));
     request.put("isStation", parseBoolean(values.get("isStation")));
-    request.put("deliveryFeeType", blankToNull(values.get("deliveryFeeType")));
-    request.put("deliveryFeeAmount", parseInteger(values.get("deliveryFeeAmount")));
-    request.put("isActive", parseBoolean(values.get("isActive")));
+    if (values.containsKey("deliveryFeeType")) {
+      request.put("deliveryFeeType", blankToNull(values.get("deliveryFeeType")));
+    }
+    if (values.containsKey("deliveryFeeAmount")) {
+      request.put("deliveryFeeAmount", parseInteger(values.get("deliveryFeeAmount")));
+    }
+    if (values.containsKey("isActive")) {
+      request.put("isActive", parseBoolean(values.get("isActive")));
+    }
     return request;
   }
 

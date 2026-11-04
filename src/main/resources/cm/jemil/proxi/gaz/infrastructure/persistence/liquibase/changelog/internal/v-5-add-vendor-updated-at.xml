@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="v-5-1" author="PXG-057">
+        <addColumn tableName="t_vendors">
+            <column name="c_updated_at" type="timestamptz"
+                    defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <sql>UPDATE t_vendors SET c_updated_at = c_created_at WHERE c_updated_at IS NULL;</sql>
+    </changeSet>
+
+</databaseChangeLog>

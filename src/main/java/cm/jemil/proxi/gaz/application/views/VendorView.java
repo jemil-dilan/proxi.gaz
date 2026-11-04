@@ -35,5 +35,11 @@ public interface VendorView {
     Money getDeliveryFeeAmount();
 
     boolean getIsActive();
+
+    java.time.Instant getCreatedAt();
+
+    java.time.Instant getUpdatedAt();
+
+    cm.jemil.proxi.gaz.domain.shared.Email getEmail();
   }
 }

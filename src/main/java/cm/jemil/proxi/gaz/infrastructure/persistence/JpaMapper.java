@@ -87,6 +87,7 @@ interface JpaMapper {
   @Mapping(target = "deliveryFeeType", source = "deliveryFeeType.value")
   @Mapping(target = "deliveryFeeAmount", source = "deliveryFeeAmount.amountFcfa")
   @Mapping(target = "active", source = "active")
+  @Mapping(target = "updatedAt", expression = "java(java.time.Instant.now())")
   VendorJpa toJpa(Vendor vendor);
 
   @BeanMapping(ignoreByDefault = true)
@@ -100,6 +101,7 @@ interface JpaMapper {
   @Mapping(target = "deliveryFeeType", source = "deliveryFeeType.value")
   @Mapping(target = "deliveryFeeAmount", source = "deliveryFeeAmount.amountFcfa")
   @Mapping(target = "active", source = "active")
+  @Mapping(target = "updatedAt", expression = "java(java.time.Instant.now())")
   void fromDomain(Vendor vendor, @MappingTarget VendorJpa target);
 
   default Vendor toDomain(VendorJpa entity) {
@@ -202,6 +204,21 @@ interface JpaMapper {
       @Override
       public boolean getIsActive() {
         return entity.isActive();
+      }
+
+      @Override
+      public java.time.Instant getCreatedAt() {
+        return entity.getCreatedAt();
+      }
+
+      @Override
+      public java.time.Instant getUpdatedAt() {
+        return entity.getUpdatedAt();
+      }
+
+      @Override
+      public Email getEmail() {
+        return null; // Will be populated from User in ListVendorsUseCase
       }
     };
   }
