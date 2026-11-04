@@ -33,7 +33,6 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.mapstruct.BeanMapping;
-import org.mapstruct.Named;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -139,7 +138,9 @@ interface RestMapper {
 
   @org.mapstruct.Named("mapInstantToLocalDateTime")
   default java.time.LocalDateTime mapInstantToLocalDateTime(java.time.Instant instant) {
-    return instant == null ? null : java.time.LocalDateTime.ofInstant(instant, java.time.ZoneOffset.UTC);
+    return instant == null
+        ? null
+        : java.time.LocalDateTime.ofInstant(instant, java.time.ZoneOffset.UTC);
   }
 
   @BeanMapping(ignoreByDefault = true)
@@ -168,7 +169,13 @@ interface RestMapper {
   @Mapping(target = "phone", source = "phone.value")
   @Mapping(target = "name", source = "name.value")
   @Mapping(target = "email", source = "email.value")
-  @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "mapInstantToLocalDateTime")
-  @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "mapInstantToLocalDateTime")
+  @Mapping(
+      target = "createdAt",
+      source = "createdAt",
+      qualifiedByName = "mapInstantToLocalDateTime")
+  @Mapping(
+      target = "updatedAt",
+      source = "updatedAt",
+      qualifiedByName = "mapInstantToLocalDateTime")
   VendorDTO toDTO(VendorView.VendorView1 vendorView1);
 }
