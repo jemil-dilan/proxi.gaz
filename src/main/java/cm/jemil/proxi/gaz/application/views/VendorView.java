@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.application.views;
 
 import cm.jemil.proxi.gaz.domain.shared.AddressText;
+import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
 import cm.jemil.proxi.gaz.domain.shared.Money;
 import cm.jemil.proxi.gaz.domain.shared.PhoneNumber;
@@ -41,5 +42,39 @@ public interface VendorView {
     java.time.Instant getUpdatedAt();
 
     cm.jemil.proxi.gaz.domain.shared.Email getEmail();
+  }
+
+  interface VendorDetailView extends VendorView {
+    VendorId getVendorId();
+
+    UserId getUserId();
+
+    VendorName getName();
+
+    PhoneNumber getPhone();
+
+    GeoPoint getLocation();
+
+    AddressText getAddressText();
+
+    boolean getIsStation();
+
+    DeliveryFeeType getDeliveryFeeType();
+
+    Money getDeliveryFeeAmount();
+
+    boolean getIsActive();
+
+    java.time.Instant getCreatedAt();
+
+    java.time.Instant getUpdatedAt();
+
+    cm.jemil.proxi.gaz.domain.shared.Email getEmail();
+
+    boolean getHasActiveSession();
+
+    java.time.Instant getSessionCreatedAt();
+
+    java.time.Instant getSessionLastUsedAt();
   }
 }

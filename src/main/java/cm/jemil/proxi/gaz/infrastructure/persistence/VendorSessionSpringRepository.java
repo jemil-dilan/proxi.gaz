@@ -12,5 +12,7 @@ interface VendorSessionSpringRepository extends JpaRepository<VendorSessionJpa, 
 
   Optional<VendorSessionJpa> findByTokenHash(String tokenHash);
 
+  Optional<VendorSessionJpa> findFirstByVendorIdOrderByCreatedAtDesc(UUID vendorId);
+
   void deleteByVendorId(UUID vendorId);
 }

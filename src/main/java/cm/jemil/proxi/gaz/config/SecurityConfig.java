@@ -6,6 +6,8 @@ package cm.jemil.proxi.gaz.config;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+import cm.jemil.proxi.gaz.application.outbound.Clock;
+import cm.jemil.proxi.gaz.application.outbound.VendorSessionRepository;
 import cm.jemil.proxi.gaz.application.usecase.ValidateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.interfaces.rest.Constants;
 import org.springframework.context.annotation.Bean;
@@ -36,12 +38,16 @@ public class SecurityConfig {
   @Order(1)
   @Bean
   public SecurityFilterChain vendorSecurityFilterChain(
-      HttpSecurity http, ValidateVendorSessionUseCase validateVendorSessionUseCase) {
+      HttpSecurity http,
+      ValidateVendorSessionUseCase validateVendorSessionUseCase,
+      VendorSessionRepository vendorSessionRepository,
+      Clock clock) {
     http.securityMatcher(Constants.PATH_VENDOR_SESSION)
         .csrf(csrf -> csrf.requireCsrfProtectionMatcher(_ -> false))
         .authorizeHttpRequests(authorize -> authorize.anyRequest().hasAuthority(Scopes.VENDOR))
         .addFilterBefore(
-            new VendorSessionAuthenticationFilter(validateVendorSessionUseCase),
+            new VendorSessionAuthenticationFilter(
+                validateVendorSessionUseCase, vendorSessionRepository, clock),
             AnonymousAuthenticationFilter.class)
         .exceptionHandling(
             exceptions ->

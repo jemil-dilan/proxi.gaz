@@ -72,8 +72,10 @@ public class ProxiGazBeans {
 
   @Bean
   public ValidateVendorSessionUseCase validateVendorSessionUseCase(
-      VendorSessionRepository repository, VendorSessionTokenHasher tokenHasher) {
-    return new ValidateVendorSessionUseCase(repository, tokenHasher);
+      VendorSessionRepository repository,
+      VendorSessionTokenHasher tokenHasher,
+      VendorRepository vendorRepository) {
+    return new ValidateVendorSessionUseCase(repository, tokenHasher, vendorRepository);
   }
 
   @Bean

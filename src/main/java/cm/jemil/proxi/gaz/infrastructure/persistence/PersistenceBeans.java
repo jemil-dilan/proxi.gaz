@@ -36,8 +36,11 @@ public class PersistenceBeans {
 
   @Bean
   VendorRepository vendorRepository(
-      VendorSpringRepository vendorSpringRepository, JpaMapper jpaMapper) {
-    return new JpaVendorRepository(vendorSpringRepository, jpaMapper);
+      VendorSpringRepository vendorSpringRepository,
+      VendorSessionSpringRepository vendorSessionSpringRepository,
+      UserSpringRepository userSpringRepository,
+      JpaMapper jpaMapper) {
+    return new JpaVendorRepository(vendorSpringRepository, vendorSessionSpringRepository, userSpringRepository, jpaMapper);
   }
 
   @Bean

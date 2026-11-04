@@ -51,6 +51,19 @@ paths:
             type: "string"
             minLength: 1
             maxLength: 255
+            description: "Case-insensitive contains filter on vendor name"
+        - name: "sort"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            enum:
+              - "name,asc"
+              - "name,desc"
+              - "createdAt,asc"
+              - "createdAt,desc"
+            default: "name,asc"
+            description: "Sort order: name or createdAt, with asc/desc direction"
       responses:
         "200":
           description: "Page of vendors matching the filters"
@@ -82,6 +95,10 @@ paths:
               schema:
                 type: "string"
                 format: "uri"
+            Cache-Control:
+              description: "no-store"
+              schema:
+                type: "string"
           content:
             application/json:
               schema:
@@ -89,6 +106,29 @@ paths:
         "400":
           description: "Invalid vendor details"
   /admin/vendors/{vendorId}:
+    get:
+      tags:
+        - "Vendor"
+      summary: "Get vendor details"
+      operationId: "getVendor"
+      security:
+        - adminAuth: []
+      parameters:
+        - name: "vendorId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Vendor details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorDetailDTO"
+        "404":
+          description: "Vendor not found"
     put:
       tags:
         - "Vendor"
@@ -162,6 +202,11 @@ paths:
       responses:
         "200":
           description: "New vendor bearer token; returned once"
+          headers:
+            Cache-Control:
+              description: "no-store"
+              schema:
+                type: "string"
           content:
             application/json:
               schema:
@@ -204,6 +249,8 @@ paths:
                 $ref: "#/components/schemas/VendorSessionIdentityDTO"
         "401":
           description: "Vendor session is invalid or revoked"
+        "403":
+          description: "Vendor is inactive (PROXIGAZ-403-002)"
   /admin/auth/login:
     post:
       tags:
@@ -663,6 +710,68 @@ components:
           type: "string"
           format: "date-time"
           description: "When the vendor was last updated"
+    VendorDetailDTO:
+      type: "object"
+      required:
+        - "vendorId"
+        - "name"
+        - "phone"
+        - "latitude"
+        - "longitude"
+        - "isStation"
+        - "isActive"
+      properties:
+        vendorId:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+        email:
+          type: "string"
+          format: "email"
+          maxLength: 254
+          nullable: true
+          description: "Admin contact email"
+        phone:
+          type: "string"
+        latitude:
+          type: "number"
+          format: "double"
+        longitude:
+          type: "number"
+          format: "double"
+        addressText:
+          type: "string"
+        isStation:
+          type: "boolean"
+        deliveryFeeType:
+          type: "string"
+        deliveryFeeAmount:
+          type: "integer"
+          format: "int32"
+        isActive:
+          type: "boolean"
+        createdAt:
+          type: "string"
+          format: "date-time"
+          description: "When the vendor was created"
+        updatedAt:
+          type: "string"
+          format: "date-time"
+          description: "When the vendor was last updated"
+        hasActiveSession:
+          type: "boolean"
+          description: "Whether the vendor has an active session"
+        sessionCreatedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+          description: "When the vendor session was created"
+        sessionLastUsedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+          description: "When the vendor session was last used"
     VendorPaginationDTO:
       type: "object"
       required:
@@ -701,3 +810,9 @@ components:
         vendorId:
           type: "string"
           format: "uuid"
+        name:
+          type: "string"
+          description: "Vendor name"
+        isActive:
+          type: "boolean"
+          description: "Whether the vendor is active"

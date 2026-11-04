@@ -11,7 +11,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RevokeVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RotateVendorSessionUseCase;
@@ -37,6 +39,7 @@ class VendorControllerTest {
 
   private final RestMapper restMapper = mock(RestMapper.class);
   private final CreateVendorUseCase createVendorUseCase = mock(CreateVendorUseCase.class);
+  private final GetVendorUseCase getVendorUseCase = mock(GetVendorUseCase.class);
   private final UpdateVendorUseCase updateVendorUseCase = mock(UpdateVendorUseCase.class);
   private final SetVendorStatusUseCase setVendorStatusUseCase = mock(SetVendorStatusUseCase.class);
   private final ListVendorsUseCase listVendorsUseCase = mock(ListVendorsUseCase.class);
@@ -44,15 +47,18 @@ class VendorControllerTest {
       mock(RotateVendorSessionUseCase.class);
   private final RevokeVendorSessionUseCase revokeVendorSessionUseCase =
       mock(RevokeVendorSessionUseCase.class);
+  private final VendorRepository vendorRepository = mock(VendorRepository.class);
   private final VendorController controller =
       new VendorController(
           restMapper,
           createVendorUseCase,
+          getVendorUseCase,
           updateVendorUseCase,
           setVendorStatusUseCase,
           listVendorsUseCase,
           rotateVendorSessionUseCase,
-          revokeVendorSessionUseCase);
+          revokeVendorSessionUseCase,
+          vendorRepository);
 
   @Test
   void createVendor_shouldReturnOneTimeSessionTokenWithoutCaching() {
@@ -100,7 +106,7 @@ class VendorControllerTest {
         .thenReturn(useCaseResponse);
     when(restMapper.fromDomain(useCaseResponse)).thenReturn(paginationDTO);
 
-    var response = controller.listVendors(1, 10, false, "Akwa");
+    var response = controller.listVendors(1, 10, false, "Akwa", null);
 
     assertThat(response.getStatusCode().value()).isEqualTo(200);
     assertThat(response.getBody().getPage()).isEqualTo(1);
@@ -135,7 +141,7 @@ class VendorControllerTest {
         .thenReturn(useCaseResponse);
     when(restMapper.fromDomain(useCaseResponse)).thenReturn(paginationDTO);
 
-    var response = controller.listVendors(null, null, null, null);
+    var response = controller.listVendors(null, null, null, null, null);
 
     assertThat(response.getStatusCode().value()).isEqualTo(200);
     assertThat(response.getBody().getPage()).isEqualTo(0);
@@ -162,7 +168,7 @@ class VendorControllerTest {
         .thenReturn(useCaseResponse);
     when(restMapper.fromDomain(useCaseResponse)).thenReturn(paginationDTO);
 
-    var response = controller.listVendors(0, 20, true, null);
+    var response = controller.listVendors(0, 20, true, null, null);
 
     assertThat(response.getStatusCode().value()).isEqualTo(200);
     assertThat(response.getBody().getTotalElements()).isEqualTo(5);

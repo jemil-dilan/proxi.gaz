@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
 import cm.jemil.proxi.gaz.application.outbound.VendorSessionRepository;
+import cm.jemil.proxi.gaz.domain.shared.LastUsedAt;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSession;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSessionTokenHash;
@@ -25,6 +26,12 @@ class JpaVendorSessionRepository implements VendorSessionRepository {
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public Optional<VendorSession> findByVendorId(VendorId vendorId) {
+    return springRepository.findFirstByVendorIdOrderByCreatedAtDesc(vendorId.value()).map(jpaMapper::toDomain);
+  }
+
+  @Override
   public void replaceForVendor(VendorId vendorId, VendorSession session) {
     springRepository.deleteByVendorId(vendorId.value());
     springRepository.flush();
@@ -35,5 +42,16 @@ class JpaVendorSessionRepository implements VendorSessionRepository {
   @Override
   public void revokeForVendor(VendorId vendorId) {
     springRepository.deleteByVendorId(vendorId.value());
+  }
+
+  @Override
+  public void updateLastUsedAt(VendorId vendorId, LastUsedAt lastUsedAt) {
+    springRepository
+        .findFirstByVendorIdOrderByCreatedAtDesc(vendorId.value())
+        .ifPresent(
+            sessionJpa -> {
+              sessionJpa.setLastUsedAt(lastUsedAt.value());
+              springRepository.save(sessionJpa);
+            });
   }
 }

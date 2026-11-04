@@ -12,6 +12,7 @@ import cm.jemil.proxi.gaz.domain.shared.AddressText;
 import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
 import cm.jemil.proxi.gaz.domain.shared.PhoneNumber;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
+import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.domain.vendor.Vendor;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
@@ -20,9 +21,11 @@ import org.junit.jupiter.api.Test;
 
 class JpaVendorRepositoryTest {
   private final VendorSpringRepository springRepository = mock(VendorSpringRepository.class);
+  private final VendorSessionSpringRepository vendorSessionSpringRepository = mock(VendorSessionSpringRepository.class);
+  private final UserSpringRepository userSpringRepository = mock(UserSpringRepository.class);
   private final JpaMapper jpaMapper = mock(JpaMapper.class);
   private final JpaVendorRepository repository =
-      new JpaVendorRepository(springRepository, jpaMapper);
+      new JpaVendorRepository(springRepository, vendorSessionSpringRepository, userSpringRepository, jpaMapper);
 
   @Test
   void update_shouldFailWhenVendorDisappearsBeforePersistence() {

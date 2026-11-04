@@ -14,9 +14,11 @@ import cm.jemil.proxi.gaz.application.views.DemoView;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView2;
 import cm.jemil.proxi.gaz.application.views.VendorView;
+import cm.jemil.proxi.gaz.application.views.VendorView.VendorDetailView;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.Money;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
+import cm.jemil.proxi.gaz.domain.vendor.VendorSessionId;
 import cm.jemil.proxi.gaz.domain.vendor.DeliveryFeeType;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
@@ -27,6 +29,7 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoUpdateDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDetailDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
@@ -171,4 +174,24 @@ interface RestMapper {
   @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "mapInstantToLocalDateTime")
   @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "mapInstantToLocalDateTime")
   VendorDTO toDTO(VendorView.VendorView1 vendorView1);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "vendorId", source = "vendorId.value")
+  @Mapping(target = "addressText", source = "addressText.value")
+  @Mapping(target = "deliveryFeeAmount", source = "deliveryFeeAmount.amountFcfa")
+  @Mapping(target = "deliveryFeeType", source = "deliveryFeeType.value")
+  @Mapping(target = "isActive", source = "isActive")
+  @Mapping(target = "isStation", source = "isStation")
+  @Mapping(target = "latitude", source = "location.latitude")
+  @Mapping(target = "longitude", source = "location.longitude")
+  @Mapping(target = "phone", source = "phone.value")
+  @Mapping(target = "name", source = "name.value")
+  @Mapping(target = "email", source = "email.value")
+  @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "mapInstantToLocalDateTime")
+  @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "mapInstantToLocalDateTime")
+  @Mapping(target = "hasActiveSession", source = "hasActiveSession")
+  @Mapping(target = "sessionCreatedAt", source = "sessionCreatedAt", qualifiedByName = "mapInstantToLocalDateTime")
+  @Mapping(target = "sessionLastUsedAt", source = "sessionLastUsedAt", qualifiedByName = "mapInstantToLocalDateTime")
+  VendorDetailDTO toDTO(VendorDetailView vendorDetailView);
 }
+
