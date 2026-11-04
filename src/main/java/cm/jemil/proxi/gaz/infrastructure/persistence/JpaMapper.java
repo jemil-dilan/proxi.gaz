@@ -4,12 +4,14 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
+import cm.jemil.proxi.gaz.application.views.VendorView.VendorDetailView;
 import cm.jemil.proxi.gaz.application.views.VendorView.VendorView1;
 import cm.jemil.proxi.gaz.domain.demo.Demo;
 import cm.jemil.proxi.gaz.domain.demo.DemoDescription;
 import cm.jemil.proxi.gaz.domain.demo.DemoId;
 import cm.jemil.proxi.gaz.domain.demo.DemoName;
 import cm.jemil.proxi.gaz.domain.demo.DemoReference;
+import cm.jemil.proxi.gaz.domain.shared.LastUsedAt;
 import cm.jemil.proxi.gaz.domain.shared.AddressText;
 import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.Email;
@@ -26,6 +28,7 @@ import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSession;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSessionId;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSessionTokenHash;
+import java.time.Instant;
 import java.util.Optional;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -131,7 +134,8 @@ interface JpaMapper {
         VendorSessionId.from(entity.getId()),
         VendorId.from(entity.getVendorId()),
         new VendorSessionTokenHash(entity.getTokenHash()),
-        CreatedAt.from(entity.getCreatedAt()));
+        CreatedAt.from(entity.getCreatedAt()),
+        LastUsedAt.fromOptional(entity.getLastUsedAt()));
   }
 
   @BeanMapping(ignoreByDefault = true)
@@ -219,6 +223,91 @@ interface JpaMapper {
       @Override
       public Email getEmail() {
         return null; // Will be populated from User in ListVendorsUseCase
+      }
+    };
+  }
+
+  default VendorDetailView toDetailView(VendorJpa vendorJpa, VendorSessionJpa sessionJpa, UserJpa userJpa) {
+    return new VendorDetailView() {
+      @Override
+      public VendorId getVendorId() {
+        return VendorId.from(vendorJpa.getId());
+      }
+
+      @Override
+      public UserId getUserId() {
+        return UserId.from(vendorJpa.getUserId());
+      }
+
+      @Override
+      public VendorName getName() {
+        return new VendorName(vendorJpa.getName());
+      }
+
+      @Override
+      public PhoneNumber getPhone() {
+        return new PhoneNumber(vendorJpa.getPhone());
+      }
+
+      @Override
+      public GeoPoint getLocation() {
+        Point location = vendorJpa.getLocation();
+        return location != null ? GeoPoint.of(location.getY(), location.getX()) : null;
+      }
+
+      @Override
+      public AddressText getAddressText() {
+        return AddressText.fromOptional(vendorJpa.getAddressText()).orElse(null);
+      }
+
+      @Override
+      public boolean getIsStation() {
+        return vendorJpa.isStation();
+      }
+
+      @Override
+      public DeliveryFeeType getDeliveryFeeType() {
+        return DeliveryFeeType.fromOptional(vendorJpa.getDeliveryFeeType()).orElse(null);
+      }
+
+      @Override
+      public Money getDeliveryFeeAmount() {
+        return Optional.ofNullable(vendorJpa.getDeliveryFeeAmount()).map(Money::fcfa).orElse(null);
+      }
+
+      @Override
+      public boolean getIsActive() {
+        return vendorJpa.isActive();
+      }
+
+      @Override
+      public java.time.Instant getCreatedAt() {
+        return vendorJpa.getCreatedAt();
+      }
+
+      @Override
+      public java.time.Instant getUpdatedAt() {
+        return vendorJpa.getUpdatedAt();
+      }
+
+      @Override
+      public Email getEmail() {
+        return Optional.ofNullable(userJpa).map(u -> Email.from(u.getEmail())).orElse(null);
+      }
+
+      @Override
+      public Instant getSessionCreatedAt() {
+        return sessionJpa != null ? sessionJpa.getCreatedAt() : null;
+      }
+
+      @Override
+      public Instant getSessionLastUsedAt() {
+        return sessionJpa != null ? sessionJpa.getLastUsedAt() : null;
+      }
+
+      @Override
+      public boolean getHasActiveSession() {
+        return sessionJpa != null;
       }
     };
   }

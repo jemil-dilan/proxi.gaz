@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
+import cm.jemil.proxi.gaz.application.views.VendorView.VendorDetailView;
 import cm.jemil.proxi.gaz.application.views.VendorView.VendorView1;
 import cm.jemil.proxi.gaz.domain.shared.PageData;
 import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
@@ -24,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 class JpaVendorRepository implements VendorRepository {
 
   private final VendorSpringRepository vendorSpringRepository;
+  private final VendorSessionSpringRepository vendorSessionSpringRepository;
+  private final UserSpringRepository userSpringRepository;
   private final JpaMapper jpaMapper;
 
   @Override
@@ -56,6 +59,21 @@ class JpaVendorRepository implements VendorRepository {
         page.getTotalPages(),
         page.getSize(),
         page.getNumber());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public VendorDetailView findDetailById(VendorId vendorId) {
+    VendorJpa vendorJpa = vendorSpringRepository
+        .findAggregateById(vendorId.value())
+        .orElseThrow(VendorNotFoundException::new);
+    VendorSessionJpa sessionJpa = vendorSessionSpringRepository
+        .findFirstByVendorIdOrderByCreatedAtDesc(vendorJpa.getId())
+        .orElse(null);
+    UserJpa userJpa = userSpringRepository
+        .findAggregateById(vendorJpa.getUserId())
+        .orElse(null);
+    return jpaMapper.toDetailView(vendorJpa, sessionJpa, userJpa);
   }
 
   @Override

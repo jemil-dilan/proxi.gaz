@@ -13,6 +13,7 @@ import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
 import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
 import cm.jemil.proxi.gaz.domain.vendor.InvalidVendorSessionException;
+import cm.jemil.proxi.gaz.domain.vendor.VendorInactiveException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -57,8 +58,9 @@ class DomainExceptionTranslator {
         switch (ex) {
           case DemoNotFoundException _, VendorNotFoundException _ -> HttpStatus.NOT_FOUND;
           case DemoAlreadyExistsException _ -> HttpStatus.CONFLICT;
-          case InvalidCredentialsException _, InvalidVendorSessionException _ ->
-              HttpStatus.UNAUTHORIZED;
+          case InvalidCredentialsException _ -> HttpStatus.UNAUTHORIZED;
+          case InvalidVendorSessionException _, VendorInactiveException _ ->
+              HttpStatus.FORBIDDEN;
           case FieldsExtractionCodeNotSupported _,
               InvalidOrderStatusTransitionException _,
               InvalidDomainValueException _ ->

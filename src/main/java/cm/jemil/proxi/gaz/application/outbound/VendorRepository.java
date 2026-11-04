@@ -4,6 +4,7 @@
  */
 package cm.jemil.proxi.gaz.application.outbound;
 
+import cm.jemil.proxi.gaz.application.views.VendorView.VendorDetailView;
 import cm.jemil.proxi.gaz.application.views.VendorView.VendorView1;
 import cm.jemil.proxi.gaz.domain.shared.PageData;
 import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
@@ -23,6 +24,8 @@ public interface VendorRepository {
 
   PageData<VendorView1> loadAllVendors(
       PaginationFetchRequest paginationFetchRequest, boolean isActive, @Nullable VendorName name);
+
+  cm.jemil.proxi.gaz.application.views.VendorView.VendorDetailView findDetailById(VendorId vendorId);
 
   void update(Vendor vendor);
 }

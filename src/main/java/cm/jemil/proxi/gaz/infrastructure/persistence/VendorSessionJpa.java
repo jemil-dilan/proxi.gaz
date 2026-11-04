@@ -33,4 +33,7 @@ class VendorSessionJpa {
 
   @Column(name = "c_created_at", nullable = false)
   private Instant createdAt;
+
+  @Column(name = "c_last_used_at")
+  private Instant lastUsedAt;
 }

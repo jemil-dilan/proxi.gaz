@@ -4,12 +4,18 @@
  */
 package cm.jemil.proxi.gaz.interfaces.rest;
 
+import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RevokeVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RotateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
+import cm.jemil.proxi.gaz.application.views.VendorView;
+import cm.jemil.proxi.gaz.domain.vendor.InvalidVendorSessionException;
+import cm.jemil.proxi.gaz.domain.vendor.Vendor;
+import cm.jemil.proxi.gaz.domain.vendor.VendorInactiveException;
 import cm.jemil.proxi.gaz.config.VendorPrincipal;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.VendorApi;
@@ -35,11 +41,13 @@ class VendorController implements VendorApi {
 
   private final RestMapper restMapper;
   private final CreateVendorUseCase createVendorUseCase;
+  private final GetVendorUseCase getVendorUseCase;
   private final UpdateVendorUseCase updateVendorUseCase;
   private final SetVendorStatusUseCase setVendorStatusUseCase;
   private final ListVendorsUseCase listVendorsUseCase;
   private final RotateVendorSessionUseCase rotateVendorSessionUseCase;
   private final RevokeVendorSessionUseCase revokeVendorSessionUseCase;
+  private final VendorRepository vendorRepository;
 
   @Override
   public ResponseEntity<VendorOnboardingResponseDTO> createVendor(CreateVendorDTO request) {
@@ -51,12 +59,19 @@ class VendorController implements VendorApi {
 
   @Override
   public ResponseEntity<VendorPaginationDTO> listVendors(
-      Integer page, Integer size, Boolean isActive, String name) {
+      Integer page, Integer size, Boolean isActive, String name, String sort) {
     var result =
         listVendorsUseCase.execute(
             new ListVendorsUseCase.Query(
                 page == null ? 0 : page, size == null ? 20 : size, isActive, name));
     return ResponseEntity.ok().body(restMapper.fromDomain(result));
+  }
+
+  @Override
+  public ResponseEntity<cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDetailDTO> getVendor(
+      UUID vendorId) {
+    var result = getVendorUseCase.execute(VendorId.from(vendorId));
+    return ResponseEntity.ok(restMapper.toDTO(result));
   }
 
   @Override
@@ -80,7 +95,21 @@ class VendorController implements VendorApi {
             ? id
             : null;
 
-    return ResponseEntity.ok(new VendorSessionIdentityDTO(vendorId));
+    if (vendorId == null) {
+      throw new InvalidVendorSessionException();
+    }
+
+    // For PXG-058: return name and isActive from vendor
+    var vendor = vendorRepository.findById(VendorId.from(vendorId));
+    if (!vendor.isActive()) {
+      throw new VendorInactiveException(VendorId.from(vendorId));
+    }
+
+    return ResponseEntity.ok(
+        new VendorSessionIdentityDTO()
+            .vendorId(vendorId)
+            .name(vendor.getName().value())
+            .isActive(vendor.isActive()));
   }
 
   @Override
