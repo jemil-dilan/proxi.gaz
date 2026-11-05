@@ -84,6 +84,25 @@ public class CommonSteps implements En {
                     new LastRequestResponse(
                         HttpStatus.valueOf(httpStatus.toUpperCase(Locale.ROOT)), errorCode)));
 
+    Then(
+        "The last request failed with the http status {string}",
+        (String httpStatus) -> {
+          assertThat(httpClient.getLastResponse().status().value())
+              .isEqualTo(HttpStatus.valueOf(httpStatus.toUpperCase(Locale.ROOT)).value());
+        });
+
+    Then(
+        "The last request failed with the http status {string} or {string}",
+        (String status1, String status2) -> {
+          var actualStatus = httpClient.getLastResponse().status().value();
+          var expected1 = HttpStatus.valueOf(status1.toUpperCase(Locale.ROOT)).value();
+          var expected2 = HttpStatus.valueOf(status2.toUpperCase(Locale.ROOT)).value();
+          assertThat(actualStatus)
+              .withFailMessage(
+                  "Expected status %s or %s but was %s", expected1, expected2, actualStatus)
+              .isIn(expected1, expected2);
+        });
+
     And(
         "The last response body should contain RFC 7807 Problem structure",
         () -> {
@@ -103,17 +122,17 @@ public class CommonSteps implements En {
         });
 
     And(
-        "The last response should have problem type {string}",
-        (String expectedType) -> {
-          var body = httpClient.getLastResponseBody();
-          assertThat(body).contains("\"type\":\"" + expectedType + "\"");
-        });
-
-    And(
         "The last response should have a valid error code",
         () -> {
           var body = httpClient.getLastResponseBody();
           assertThat(body).contains("\"code\":\"PROXIGAZ-");
+        });
+
+    And(
+        "The last response should have problem type {string}",
+        (String expectedType) -> {
+          var body = httpClient.getLastResponseBody();
+          assertThat(body).contains("\"type\":\"" + expectedType + "\"");
         });
   }
 

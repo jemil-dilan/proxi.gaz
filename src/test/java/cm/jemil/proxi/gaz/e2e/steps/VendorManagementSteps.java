@@ -20,10 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 public class VendorManagementSteps implements En {
@@ -31,7 +29,6 @@ public class VendorManagementSteps implements En {
   private static final String VENDORS_PATH = "/admin/vendors";
 
   private final HttpClient httpClient;
-  private final JdbcTemplate jdbcTemplate;
   private UUID vendorId;
   private UUID userId;
   private String sessionToken;
@@ -39,7 +36,6 @@ public class VendorManagementSteps implements En {
 
   public VendorManagementSteps(HttpClient httpClient, JdbcTemplate jdbcTemplate) {
     this.httpClient = httpClient;
-    this.jdbcTemplate = jdbcTemplate;
 
     Given(
         "I assume that the vendors with the following data are inside the database",
@@ -103,13 +99,6 @@ public class VendorManagementSteps implements En {
                             + " c_id = ?)",
                         vendorId);
                   });
-        });
-
-    Then(
-        "The last request failed with the http status {string}",
-        (String httpStatus) -> {
-          assertThat(httpClient.getLastResponse().status().value())
-              .isEqualTo(HttpStatus.valueOf(httpStatus.toUpperCase(Locale.ROOT)).value());
         });
 
     When(
@@ -433,6 +422,32 @@ public class VendorManagementSteps implements En {
               .isEqualTo(Integer.parseInt(expected.get("deliveryFeeAmount")));
           assertThat(actual.get("c_is_active"))
               .isEqualTo(Boolean.parseBoolean(expected.get("isActive")));
+        });
+
+    When(
+        "I try to access my vendor session",
+        () -> {
+          var vendorToken =
+              issuedSessionTokens.isEmpty() ? sessionToken : issuedSessionTokens.getFirst();
+          var response =
+              given().header("Authorization", "Bearer " + vendorToken).get("/vendor/session");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I try to access vendor session with the revoked token",
+        () -> {
+          var response =
+              given().header("Authorization", "Bearer " + sessionToken).get("/vendor/session");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I try to list vendors with the vendor session token",
+        () -> {
+          var response =
+              given().header("Authorization", "Bearer " + sessionToken).get("/admin/vendors");
+          httpClient.recordResponse(response.statusCode(), response.asString());
         });
   }
 

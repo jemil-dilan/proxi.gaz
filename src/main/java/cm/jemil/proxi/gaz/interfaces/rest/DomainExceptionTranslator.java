@@ -47,7 +47,13 @@ class DomainExceptionTranslator {
   public ResponseEntity<ProblemDetail> handleInvalidRequest(MethodArgumentNotValidException ex) {
     var errors =
         ex.getBindingResult().getFieldErrors().stream()
-            .map(error -> Map.of("field", error.getField(), "message", error.getDefaultMessage()))
+            .map(
+                error ->
+                    Map.of(
+                        "field",
+                        error.getField(),
+                        "message",
+                        error.getDefaultMessage() == null ? " " : error.getDefaultMessage()))
             .collect(Collectors.toList());
     var detail =
         ex.getBindingResult().getFieldErrors().stream()

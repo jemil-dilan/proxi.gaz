@@ -22,7 +22,7 @@ paths:
       summary: "List and filter vendors"
       operationId: "listVendors"
       security:
-        - bearerAuth: []
+        - adminAuth: []
       parameters:
         - name: "page"
           in: "query"
@@ -70,7 +70,7 @@ paths:
       summary: "Create a vendor"
       operationId: "createVendor"
       security:
-        - bearerAuth: []
+        - adminAuth: []
       requestBody:
         required: true
         content:
@@ -99,7 +99,7 @@ paths:
       summary: "Replace vendor details"
       operationId: "updateVendor"
       security:
-        - bearerAuth: []
+        - adminAuth: []
       parameters:
         - name: "vendorId"
           in: "path"
@@ -131,7 +131,7 @@ paths:
       summary: "Set vendor activation status"
       operationId: "setVendorStatus"
       security:
-        - bearerAuth: []
+        - adminAuth: []
       parameters:
         - name: "vendorId"
           in: "path"
@@ -163,7 +163,7 @@ paths:
       summary: "Rotate the vendor session token"
       operationId: "rotateVendorSession"
       security:
-        - bearerAuth: []
+        - adminAuth: []
       parameters:
         - name: "vendorId"
           in: "path"
@@ -190,7 +190,7 @@ paths:
       summary: "Revoke the vendor session token"
       operationId: "revokeVendorSession"
       security:
-        - bearerAuth: []
+        - adminAuth: []
       parameters:
         - name: "vendorId"
           in: "path"
@@ -214,7 +214,7 @@ paths:
       summary: "Return the authenticated vendor identity"
       operationId: "getVendorSession"
       security:
-        - bearerAuth: []
+        - vendorSessionAuth: []
       responses:
         "200":
           description: "Vendor session is valid"
@@ -257,7 +257,7 @@ paths:
       summary: "Return the authenticated admin identity"
       operationId: "getAdminProfile"
       security:
-        - bearerAuth: []
+        - adminAuth: []
       responses:
         "200":
           description: "Authenticated admin identity"
@@ -432,6 +432,16 @@ paths:
           $ref: "#/components/responses/NotFound"
 components:
   securitySchemes:
+    adminAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+      description: "Admin JWT token for back-office operations"
+    vendorSessionAuth:
+      type: "http"
+      scheme: "bearer"
+      bearerFormat: "JWT"
+      description: "Vendor long-lived opaque session token for vendor operations"
     bearerAuth:
       type: "http"
       scheme: "bearer"
