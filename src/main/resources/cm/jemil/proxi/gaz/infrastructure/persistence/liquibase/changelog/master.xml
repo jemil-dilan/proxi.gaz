@@ -14,5 +14,7 @@
 		relativeToChangelogFile="true" />
 	<include file="internal/v-4-vendor-user-link.xml"
 		relativeToChangelogFile="true" />
+	<include file="internal/v-5-add-vendor-updated-at.xml"
+		relativeToChangelogFile="true" />
 </databaseChangeLog>
 

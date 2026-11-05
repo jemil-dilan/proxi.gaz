@@ -62,4 +62,7 @@ class VendorJpa {
 
   @Column(name = "c_created_at", nullable = false, insertable = false, updatable = false)
   private Instant createdAt;
+
+  @Column(name = "c_updated_at", nullable = false)
+  private Instant updatedAt;
 }

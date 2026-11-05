@@ -50,11 +50,11 @@ interface RestMapper {
   @Mapping(target = "phone.value", source = "phone")
   @Mapping(target = "location.latitude", source = "latitude")
   @Mapping(target = "location.longitude", source = "longitude")
-  @Mapping(target = "addressText.value", source = "address")
+  @Mapping(target = "addressText.value", source = "addressText")
   @Mapping(target = "isStation", source = "isStation")
   @Mapping(target = "deliveryFeeType", source = "deliveryFeeType")
   @Mapping(target = "deliveryFeeAmount", source = "deliveryFeeAmount")
-  @Mapping(target = "isActive", source = "isActive")
+  @Mapping(target = "isActive", constant = "true")
   CreateVendorUseCase.Command toCommand(CreateVendorDTO createVendorDTO);
 
   @BeanMapping(ignoreByDefault = true)
@@ -136,6 +136,13 @@ interface RestMapper {
     return deliveryFeeAmount == null ? null : Money.fcfa(deliveryFeeAmount.intValue());
   }
 
+  @org.mapstruct.Named("mapInstantToLocalDateTime")
+  default java.time.LocalDateTime mapInstantToLocalDateTime(java.time.Instant instant) {
+    return instant == null
+        ? null
+        : java.time.LocalDateTime.ofInstant(instant, java.time.ZoneOffset.UTC);
+  }
+
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "demoId", source = "demoId")
   @Mapping(target = "name", source = "dto.name")
@@ -161,5 +168,14 @@ interface RestMapper {
   @Mapping(target = "longitude", source = "location.longitude")
   @Mapping(target = "phone", source = "phone.value")
   @Mapping(target = "name", source = "name.value")
+  @Mapping(target = "email", source = "email.value")
+  @Mapping(
+      target = "createdAt",
+      source = "createdAt",
+      qualifiedByName = "mapInstantToLocalDateTime")
+  @Mapping(
+      target = "updatedAt",
+      source = "updatedAt",
+      qualifiedByName = "mapInstantToLocalDateTime")
   VendorDTO toDTO(VendorView.VendorView1 vendorView1);
 }

@@ -126,9 +126,8 @@ class RestMapperTest {
             .phone("+237699002001")
             .latitude(4.05)
             .longitude(9.70)
-            .address("Akwa")
-            .isStation(false)
-            .isActive(true);
+            .addressText("Akwa")
+            .isStation(false);
 
     var command = restMapper.toCommand(dto);
 
@@ -144,9 +143,8 @@ class RestMapperTest {
             .phone("+237699002001")
             .latitude(4.05)
             .longitude(9.70)
-            .address("Akwa")
-            .isStation(false)
-            .isActive(true);
+            .addressText("Akwa")
+            .isStation(false);
 
     var command = restMapper.toCommand(dto);
 
