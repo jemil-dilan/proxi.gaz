@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-10-31 by `working/PXG-012C` (PXG-013–015 merged; CI green per user; Docker/release workflow complete)
+Last updated: 2026-11-03 by `working/PXG-055` (PXG-055 complete: RFC 7807 error model; all tests pass)
 
 ## Critical Gate
 
@@ -12,7 +12,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
 | 0 — Foundations & Core Infrastructure | Implementation done; release outstanding | PXG-001–011 complete; manual-test gate explicitly waived; no Docker/GitHub staging release was produced |
-| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 are merged to `main`; CI is green per user confirmation. PXG-012C implemented Docker packaging and GitHub staging/release automation; catalog/availability/geo work remains |
+| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 are merged to `main`; CI is green per user confirmation. PXG-012C implemented Docker packaging and GitHub staging/release automation; **PXG-055** (error model) complete on branch; catalog/availability/geo work remains |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -36,7 +36,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | ORD-05   | Client confirms reception → Livrée & Vérifiée           | No          | No          | No         | Unlocks review |
 | ORD-06   | 24 h auto-stats validation (review stays locked)        | No          | No          | No         | Use controlled Clock only |
 | REV-01   | Create review (only if Livrée & Vérifiée)               | No          | No          | No         |       |
-| SYS-01   | NotificationChannel (Web Push) + plan B                 | No          | No          | No         | Test during manual phase |
+| SYS-01   | NotificationChannel (Web Push) + plan B                 | Partial     | No | No         | RFC 7807 error model implemented (PXG-055); Web Push adapter remains for PXG-030 |
 | SYS-02   | OtpProvider port (null in pilot)                        | No          | No          | No         | Trigger if fake-order rate > 10 % |
 | SYS-03   | OrderReport (fake order) + phone block list + rate limit| No          | No          | No         | Strengthen anti-abuse |
 | SYS-04   | Pilot KPI queries                                       | No          | No          | No         |       |
@@ -64,6 +64,11 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-013 | Vendor activate/deactivate | Merged to `main`; CI green per user; nearby-search filtering remains in PXG-020 |
 | PXG-014 | List/filter Vendors | Merged to `main`; CI green per user |
 | PXG-015 | VendorSession management and validation | Merged to `main`; CI green per user |
+| PXG-055 | Error model & RFC 7807 Problem details | Complete on `working/PXG-055`; all tests pass (unit, data, E2E); ready for merge |
+
+## Architecture Updates
+
+- **Demo slice preserved**: Added documentation to `docs/ProxiGaz_Implementation_Guideline.md` clarifying that the Demo vertical slice is intentionally preserved as an architecture reference for AI agents and developers.
 
 ## Reference Scaffold (PXG-001)
 

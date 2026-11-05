@@ -12,13 +12,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -36,7 +34,9 @@ public class SecurityConfig {
   @Order(1)
   @Bean
   public SecurityFilterChain vendorSecurityFilterChain(
-      HttpSecurity http, ValidateVendorSessionUseCase validateVendorSessionUseCase) {
+      HttpSecurity http,
+      ValidateVendorSessionUseCase validateVendorSessionUseCase,
+      ProblemDetailsAuthenticationEntryPoint authenticationEntryPoint) {
     http.securityMatcher(Constants.PATH_VENDOR_SESSION)
         .csrf(csrf -> csrf.requireCsrfProtectionMatcher(_ -> false))
         .authorizeHttpRequests(authorize -> authorize.anyRequest().hasAuthority(Scopes.VENDOR))
@@ -44,9 +44,7 @@ public class SecurityConfig {
             new VendorSessionAuthenticationFilter(validateVendorSessionUseCase),
             AnonymousAuthenticationFilter.class)
         .exceptionHandling(
-            exceptions ->
-                exceptions.authenticationEntryPoint(
-                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+            exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint))
         .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
     return http.build();
   }
@@ -54,7 +52,8 @@ public class SecurityConfig {
   @SuppressWarnings("java:S4502")
   @Order(2)
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+  public SecurityFilterChain securityFilterChain(
+      HttpSecurity http, ProblemDetailsAuthenticationEntryPoint authenticationEntryPoint) {
     http.csrf(csrf -> csrf.requireCsrfProtectionMatcher(_ -> false))
         .authorizeHttpRequests(
             authorize ->
@@ -77,6 +76,8 @@ public class SecurityConfig {
                     .hasAnyAuthority(Scopes.DEMO_DELETE)
                     .anyRequest()
                     .denyAll())
+        .exceptionHandling(
+            exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint))
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
         .sessionManagement(session -> session.sessionCreationPolicy(STATELESS));
 

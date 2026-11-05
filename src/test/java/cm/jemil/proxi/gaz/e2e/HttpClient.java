@@ -70,7 +70,13 @@ public class HttpClient {
     }
     try {
       JsonNode node = MAPPER.readTree(body);
-      JsonNode errorCode = node.get("errorCode");
+      // Try new RFC 7807 format first
+      JsonNode errorCode = node.get("code");
+      if (errorCode != null && !errorCode.isNull()) {
+        return errorCode.asText();
+      }
+      // Fall back to old format
+      errorCode = node.get("errorCode");
       return errorCode == null || errorCode.isNull() ? "" : errorCode.asText();
     } catch (Exception _) {
       return "";

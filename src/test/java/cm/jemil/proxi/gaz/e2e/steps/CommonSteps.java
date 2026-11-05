@@ -83,6 +83,38 @@ public class CommonSteps implements En {
                 .isEqualTo(
                     new LastRequestResponse(
                         HttpStatus.valueOf(httpStatus.toUpperCase(Locale.ROOT)), errorCode)));
+
+    And(
+        "The last response body should contain RFC 7807 Problem structure",
+        () -> {
+          var body = httpClient.getLastResponseBody();
+          assertThat(body).contains("\"type\"");
+          assertThat(body).contains("\"title\"");
+          assertThat(body).contains("\"status\"");
+          assertThat(body).contains("\"code\"");
+          assertThat(body).contains("\"correlationId\"");
+        });
+
+    And(
+        "The last response should have error code {string}",
+        (String expectedCode) -> {
+          var body = httpClient.getLastResponseBody();
+          assertThat(body).contains("\"code\":\"" + expectedCode + "\"");
+        });
+
+    And(
+        "The last response should have problem type {string}",
+        (String expectedType) -> {
+          var body = httpClient.getLastResponseBody();
+          assertThat(body).contains("\"type\":\"" + expectedType + "\"");
+        });
+
+    And(
+        "The last response should have a valid error code",
+        () -> {
+          var body = httpClient.getLastResponseBody();
+          assertThat(body).contains("\"code\":\"PROXIGAZ-");
+        });
   }
 
   private String buildAccessToken(String scopes) {

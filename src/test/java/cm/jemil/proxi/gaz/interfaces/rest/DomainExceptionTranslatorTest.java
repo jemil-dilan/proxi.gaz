@@ -6,6 +6,7 @@ package cm.jemil.proxi.gaz.interfaces.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import cm.jemil.proxi.gaz.config.CorrelationIdHolder;
 import cm.jemil.proxi.gaz.domain.DomainException;
 import cm.jemil.proxi.gaz.domain.ErrorCodes;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
@@ -15,12 +16,24 @@ import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
 import cm.jemil.proxi.gaz.domain.order.OrderStatus;
 import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 class DomainExceptionTranslatorTest {
 
   private final DomainExceptionTranslator translator = new DomainExceptionTranslator();
+
+  @BeforeEach
+  void setUp() {
+    CorrelationIdHolder.set("test-correlation-id");
+  }
+
+  @AfterEach
+  void tearDown() {
+    CorrelationIdHolder.clear();
+  }
 
   @Test
   void handleDomainException_shouldReturnNotFound_forDemoNotFound() {
@@ -29,8 +42,12 @@ class DomainExceptionTranslatorTest {
 
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-404-000");
-    assertThat(response.getBody()).containsKey("message");
+    var problem = response.getBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.code()).isEqualTo("PROXIGAZ-404-000");
+    assertThat(problem.status()).isEqualTo(404);
+    assertThat(problem.correlationId()).isEqualTo("test-correlation-id");
+    assertThat(problem.title()).isEqualTo("DEMO NOT FOUND");
   }
 
   @Test
@@ -40,7 +57,10 @@ class DomainExceptionTranslatorTest {
 
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-409-000");
+    var problem = response.getBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.code()).isEqualTo("PROXIGAZ-409-000");
+    assertThat(problem.status()).isEqualTo(409);
   }
 
   @Test
@@ -48,7 +68,10 @@ class DomainExceptionTranslatorTest {
     var response = translator.handleDomainException(new InvalidCredentialsException());
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-401-000");
+    var problem = response.getBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.code()).isEqualTo("PROXIGAZ-401-000");
+    assertThat(problem.status()).isEqualTo(401);
   }
 
   @Test
@@ -58,7 +81,10 @@ class DomainExceptionTranslatorTest {
 
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-400-000");
+    var problem = response.getBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.code()).isEqualTo("PROXIGAZ-400-000");
+    assertThat(problem.status()).isEqualTo(400);
   }
 
   @Test
@@ -68,7 +94,10 @@ class DomainExceptionTranslatorTest {
             new InvalidOrderStatusTransitionException(OrderStatus.PENDING, OrderStatus.DELIVERED));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-400-001");
+    var problem = response.getBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.code()).isEqualTo("PROXIGAZ-400-001");
+    assertThat(problem.status()).isEqualTo(400);
   }
 
   @Test
@@ -76,7 +105,10 @@ class DomainExceptionTranslatorTest {
     var response = translator.handleDomainException(new InvalidDomainValueException("bad value"));
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-400-002");
+    var problem = response.getBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.code()).isEqualTo("PROXIGAZ-400-002");
+    assertThat(problem.status()).isEqualTo(400);
   }
 
   @Test
@@ -87,15 +119,34 @@ class DomainExceptionTranslatorTest {
 
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(response.getBody()).containsEntry("errorCode", "PROXIGAZ-500-000");
+    var problem = response.getBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.code()).isEqualTo("PROXIGAZ-500-000");
+    assertThat(problem.status()).isEqualTo(500);
   }
 
   @Test
-  void handleDomainException_shouldAlwaysCarryNonEmptyMessage() {
+  void handleDomainException_shouldAlwaysCarryNonEmptyDetail() {
     // When
     var response = translator.handleDomainException(new DemoNotFoundException());
 
     // Then
-    assertThat(response.getBody().get("message")).isNotBlank();
+    var problem = response.getBody();
+    assertThat(problem.detail()).isNotBlank();
+  }
+
+  @Test
+  void handleDomainException_shouldHaveRFC7807Structure() {
+    // When
+    var response = translator.handleDomainException(new DemoNotFoundException());
+
+    // Then
+    var problem = response.getBody();
+    assertThat(problem.type()).isNotNull();
+    assertThat(problem.title()).isNotNull();
+    assertThat(problem.status()).isNotNull();
+    assertThat(problem.code()).isNotNull();
+    assertThat(problem.correlationId()).isNotNull();
+    assertThat(problem.timestamp()).isNotNull();
   }
 }
