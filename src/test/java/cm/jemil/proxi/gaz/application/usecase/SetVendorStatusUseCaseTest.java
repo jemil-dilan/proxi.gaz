@@ -40,7 +40,7 @@ class SetVendorStatusUseCaseTest {
             true);
     when(repository.findById(vendor.getId())).thenReturn(vendor);
 
-    useCase.execute(vendor.getId(), false);
+    useCase.execute(vendor.id(), false);
 
     var captor = ArgumentCaptor.forClass(Vendor.class);
     verify(repository).update(captor.capture());

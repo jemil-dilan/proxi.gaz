@@ -5,12 +5,19 @@
 package cm.jemil.proxi.gaz.e2e.steps;
 
 import static io.restassured.RestAssured.given;
+import static java.util.stream.Collectors.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 import cm.jemil.proxi.gaz.e2e.HttpClient;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorSessionIdentityDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorSessionTokenDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorStatusUpdateDTO;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java8.En;
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +28,7 @@ import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -29,7 +37,10 @@ public class VendorManagementSteps implements En {
   private static final String VENDORS_PATH = "/admin/vendors";
 
   private final HttpClient httpClient;
-  private UUID vendorId;
+  private VendorOnboardingResponseDTO vendorOnboardingResponseDTO;
+  private VendorSessionIdentityDTO vendorSessionIdentityDTO;
+  private VendorSessionTokenDTO vendorSessionTokenDTO;
+  private VendorDTO vendorDTO;
   private UUID userId;
   private String sessionToken;
   private final List<String> issuedSessionTokens = new ArrayList<>();
@@ -110,41 +121,27 @@ public class VendorManagementSteps implements En {
                   .header("Authorization", httpClient.authorizationHeader())
                   .body(toCreateRequest(dataTable.asMaps().getFirst()))
                   .post(VENDORS_PATH);
-          httpClient.recordResponse(response.statusCode(), response.asString());
-          if (response.statusCode() == 201) {
-            vendorId = UUID.fromString(response.jsonPath().getString("vendorId"));
-            sessionToken = response.jsonPath().getString("sessionToken");
-            issuedSessionTokens.add(sessionToken);
-          }
+          assertThat(response.statusCode()).isEqualTo(201);
+          httpClient.recordResponse(
+              response.statusCode(),
+              response.asString(),
+              response.headers().asList().stream()
+                  .collect(toMap(h -> h.getName(), h -> h.getValue(), (a, b) -> a)));
+          this.vendorOnboardingResponseDTO = response.as(VendorOnboardingResponseDTO.class);
+          issuedSessionTokens.add(vendorOnboardingResponseDTO.getSessionToken());
         });
 
     When(
-        "I create a vendor without the required addressText flag",
-        () -> {
-          var request =
-              Map.of(
-                  "name",
-                  "Missing addressText",
-                  "phone",
-                  "+237699002024",
-                  "latitude",
-                  4.05,
-                  "longitude",
-                  9.70,
-                  "isStation",
-                  false);
+        "I try to create a vendor with the following data",
+        (DataTable dataTable) -> {
           var response =
               given()
                   .contentType(ContentType.JSON)
                   .header("Authorization", httpClient.authorizationHeader())
-                  .body(request)
+                  .body(toCreateRequest(dataTable.asMaps().getFirst()))
                   .post(VENDORS_PATH);
           httpClient.recordResponse(response.statusCode(), response.asString());
         });
-
-    Then(
-        "the vendor create request succeeds",
-        () -> assertThat(httpClient.getLastResponse().status().value()).isEqualTo(201));
 
     When(
         "I get vendor by id {string}",
@@ -158,6 +155,20 @@ public class VendorManagementSteps implements En {
         });
 
     When(
+        "I get vendor by id using the created vendor id",
+        () -> {
+          this.vendorDTO =
+              given()
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .pathParam("vendorId", this.vendorOnboardingResponseDTO.getVendorId())
+                  .get(VENDORS_PATH + "/{vendorId}")
+                  .then()
+                  .statusCode(200)
+                  .extract()
+                  .as(VendorDTO.class);
+        });
+
+    When(
         "I try to get vendor by id {string}",
         (String vendorId) -> {
           var response =
@@ -166,6 +177,76 @@ public class VendorManagementSteps implements En {
                   .pathParam("vendorId", vendorId)
                   .get(VENDORS_PATH + "/{vendorId}");
           httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    Then(
+        "the vendor detail response contains active session metadata",
+        () -> {
+          assertThat(this.vendorDTO.getHasActiveSession()).isTrue();
+          assertThat(this.vendorDTO.getSessionCreatedAt()).isNotNull();
+          assertThat(this.vendorDTO.getSessionLastUsedAt()).isNull();
+        });
+
+    Then(
+        "the vendor detail response contains revoked session metadata",
+        () -> {
+          assertThat(this.vendorDTO.getHasActiveSession()).isFalse();
+          assertThat(this.vendorDTO.getSessionCreatedAt()).isNull();
+          assertThat(this.vendorDTO.getSessionLastUsedAt()).isNull();
+        });
+
+    Then(
+        "the vendor detail response contains used session metadata",
+        () -> {
+          assertThat(this.vendorDTO.getHasActiveSession()).isTrue();
+          assertThat(this.vendorDTO.getSessionCreatedAt()).isNotNull();
+          assertThat(this.vendorDTO.getSessionLastUsedAt()).isNotNull();
+        });
+
+    Then(
+        "the vendor detail isActive is {word}",
+        (String isActive) ->
+            assertThat(this.vendorDTO.getIsActive()).isEqualTo(Boolean.parseBoolean(isActive)));
+
+    Then(
+        "the session has active session",
+        () -> {
+          assertThat(this.vendorDTO.getHasActiveSession()).isTrue();
+        });
+
+    Then(
+        "the vendor list is sorted by createdAt ascending",
+        () -> {
+          var body = JsonPath.from(httpClient.getLastResponseBody());
+          var createdAt = body.getList("content.createdAt", String.class);
+          assertThat(createdAt).isSorted();
+        });
+
+    Then(
+        "the vendor session contains name {string}",
+        (String expectedName) -> {
+          assertThat(this.vendorSessionIdentityDTO.getName()).isEqualTo(expectedName);
+        });
+
+    Then(
+        "the vendor session contains isActive {word}",
+        (String isActive) -> {
+          assertThat(this.vendorSessionIdentityDTO.getIsActive())
+              .isEqualTo(Boolean.parseBoolean(isActive));
+        });
+
+    Then(
+        "the vendor create response has Cache-Control no-store header",
+        () -> {
+          assertThat(httpClient.headerContains("Cache-Control", "no-store")).isTrue();
+        });
+
+    Then(
+        "the vendor list is sorted by name ascending",
+        () -> {
+          var body = JsonPath.from(httpClient.getLastResponseBody());
+          var names = body.getList("content.name", String.class);
+          assertThat(names).isSortedAccordingTo(String.CASE_INSENSITIVE_ORDER);
         });
 
     When(
@@ -199,16 +280,14 @@ public class VendorManagementSteps implements En {
     When(
         "I list vendors at page {int} with size {int}, active {string}, and name {string}",
         (Integer page, Integer size, String active, String name) -> {
-          var request = given().header("Authorization", httpClient.authorizationHeader());
-          request.queryParam("page", page).queryParam("size", size);
-          if (!"any".equals(active)) {
-            request.queryParam("isActive", active);
-          }
-          if (!"any".equals(name)) {
-            request.queryParam("name", name);
-          }
-          var response = request.get(VENDORS_PATH);
-          httpClient.recordResponse(response.statusCode(), response.asString());
+          listVendors(page, size, active, name, null);
+        });
+
+    When(
+        "I list vendors at page {int} with size {int}, active {string}, name {string}, and sort"
+            + " {string}",
+        (Integer page, Integer size, String active, String name, String sort) -> {
+          listVendors(page, size, active, name, sort);
         });
 
     Then(
@@ -237,7 +316,9 @@ public class VendorManagementSteps implements En {
         () -> {
           userId =
               jdbcTemplate.queryForObject(
-                  "SELECT c_user_id FROM t_vendors WHERE c_id = ?", UUID.class, vendorId);
+                  "SELECT c_user_id FROM t_vendors WHERE c_id = ?",
+                  UUID.class,
+                  this.vendorOnboardingResponseDTO.getVendorId());
           assertThat(
                   jdbcTemplate.queryForObject(
                       "SELECT COUNT(*) FROM t_users WHERE c_id = ?", Integer.class, userId))
@@ -252,16 +333,17 @@ public class VendorManagementSteps implements En {
                   jdbcTemplate.queryForObject(
                       "SELECT COUNT(*) FROM t_vendors WHERE c_id = ? AND c_user_id = ?",
                       Integer.class,
-                      vendorId,
+                      this.vendorOnboardingResponseDTO.getVendorId(),
                       userId))
               .isEqualTo(1);
           var storedHash =
               jdbcTemplate.queryForObject(
                   "SELECT c_token_hash FROM t_vendor_sessions WHERE c_vendor_id = ?",
                   String.class,
-                  vendorId);
-          assertThat(storedHash).isEqualTo(sha256(sessionToken));
-          assertThat(storedHash).isNotEqualTo(sessionToken);
+                  this.vendorOnboardingResponseDTO.getVendorId());
+          assertThat(storedHash)
+              .isEqualTo(sha256(this.vendorOnboardingResponseDTO.getSessionToken()));
+          assertThat(storedHash).isNotEqualTo(this.vendorOnboardingResponseDTO.getSessionToken());
         });
 
     Then(
@@ -275,7 +357,7 @@ public class VendorManagementSteps implements En {
                   jdbcTemplate.queryForObject(
                       "SELECT COUNT(*) FROM t_vendors WHERE c_id = ? AND c_user_id = ?",
                       Integer.class,
-                      vendorId,
+                      this.vendorOnboardingResponseDTO.getVendorId(),
                       userId))
               .isEqualTo(1);
         });
@@ -286,65 +368,79 @@ public class VendorManagementSteps implements En {
 
     When(
         "I access the vendor session using the issued token",
-        () -> accessVendorSession(sessionToken));
+        () -> {
+          this.vendorSessionIdentityDTO =
+              given()
+                  .header("Authorization", "Bearer " + currentSessionToken())
+                  .get("/vendor/session")
+                  .then()
+                  .statusCode(200)
+                  .extract()
+                  .as(new TypeRef<>() {});
+        });
 
     When(
-        "I access the vendor session using the previous token",
-        () -> accessVendorSession(issuedSessionTokens.get(issuedSessionTokens.size() - 1)));
+        "I try to access the vendor session using the previous token",
+        () -> {
+          assertThat(issuedSessionTokens)
+              .as("expected at least two issued tokens after rotation")
+              .hasSizeGreaterThanOrEqualTo(2);
+          var previousToken = issuedSessionTokens.get(issuedSessionTokens.size() - 2);
+          var response =
+              given().header("Authorization", "Bearer " + previousToken).get("/vendor/session");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
+
+    When(
+        "I try to access the vendor session using the issued token",
+        () -> {
+          var response =
+              given()
+                  .header("Authorization", "Bearer " + currentSessionToken())
+                  .get("/vendor/session");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
 
     When(
         "I rotate the vendor session as admin",
         () -> {
-          var previousToken = sessionToken;
-          var response =
+          this.vendorSessionTokenDTO =
               given()
                   .header("Authorization", httpClient.authorizationHeader())
-                  .pathParam("vendorId", vendorId)
-                  .post(VENDORS_PATH + "/{vendorId}/session");
-          httpClient.recordResponse(response.statusCode(), response.asString());
-          if (response.statusCode() == 200) {
-            sessionToken = response.jsonPath().getString("sessionToken");
-            issuedSessionTokens.add(previousToken);
-          }
-        });
-
-    Then(
-        "the vendor session token is rotated",
-        () -> {
-          assertThat(httpClient.getLastResponse().status().value()).isEqualTo(200);
-          assertThat(sessionToken).isNotBlank();
+                  .pathParam("vendorId", this.vendorOnboardingResponseDTO.getVendorId())
+                  .post(VENDORS_PATH + "/{vendorId}/session")
+                  .then()
+                  .statusCode(201)
+                  .extract()
+                  .as(VendorSessionTokenDTO.class);
+          issuedSessionTokens.add(this.vendorSessionTokenDTO.getSessionToken());
         });
 
     When(
         "I revoke the vendor session as admin",
-        () -> {
-          var response =
-              given()
-                  .header("Authorization", httpClient.authorizationHeader())
-                  .pathParam("vendorId", vendorId)
-                  .delete(VENDORS_PATH + "/{vendorId}/session");
-          httpClient.recordResponse(response.statusCode(), response.asString());
-        });
-
-    Then(
-        "the vendor session is accepted",
-        () -> assertThat(httpClient.getLastResponse().status().value()).isEqualTo(200));
+        () ->
+            given()
+                .header("Authorization", httpClient.authorizationHeader())
+                .pathParam("vendorId", this.vendorOnboardingResponseDTO.getVendorId())
+                .delete(VENDORS_PATH + "/{vendorId}/session")
+                .then()
+                .statusCode(204));
 
     When(
         "I update that vendor with the following data",
         (DataTable dataTable) -> {
-          var response =
-              given()
-                  .contentType(ContentType.JSON)
-                  .header("Authorization", httpClient.authorizationHeader())
-                  .pathParam("vendorId", vendorId)
-                  .body(toUpdateRequest(dataTable.asMaps().getFirst()))
-                  .put(VENDORS_PATH + "/{vendorId}");
-          httpClient.recordResponse(response.statusCode(), response.asString());
+          given()
+              .contentType(ContentType.JSON)
+              .header("Authorization", httpClient.authorizationHeader())
+              .pathParam("vendorId", this.vendorOnboardingResponseDTO.getVendorId())
+              .body(toUpdateRequest(dataTable.asMaps().getFirst()))
+              .put(VENDORS_PATH + "/{vendorId}")
+              .then()
+              .statusCode(204);
         });
 
     When(
-        "I update a missing vendor with the following data",
+        "I try to update a vendor with the following data",
         (DataTable dataTable) -> {
           var missingId = UUID.randomUUID();
           var response =
@@ -357,38 +453,44 @@ public class VendorManagementSteps implements En {
           httpClient.recordResponse(response.statusCode(), response.asString());
         });
 
-    Then(
-        "the vendor update request succeeds",
-        () -> assertThat(httpClient.getLastResponse().status().value()).isEqualTo(204));
-
-    Then(
-        "the vendor request is rejected with status {int}",
-        (Integer status) ->
-            assertThat(httpClient.getLastResponse().status().value())
-                .withFailMessage(
-                    "Expected status %s but response body was: %s",
-                    status, httpClient.getLastResponseBody())
-                .isEqualTo(status));
-
     When(
         "I set that vendor's active status to {string}",
-        (String active) -> setVendorStatus(vendorId, Boolean.parseBoolean(active)));
+        (String active) -> {
+          var vendorUpdateDTO = new VendorStatusUpdateDTO(Boolean.parseBoolean(active));
+          given()
+              .contentType(ContentType.JSON)
+              .header("Authorization", httpClient.authorizationHeader())
+              .pathParam("vendorId", this.vendorOnboardingResponseDTO.getVendorId())
+              .body(vendorUpdateDTO)
+              .put(VENDORS_PATH + "/{vendorId}/status")
+              .then()
+              .assertThat()
+              .statusCode(204);
+        });
 
     When(
-        "I set a missing vendor's active status to {string}",
-        (String active) -> setVendorStatus(UUID.randomUUID(), Boolean.parseBoolean(active)));
-
-    Then(
-        "the vendor status request succeeds with status {int}",
-        (Integer status) ->
-            assertThat(httpClient.getLastResponse().status().value()).isEqualTo(status));
+        "I try to modify vendor's active status to {string}",
+        (String active) -> {
+          var vendorUpdateDTO = new VendorStatusUpdateDTO(Boolean.parseBoolean(active));
+          var targetVendorId = UUID.randomUUID();
+          var response =
+              given()
+                  .contentType(ContentType.JSON)
+                  .header("Authorization", httpClient.authorizationHeader())
+                  .pathParam("vendorId", targetVendorId)
+                  .body(vendorUpdateDTO)
+                  .put(VENDORS_PATH + "/{vendorId}/status");
+          httpClient.recordResponse(response.statusCode(), response.asString());
+        });
 
     Then(
         "the vendor active status is {word}",
         (String active) -> {
           var persistedStatus =
               jdbcTemplate.queryForObject(
-                  "SELECT c_is_active FROM t_vendors WHERE c_id = ?", Boolean.class, vendorId);
+                  "SELECT c_is_active FROM t_vendors WHERE c_id = ?",
+                  Boolean.class,
+                  this.vendorOnboardingResponseDTO.getVendorId());
           assertThat(persistedStatus).isEqualTo(Boolean.parseBoolean(active));
         });
 
@@ -404,7 +506,7 @@ public class VendorManagementSteps implements En {
                          c_is_station, c_delivery_fee_type, c_delivery_fee_amount, c_is_active
                   FROM t_vendors WHERE c_id = ?
                   """,
-                  vendorId);
+                  this.vendorOnboardingResponseDTO.getVendorId());
 
           assertThat(actual.get("c_name")).isEqualTo(expected.get("name"));
           assertThat(actual.get("c_phone")).isEqualTo(expected.get("phone"));
@@ -426,7 +528,11 @@ public class VendorManagementSteps implements En {
         "I try to access my vendor session",
         () -> {
           var vendorToken =
-              issuedSessionTokens.isEmpty() ? sessionToken : issuedSessionTokens.getFirst();
+              issuedSessionTokens.isEmpty()
+                  ? Optional.ofNullable(this.vendorOnboardingResponseDTO)
+                      .map(VendorOnboardingResponseDTO::getSessionToken)
+                      .orElse(sessionToken)
+                  : issuedSessionTokens.getFirst();
           var response =
               given().header("Authorization", "Bearer " + vendorToken).get("/vendor/session");
           httpClient.recordResponse(response.statusCode(), response.asString());
@@ -449,6 +555,29 @@ public class VendorManagementSteps implements En {
         });
   }
 
+  private String currentSessionToken() {
+    if (!issuedSessionTokens.isEmpty()) {
+      return issuedSessionTokens.getLast();
+    }
+    return vendorOnboardingResponseDTO.getSessionToken();
+  }
+
+  private void listVendors(Integer page, Integer size, String active, String name, String sort) {
+    var request = given().header("Authorization", httpClient.authorizationHeader());
+    request.queryParam("page", page).queryParam("size", size);
+    if (!"any".equals(active)) {
+      request.queryParam("isActive", active);
+    }
+    if (!"any".equals(name)) {
+      request.queryParam("name", name);
+    }
+    if (sort != null && !"default".equals(sort)) {
+      request.queryParam("sort", sort);
+    }
+    var response = request.get(VENDORS_PATH);
+    httpClient.recordResponse(response.statusCode(), response.asString());
+  }
+
   private static Map<String, Object> toCreateRequest(Map<String, String> values) {
     var request = commonRequest(values);
     request.put("addressText", values.get("addressText"));
@@ -456,27 +585,11 @@ public class VendorManagementSteps implements En {
     return request;
   }
 
-  private void accessVendorSession(String token) {
-    var response = given().header("Authorization", "Bearer " + token).get("/vendor/session");
-    httpClient.recordResponse(response.statusCode(), response.asString());
-  }
-
   private static Map<String, Object> toUpdateRequest(Map<String, String> values) {
     var request = commonRequest(values);
     request.remove("isActive");
     request.put("addressText", values.get("addressText"));
     return request;
-  }
-
-  private void setVendorStatus(UUID targetVendorId, boolean isActive) {
-    var response =
-        given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", httpClient.authorizationHeader())
-            .pathParam("vendorId", targetVendorId)
-            .body(Map.of("isActive", isActive))
-            .put(VENDORS_PATH + "/{vendorId}/status");
-    httpClient.recordResponse(response.statusCode(), response.asString());
   }
 
   private static Map<String, Object> commonRequest(Map<String, String> values) {

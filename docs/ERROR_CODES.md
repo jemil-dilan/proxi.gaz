@@ -45,7 +45,6 @@ The `errors` array is only present for validation errors (400 responses).
 |------|-------|-------------|-------------|
 | `PROXIGAZ-401-000` | Invalid Credentials | Authentication failed due to invalid credentials | 401 |
 | `PROXIGAZ-401-001` | Token Invalid | The provided token is invalid or expired | 401 |
-| `PROXIGAZ-401-002` | Vendor Inactive | The vendor account is inactive | 401 |
 
 ### 403 Forbidden
 

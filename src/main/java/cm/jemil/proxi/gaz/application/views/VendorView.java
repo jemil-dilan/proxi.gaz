@@ -4,42 +4,43 @@
  */
 package cm.jemil.proxi.gaz.application.views;
 
-import cm.jemil.proxi.gaz.domain.shared.AddressText;
-import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
-import cm.jemil.proxi.gaz.domain.shared.Money;
-import cm.jemil.proxi.gaz.domain.shared.PhoneNumber;
-import cm.jemil.proxi.gaz.domain.shared.UserId;
-import cm.jemil.proxi.gaz.domain.vendor.DeliveryFeeType;
-import cm.jemil.proxi.gaz.domain.vendor.VendorId;
-import cm.jemil.proxi.gaz.domain.vendor.VendorName;
+import java.time.Instant;
+import java.util.UUID;
+import org.locationtech.jts.geom.Point;
 
 public interface VendorView {
 
   interface VendorView1 extends VendorView {
-    VendorId getVendorId();
+    UUID getVendorId();
 
-    UserId getUserId();
+    UUID getUserId();
 
-    VendorName getName();
+    String getName();
 
-    PhoneNumber getPhone();
+    String getPhone();
 
-    GeoPoint getLocation();
+    Point getLocation();
 
-    AddressText getAddressText();
+    String getAddressText();
 
     boolean getIsStation();
 
-    DeliveryFeeType getDeliveryFeeType();
+    String getDeliveryFeeType();
 
-    Money getDeliveryFeeAmount();
+    Integer getDeliveryFeeAmount();
 
     boolean getIsActive();
 
-    java.time.Instant getCreatedAt();
+    Instant getCreatedAt();
 
-    java.time.Instant getUpdatedAt();
+    Instant getUpdatedAt();
 
-    cm.jemil.proxi.gaz.domain.shared.Email getEmail();
+    String getEmail();
+
+    boolean getHasActiveSession();
+
+    Instant getSessionCreatedAt();
+
+    Instant getSessionLastUsedAt();
   }
 }

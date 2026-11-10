@@ -51,6 +51,19 @@ paths:
             type: "string"
             minLength: 1
             maxLength: 255
+            description: "Case-insensitive contains filter on vendor name"
+        - name: "sort"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            enum:
+              - "name,asc"
+              - "name,desc"
+              - "createdAt,asc"
+              - "createdAt,desc"
+            default: "name,asc"
+          description: "Sort field and direction. Default is name,asc."
       responses:
         "200":
           description: "Page of vendors matching the filters"
@@ -86,6 +99,10 @@ paths:
               schema:
                 type: "string"
                 format: "uri"
+            Cache-Control:
+              description: "no-store"
+              schema:
+                type: "string"
           content:
             application/json:
               schema:
@@ -99,6 +116,29 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
   /admin/vendors/{vendorId}:
+    get:
+      tags:
+        - "Vendor"
+      summary: "Get vendor details"
+      operationId: "getVendor"
+      security:
+        - adminAuth: []
+      parameters:
+        - name: "vendorId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Vendor details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorDTO"
+        "404":
+          $ref: "#/components/responses/NotFound"
     put:
       tags:
         - "Vendor"
@@ -178,8 +218,13 @@ paths:
             type: "string"
             format: "uuid"
       responses:
-        "200":
+        "201":
           description: "New vendor bearer token; returned once"
+          headers:
+            Cache-Control:
+              description: "no-store"
+              schema:
+                type: "string"
           content:
             application/json:
               schema:
@@ -721,6 +766,19 @@ components:
           type: "string"
           format: "date-time"
           description: "When the vendor was last updated"
+        hasActiveSession:
+          type: "boolean"
+          description: "Whether the vendor has an active session"
+        sessionCreatedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+          description: "When the vendor session was created"
+        sessionLastUsedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+          description: "When the vendor session was last used"
     VendorPaginationDTO:
       type: "object"
       required:
@@ -759,6 +817,12 @@ components:
         vendorId:
           type: "string"
           format: "uuid"
+        name:
+          type: "string"
+          description: "Vendor name"
+        isActive:
+          type: "boolean"
+          description: "Whether the vendor is active"
     ProblemDTO:
       type: "object"
       description: "RFC 7807 Problem Details"

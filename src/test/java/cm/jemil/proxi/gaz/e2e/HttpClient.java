@@ -8,6 +8,7 @@ import static io.cucumber.spring.CucumberTestContext.SCOPE_CUCUMBER_GLUE;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatusCode;
@@ -23,6 +24,7 @@ public class HttpClient {
   private LastRequestResponse lastResponse;
   private String lastResponseBody = "";
   private String accessToken;
+  private Map<String, String> lastResponseHeaders = new java.util.HashMap<>();
 
   public UUID lastUpdatedId;
 
@@ -60,8 +62,35 @@ public class HttpClient {
     lastResponseBody = body == null ? "" : body;
   }
 
+  public void recordResponse(int statusCode, String body, Map<String, String> headers) {
+    recordResponse(statusCode, body);
+    this.lastResponseHeaders =
+        headers != null ? new java.util.HashMap<>(headers) : new java.util.HashMap<>();
+  }
+
   public String getLastResponseBody() {
     return lastResponseBody;
+  }
+
+  public Map<String, String> getLastResponseHeaders() {
+    return lastResponseHeaders;
+  }
+
+  public String getLastResponseHeader(String headerName) {
+    return lastResponseHeaders.get(headerName);
+  }
+
+  public boolean hasHeader(String headerName) {
+    return lastResponseHeaders.containsKey(headerName);
+  }
+
+  public boolean headerContains(String headerName, String value) {
+    return lastResponseHeaders.entrySet().stream()
+        .anyMatch(
+            entry ->
+                entry.getKey().equalsIgnoreCase(headerName)
+                    && entry.getValue() != null
+                    && entry.getValue().contains(value));
   }
 
   private static String extractErrorCode(String body) {

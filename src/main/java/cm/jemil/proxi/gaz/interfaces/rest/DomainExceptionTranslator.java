@@ -15,6 +15,7 @@ import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
 import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
 import cm.jemil.proxi.gaz.domain.vendor.InvalidVendorSessionException;
+import cm.jemil.proxi.gaz.domain.vendor.VendorInactiveException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
 import java.time.Instant;
 import java.util.List;
@@ -112,6 +113,7 @@ class DomainExceptionTranslator {
   private HttpStatus resolveStatus(DomainException ex) {
     return switch (ex) {
       case DemoNotFoundException _, VendorNotFoundException _ -> HttpStatus.NOT_FOUND;
+      case VendorInactiveException _ -> HttpStatus.FORBIDDEN;
       case DemoAlreadyExistsException _ -> HttpStatus.CONFLICT;
       case InvalidCredentialsException _, InvalidVendorSessionException _ ->
           HttpStatus.UNAUTHORIZED;

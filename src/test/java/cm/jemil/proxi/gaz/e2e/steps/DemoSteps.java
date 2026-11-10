@@ -106,7 +106,7 @@ public class DemoSteps implements En {
                     .then()
                     .statusCode(200)
                     .extract()
-                    .as(new TypeRef<List<DemoDTO>>() {}));
+                    .as(new TypeRef<>() {}));
 
     And(
         "I try to fetch all demos using the extraction code {string}",

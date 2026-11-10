@@ -5,15 +5,19 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
-import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetAllVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetAllVendorsUseCase.Query;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorByIdUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RevokeVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RotateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import cm.jemil.proxi.gaz.config.VendorPrincipal;
-import cm.jemil.proxi.gaz.domain.vendor.VendorId;
+import cm.jemil.proxi.gaz.domain.vendor.InvalidVendorSessionException;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.VendorApi;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorSessionIdentityDTO;
@@ -35,11 +39,13 @@ class VendorController implements VendorApi {
 
   private final RestMapper restMapper;
   private final CreateVendorUseCase createVendorUseCase;
+  private final GetVendorByIdUseCase getVendorByIdUseCase;
   private final UpdateVendorUseCase updateVendorUseCase;
   private final SetVendorStatusUseCase setVendorStatusUseCase;
-  private final ListVendorsUseCase listVendorsUseCase;
+  private final GetAllVendorsUseCase getAllVendorsUseCase;
   private final RotateVendorSessionUseCase rotateVendorSessionUseCase;
   private final RevokeVendorSessionUseCase revokeVendorSessionUseCase;
+  private final GetVendorSessionUseCase getVendorSessionUseCase;
 
   @Override
   public ResponseEntity<VendorOnboardingResponseDTO> createVendor(CreateVendorDTO request) {
@@ -51,12 +57,17 @@ class VendorController implements VendorApi {
 
   @Override
   public ResponseEntity<VendorPaginationDTO> listVendors(
-      Integer page, Integer size, Boolean isActive, String name) {
+      Integer page, Integer size, Boolean isActive, String name, String sort) {
     var result =
-        listVendorsUseCase.execute(
-            new ListVendorsUseCase.Query(
-                page == null ? 0 : page, size == null ? 20 : size, isActive, name));
+        getAllVendorsUseCase.execute(
+            new Query(page == null ? 0 : page, size == null ? 20 : size, isActive, name, sort));
     return ResponseEntity.ok().body(restMapper.fromDomain(result));
+  }
+
+  @Override
+  public ResponseEntity<VendorDTO> getVendor(UUID vendorId) {
+    var result = getVendorByIdUseCase.execute(vendorId);
+    return ResponseEntity.ok(restMapper.toDTO(result));
   }
 
   @Override
@@ -67,7 +78,7 @@ class VendorController implements VendorApi {
 
   @Override
   public ResponseEntity<Void> setVendorStatus(UUID vendorId, VendorStatusUpdateDTO request) {
-    setVendorStatusUseCase.execute(VendorId.from(vendorId), request.getIsActive());
+    setVendorStatusUseCase.execute(vendorId, request.getIsActive());
     return ResponseEntity.noContent().build();
   }
 
@@ -80,7 +91,13 @@ class VendorController implements VendorApi {
             ? id
             : null;
 
-    return ResponseEntity.ok(new VendorSessionIdentityDTO(vendorId));
+    if (vendorId == null) {
+      throw new InvalidVendorSessionException();
+    }
+
+    var response = getVendorSessionUseCase.execute(vendorId);
+
+    return ResponseEntity.ok(restMapper.fromDomain(response));
   }
 
   @Override
@@ -92,7 +109,7 @@ class VendorController implements VendorApi {
   @Override
   public ResponseEntity<VendorSessionTokenDTO> rotateVendorSession(UUID vendorId) {
     var token = rotateVendorSessionUseCase.execute(vendorId);
-    return ResponseEntity.ok()
+    return ResponseEntity.status(201)
         .cacheControl(CacheControl.noStore())
         .body(new VendorSessionTokenDTO(token));
   }
