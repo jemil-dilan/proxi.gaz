@@ -7,19 +7,23 @@ package cm.jemil.proxi.gaz.application.usecase;
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import cm.jemil.proxi.gaz.application.views.VendorView;
 import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
+import cm.jemil.proxi.gaz.domain.vendor.VendorListSort;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 
 @RequiredArgsConstructor
-public class ListVendorsUseCase {
+public class GetAllVendorsUseCase {
   private final VendorRepository vendorRepository;
 
   public Response execute(Query query) {
     var pagedata =
         vendorRepository.loadAllVendors(
-            query.paginationFetchRequest(), query.isActive(), query.vendorName());
+            query.paginationFetchRequest(),
+            query.isActive(),
+            query.vendorName(),
+            query.vendorSort());
     return new Response(
         pagedata.elements(),
         pagedata.total(),
@@ -28,13 +32,22 @@ public class ListVendorsUseCase {
         pagedata.pageNumber());
   }
 
-  public record Query(int page, int size, Boolean isActive, @Nullable String name) {
+  public record Query(
+      int page,
+      int size,
+      @Nullable Boolean isActive,
+      @Nullable String name,
+      @Nullable String sort) {
     private PaginationFetchRequest paginationFetchRequest() {
       return new PaginationFetchRequest(size, page);
     }
 
     private @Nullable VendorName vendorName() {
       return name == null ? null : new VendorName(name);
+    }
+
+    private VendorListSort vendorSort() {
+      return VendorListSort.parse(sort);
     }
   }
 

@@ -187,7 +187,7 @@ Acceptance criteria
 - Add `createdAt`, `updatedAt` to `VendorDTO`; add `email` (nullable) to `VendorDTO`; return `Location` header on 201.
 - Tests: U validators; I migration/unique constraints; E create → read round-trip returns identical fields.
 
-**PXG-058 ⬜ Vendor detail, session metadata, identity enrichment** (M)
+**PXG-058 ✅ Vendor detail, session metadata, identity enrichment** (M)
 - `GET /admin/vendors/{vendorId}` returning `VendorDetailDTO` = `VendorDTO` + `hasActiveSession`, `sessionCreatedAt`, `sessionLastUsedAt`, `isOpenNow` (when PXG-065 lands).
 - `GET /admin/vendors`: add `sort` (`name`, `createdAt`, default `name,asc`), document that `name` is a case-insensitive *contains* filter.
 - `GET /vendor/session` → `VendorSessionIdentityDTO` gains `name`, `isActive`; valid token for an inactive vendor returns **403 `PROXIGAZ-403-002`** (D11).
@@ -239,8 +239,8 @@ Acceptance criteria
 | PXG-012B | ✅ | Vendor aggregate + onboarding session | User root, Vendor aggregate with unique `user_id`, hashed one-time session; optional email nullable | L |
 | PXG-012C | ❓ | Docker image & release automation | **Verify**: immutable image, staging deploy by digest, release notes, annotated SemVer tag; production promotion approval-gated *(only enforce from pilot)* | L |
 | PXG-013 | ✅ | Activate / deactivate | `PUT /admin/vendors/{id}/status`. *Audit in PXG-061; nearby exclusion verified in PXG-020* | S |
-| PXG-014 | ✅ | List / filter | Pagination (0-based), `isActive`, `name`. *Sort in PXG-058* | M |
-| PXG-015 | ✅ | Session management & validation | Rotate (`POST …/session`), revoke (`DELETE`), `GET /vendor/session`. *Metadata in PXG-058* | M |
+| PXG-014 | ✅ | List / filter | Pagination (0-based), `isActive`, `name`; sort completed in PXG-058 | M |
+| PXG-015 | ✅ | Session management & validation | Rotate (`POST …/session`), revoke (`DELETE`), `GET /vendor/session`; metadata completed in PXG-058 | M |
 
 **PXG-012C verification checklist (❓ → ✅):** image tagged with SemVer + digest recorded · staging pulls the digest, not a mutable tag · release notes generated · annotated tag pushed · rollback command documented.
 

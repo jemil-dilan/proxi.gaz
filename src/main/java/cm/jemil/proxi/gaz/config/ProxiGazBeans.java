@@ -21,13 +21,16 @@ import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.DeleteDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllDemoUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetAllVendorsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetDemoByIdUseCase;
-import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorByIdUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RevokeVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RotateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase;
+import cm.jemil.proxi.gaz.application.usecase.UpdateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.ValidateVendorSessionUseCase;
 import java.time.Duration;
@@ -66,14 +69,16 @@ public class ProxiGazBeans {
   }
 
   @Bean
-  public ListVendorsUseCase listVendorsUseCase(VendorRepository vendorRepository) {
-    return new ListVendorsUseCase(vendorRepository);
+  public GetAllVendorsUseCase listVendorsUseCase(VendorRepository vendorRepository) {
+    return new GetAllVendorsUseCase(vendorRepository);
   }
 
   @Bean
   public ValidateVendorSessionUseCase validateVendorSessionUseCase(
-      VendorSessionRepository repository, VendorSessionTokenHasher tokenHasher) {
-    return new ValidateVendorSessionUseCase(repository, tokenHasher);
+      VendorSessionRepository repository,
+      VendorSessionTokenHasher tokenHasher,
+      VendorRepository vendorRepository) {
+    return new ValidateVendorSessionUseCase(repository, tokenHasher, vendorRepository);
   }
 
   @Bean
@@ -121,6 +126,22 @@ public class ProxiGazBeans {
   @Bean
   public GetDemoByIdUseCase getDemoByIdUseCase(DemoRepository demoRepository) {
     return new GetDemoByIdUseCase(demoRepository);
+  }
+
+  @Bean
+  public GetVendorByIdUseCase getVendorUseCase(VendorRepository vendorRepository) {
+    return new GetVendorByIdUseCase(vendorRepository);
+  }
+
+  @Bean
+  public GetVendorSessionUseCase getVendorSessionUseCase(VendorRepository vendorRepository) {
+    return new GetVendorSessionUseCase(vendorRepository);
+  }
+
+  @Bean
+  public UpdateVendorSessionUseCase updateVendorSessionUseCase(
+      VendorSessionRepository vendorSessionRepository, Clock clock) {
+    return new UpdateVendorSessionUseCase(vendorSessionRepository, clock);
   }
 
   @Bean

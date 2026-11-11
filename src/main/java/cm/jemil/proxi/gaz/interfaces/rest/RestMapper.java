@@ -6,7 +6,8 @@ package cm.jemil.proxi.gaz.interfaces.rest;
 
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
-import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetAllVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.application.usecase.UpdateDemoUseCase.Command;
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorUseCase;
@@ -18,6 +19,7 @@ import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.Money;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
 import cm.jemil.proxi.gaz.domain.vendor.DeliveryFeeType;
+import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
@@ -29,13 +31,17 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorSessionIdentityDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(
@@ -136,11 +142,17 @@ interface RestMapper {
     return deliveryFeeAmount == null ? null : Money.fcfa(deliveryFeeAmount.intValue());
   }
 
-  @org.mapstruct.Named("mapInstantToLocalDateTime")
-  default java.time.LocalDateTime mapInstantToLocalDateTime(java.time.Instant instant) {
-    return instant == null
-        ? null
-        : java.time.LocalDateTime.ofInstant(instant, java.time.ZoneOffset.UTC);
+  default UUID map(VendorId vendorId) {
+    return vendorId != null ? vendorId.value() : null;
+  }
+
+  default UUID map(UserId userId) {
+    return userId != null ? userId.value() : null;
+  }
+
+  @Named("mapInstantToLocalDateTime")
+  default LocalDateTime mapInstantToLocalDateTime(Instant instant) {
+    return instant == null ? null : LocalDateTime.ofInstant(instant, java.time.ZoneOffset.UTC);
   }
 
   @BeanMapping(ignoreByDefault = true)
@@ -155,20 +167,34 @@ interface RestMapper {
   @Mapping(target = "size", source = "pageSize")
   @Mapping(target = "totalElements", source = "totalElements")
   @Mapping(target = "totalPages", source = "totalPages")
-  VendorPaginationDTO fromDomain(ListVendorsUseCase.Response response);
+  VendorPaginationDTO fromDomain(GetAllVendorsUseCase.Response response);
 
   @BeanMapping(ignoreByDefault = true)
-  @Mapping(target = "vendorId", source = "vendorId.value")
-  @Mapping(target = "addressText", source = "addressText.value")
-  @Mapping(target = "deliveryFeeAmount", source = "deliveryFeeAmount.amountFcfa")
-  @Mapping(target = "deliveryFeeType", source = "deliveryFeeType.value")
+  @Mapping(target = "vendorId", source = "vendorId")
+  @Mapping(target = "name", source = "name.value")
+  @Mapping(target = "isActive", source = "isActive")
+  VendorSessionIdentityDTO fromDomain(GetVendorSessionUseCase.Response response);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "vendorId", source = "vendorId")
+  @Mapping(target = "addressText", source = "addressText")
+  @Mapping(target = "deliveryFeeAmount", source = "deliveryFeeAmount")
+  @Mapping(target = "deliveryFeeType", source = "deliveryFeeType")
   @Mapping(target = "isActive", source = "isActive")
   @Mapping(target = "isStation", source = "isStation")
-  @Mapping(target = "latitude", source = "location.latitude")
-  @Mapping(target = "longitude", source = "location.longitude")
-  @Mapping(target = "phone", source = "phone.value")
-  @Mapping(target = "name", source = "name.value")
-  @Mapping(target = "email", source = "email.value")
+  @Mapping(
+      target = "latitude",
+      expression =
+          "java(vendorDetailView.getLocation() != null ? vendorDetailView.getLocation().getY() :"
+              + " null)")
+  @Mapping(
+      target = "longitude",
+      expression =
+          "java(vendorDetailView.getLocation() != null ? vendorDetailView.getLocation().getX() :"
+              + " null)")
+  @Mapping(target = "phone", source = "phone")
+  @Mapping(target = "name", source = "name")
+  @Mapping(target = "email", source = "email")
   @Mapping(
       target = "createdAt",
       source = "createdAt",
@@ -177,5 +203,14 @@ interface RestMapper {
       target = "updatedAt",
       source = "updatedAt",
       qualifiedByName = "mapInstantToLocalDateTime")
-  VendorDTO toDTO(VendorView.VendorView1 vendorView1);
+  @Mapping(target = "hasActiveSession", source = "hasActiveSession")
+  @Mapping(
+      target = "sessionCreatedAt",
+      source = "sessionCreatedAt",
+      qualifiedByName = "mapInstantToLocalDateTime")
+  @Mapping(
+      target = "sessionLastUsedAt",
+      source = "sessionLastUsedAt",
+      qualifiedByName = "mapInstantToLocalDateTime")
+  VendorDTO toDTO(VendorView.VendorView1 vendorDetailView);
 }

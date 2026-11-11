@@ -4,7 +4,6 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
-import cm.jemil.proxi.gaz.application.views.VendorView.VendorView1;
 import cm.jemil.proxi.gaz.domain.demo.Demo;
 import cm.jemil.proxi.gaz.domain.demo.DemoDescription;
 import cm.jemil.proxi.gaz.domain.demo.DemoId;
@@ -24,8 +23,6 @@ import cm.jemil.proxi.gaz.domain.vendor.Vendor;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSession;
-import cm.jemil.proxi.gaz.domain.vendor.VendorSessionId;
-import cm.jemil.proxi.gaz.domain.vendor.VendorSessionTokenHash;
 import java.util.Optional;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -124,15 +121,18 @@ interface JpaMapper {
   @Mapping(target = "vendorId", source = "vendorId.value")
   @Mapping(target = "tokenHash", source = "tokenHash.value")
   @Mapping(target = "createdAt", source = "createdAt.value")
+  @Mapping(target = "lastUsedAt", source = "lastUsedAt.value")
+  @Mapping(target = "revokedAt", source = "revokedAt.value")
   VendorSessionJpa toJpa(VendorSession session);
 
-  default VendorSession toDomain(VendorSessionJpa entity) {
-    return new VendorSession(
-        VendorSessionId.from(entity.getId()),
-        VendorId.from(entity.getVendorId()),
-        new VendorSessionTokenHash(entity.getTokenHash()),
-        CreatedAt.from(entity.getCreatedAt()));
-  }
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "id.value", source = "id")
+  @Mapping(target = "vendorId.value", source = "vendorId")
+  @Mapping(target = "tokenHash.value", source = "tokenHash")
+  @Mapping(target = "createdAt.value", source = "createdAt")
+  @Mapping(target = "lastUsedAt.value", source = "lastUsedAt")
+  @Mapping(target = "revokedAt.value", source = "revokedAt")
+  VendorSession toDomain(VendorSessionJpa session);
 
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "id", source = "id.value")
@@ -151,75 +151,5 @@ interface JpaMapper {
 
   default Point toPoint(GeoPoint value) {
     return GEOMETRY_FACTORY.createPoint(new Coordinate(value.longitude(), value.latitude()));
-  }
-
-  default VendorView1 toView(VendorJpa entity) {
-    return new VendorView1() {
-      @Override
-      public VendorId getVendorId() {
-        return VendorId.from(entity.getId());
-      }
-
-      @Override
-      public UserId getUserId() {
-        return UserId.from(entity.getUserId());
-      }
-
-      @Override
-      public VendorName getName() {
-        return new VendorName(entity.getName());
-      }
-
-      @Override
-      public PhoneNumber getPhone() {
-        return new PhoneNumber(entity.getPhone());
-      }
-
-      @Override
-      public GeoPoint getLocation() {
-        Point location = entity.getLocation();
-        return location != null ? GeoPoint.of(location.getY(), location.getX()) : null;
-      }
-
-      @Override
-      public AddressText getAddressText() {
-        return AddressText.fromOptional(entity.getAddressText()).orElse(null);
-      }
-
-      @Override
-      public boolean getIsStation() {
-        return entity.isStation();
-      }
-
-      @Override
-      public DeliveryFeeType getDeliveryFeeType() {
-        return DeliveryFeeType.fromOptional(entity.getDeliveryFeeType()).orElse(null);
-      }
-
-      @Override
-      public Money getDeliveryFeeAmount() {
-        return Optional.ofNullable(entity.getDeliveryFeeAmount()).map(Money::fcfa).orElse(null);
-      }
-
-      @Override
-      public boolean getIsActive() {
-        return entity.isActive();
-      }
-
-      @Override
-      public java.time.Instant getCreatedAt() {
-        return entity.getCreatedAt();
-      }
-
-      @Override
-      public java.time.Instant getUpdatedAt() {
-        return entity.getUpdatedAt();
-      }
-
-      @Override
-      public Email getEmail() {
-        return null; // Will be populated from User in ListVendorsUseCase
-      }
-    };
   }
 }

@@ -8,7 +8,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
 | Sprint 0 — Foundations | Done (`PXG-001`–`PXG-011`) |
-| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`–`PXG-015` are merged to `main`; Epic 1.2 and geo search remain) |
+| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`–`PXG-015` and Epic 1.0 `PXG-055`–`PXG-058` done; Epic 1.2 and geo search remain) |
 | Sprints 2–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
@@ -20,8 +20,8 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - Core domain tables migrated, including the shared `t_users` identity and role tables, vendor profiles with GIST-indexed locations, orders/offers, and related records.
 - The User aggregate owns account identity, roles, optional normalized email, and admin password hashes. Vendor is a separate aggregate linked one-to-one to User by `t_vendors.c_user_id`.
 - Admins can create and update vendors through `POST /admin/vendors` and `PUT /admin/vendors/{vendorId}`. Onboarding returns a one-time, cryptographically random vendor session token; only its SHA-256 hash is stored. Vendor locations persist as PostGIS geography points.
-- Admins can activate vendors separately from profile updates through `PUT /admin/vendors/{vendorId}/status`. `GET /admin/vendors` supports pagination and active-status/name filters. These PXG-013 and PXG-014 changes are merged to `main`; nearby-search filtering remains PXG-020 work.
-- Vendor sessions use opaque bearer tokens. `GET /vendor/session` validates a token; admins can rotate or revoke it through `/admin/vendors/{vendorId}/session`. Sessions are long-lived until revoked or rotated; raw tokens are returned only once and only their hashes are stored.
+- Admins can activate vendors separately from profile updates through `PUT /admin/vendors/{vendorId}/status`. `GET /admin/vendors` supports pagination, active-status/name filters, and `sort` (`name` / `createdAt`). `GET /admin/vendors/{vendorId}` returns vendor detail including session metadata. Nearby-search filtering remains PXG-020 work.
+- Vendor sessions use opaque bearer tokens. `GET /vendor/session` validates a token and returns vendor `name` / `isActive`; inactive vendors get **403**. Admins rotate or revoke through `/admin/vendors/{vendorId}/session` (soft-revoke). Token responses send `Cache-Control: no-store`. Sessions are long-lived until revoked or rotated; raw tokens are returned only once and only their hashes are stored.
 - Domain VOs: order status state machine, Money (FCFA), GeoPoint, ConfirmationCode, TrackingToken, Availability.
 - Config profiles: `local` (default, development defaults allowed), `staging`, `production` (secrets required via env); see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).

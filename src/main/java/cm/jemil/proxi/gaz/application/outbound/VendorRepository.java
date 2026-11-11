@@ -10,6 +10,7 @@ import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
 import cm.jemil.proxi.gaz.domain.vendor.Vendor;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
+import cm.jemil.proxi.gaz.domain.vendor.VendorListSort;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -22,7 +23,12 @@ public interface VendorRepository {
   Optional<Vendor> findByUserId(UserId userId);
 
   PageData<VendorView1> loadAllVendors(
-      PaginationFetchRequest paginationFetchRequest, boolean isActive, @Nullable VendorName name);
+      PaginationFetchRequest paginationFetchRequest,
+      @Nullable Boolean isActive,
+      @Nullable VendorName name,
+      VendorListSort sort);
+
+  VendorView1 findViewById(VendorId vendorId);
 
   void update(Vendor vendor);
 }

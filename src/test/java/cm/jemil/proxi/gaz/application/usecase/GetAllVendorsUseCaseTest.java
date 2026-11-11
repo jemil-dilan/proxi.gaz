@@ -12,6 +12,7 @@ import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import cm.jemil.proxi.gaz.application.views.VendorView;
 import cm.jemil.proxi.gaz.domain.shared.PageData;
 import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
+import cm.jemil.proxi.gaz.domain.vendor.VendorListSort;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -21,20 +22,23 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ListVendorsUseCaseTest {
+class GetAllVendorsUseCaseTest {
 
-  @InjectMocks private ListVendorsUseCase useCase;
+  @InjectMocks private GetAllVendorsUseCase useCase;
 
   @Mock private VendorRepository repository;
 
   @Test
   void execute_shouldPassFiltersAndPageBoundsToRepository() {
     // Given
-    var query = new ListVendorsUseCase.Query(1, 10, false, "Akwa");
+    var query = new GetAllVendorsUseCase.Query(1, 10, false, "Akwa", "name,desc");
     var pagedata = new PageData<VendorView.VendorView1>(List.of(), 15L, 2, 10, 1);
     given(
             repository.loadAllVendors(
-                new PaginationFetchRequest(10, 1), false, new VendorName("Akwa")))
+                new PaginationFetchRequest(10, 1),
+                false,
+                new VendorName("Akwa"),
+                new VendorListSort(VendorListSort.Field.NAME, VendorListSort.Direction.DESC)))
         .willReturn(pagedata);
 
     // When
@@ -48,15 +52,21 @@ class ListVendorsUseCaseTest {
     assertThat(response.pageNumber()).isEqualTo(1);
     then(repository)
         .should()
-        .loadAllVendors(new PaginationFetchRequest(10, 1), false, new VendorName("Akwa"));
+        .loadAllVendors(
+            new PaginationFetchRequest(10, 1),
+            false,
+            new VendorName("Akwa"),
+            new VendorListSort(VendorListSort.Field.NAME, VendorListSort.Direction.DESC));
   }
 
   @Test
-  void execute_withDefaultFilters_shouldPassFalseForActiveAndNullForName() {
+  void execute_withDefaultFilters_shouldPassNullActiveAndDefaultSort() {
     // Given
-    var query = new ListVendorsUseCase.Query(0, 20, false, null);
+    var query = new GetAllVendorsUseCase.Query(0, 20, null, null, null);
     var pagedata = new PageData<VendorView.VendorView1>(List.of(), 0L, 0, 20, 0);
-    given(repository.loadAllVendors(new PaginationFetchRequest(20, 0), false, null))
+    given(
+            repository.loadAllVendors(
+                new PaginationFetchRequest(20, 0), null, null, VendorListSort.DEFAULT))
         .willReturn(pagedata);
 
     // When
@@ -64,15 +74,22 @@ class ListVendorsUseCaseTest {
 
     // Then
     assertThat(response.totalElements()).isEqualTo(0);
-    then(repository).should().loadAllVendors(new PaginationFetchRequest(20, 0), false, null);
+    then(repository)
+        .should()
+        .loadAllVendors(new PaginationFetchRequest(20, 0), null, null, VendorListSort.DEFAULT);
   }
 
   @Test
   void execute_withActiveTrue_shouldPassTrueToRepository() {
     // Given
-    var query = new ListVendorsUseCase.Query(0, 20, true, null);
+    var query = new GetAllVendorsUseCase.Query(0, 20, true, null, "createdAt,asc");
     var pagedata = new PageData<VendorView.VendorView1>(List.of(), 5L, 1, 20, 0);
-    given(repository.loadAllVendors(new PaginationFetchRequest(20, 0), true, null))
+    given(
+            repository.loadAllVendors(
+                new PaginationFetchRequest(20, 0),
+                true,
+                null,
+                new VendorListSort(VendorListSort.Field.CREATED_AT, VendorListSort.Direction.ASC)))
         .willReturn(pagedata);
 
     // When
@@ -80,6 +97,12 @@ class ListVendorsUseCaseTest {
 
     // Then
     assertThat(response.totalElements()).isEqualTo(5);
-    then(repository).should().loadAllVendors(new PaginationFetchRequest(20, 0), true, null);
+    then(repository)
+        .should()
+        .loadAllVendors(
+            new PaginationFetchRequest(20, 0),
+            true,
+            null,
+            new VendorListSort(VendorListSort.Field.CREATED_AT, VendorListSort.Direction.ASC));
   }
 }

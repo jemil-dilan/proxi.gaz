@@ -11,8 +11,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
-import cm.jemil.proxi.gaz.application.usecase.ListVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetAllVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorByIdUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RevokeVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.RotateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.SetVendorStatusUseCase;
@@ -32,27 +35,25 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class VendorControllerTest {
+  @Mock private RestMapper restMapper;
+  @Mock private CreateVendorUseCase createVendorUseCase;
+  @Mock private GetVendorByIdUseCase getVendorByIdUseCase;
+  @Mock private UpdateVendorUseCase updateVendorUseCase;
+  @Mock private SetVendorStatusUseCase setVendorStatusUseCase;
+  @Mock private GetAllVendorsUseCase getAllVendorsUseCase;
+  @Mock private RotateVendorSessionUseCase rotateVendorSessionUseCase;
+  @Mock private RevokeVendorSessionUseCase revokeVendorSessionUseCase;
+  @Mock private VendorRepository vendorRepository;
+  @Mock private GetVendorSessionUseCase getVendorSessionUseCase;
 
-  private final RestMapper restMapper = mock(RestMapper.class);
-  private final CreateVendorUseCase createVendorUseCase = mock(CreateVendorUseCase.class);
-  private final UpdateVendorUseCase updateVendorUseCase = mock(UpdateVendorUseCase.class);
-  private final SetVendorStatusUseCase setVendorStatusUseCase = mock(SetVendorStatusUseCase.class);
-  private final ListVendorsUseCase listVendorsUseCase = mock(ListVendorsUseCase.class);
-  private final RotateVendorSessionUseCase rotateVendorSessionUseCase =
-      mock(RotateVendorSessionUseCase.class);
-  private final RevokeVendorSessionUseCase revokeVendorSessionUseCase =
-      mock(RevokeVendorSessionUseCase.class);
-  private final VendorController controller =
-      new VendorController(
-          restMapper,
-          createVendorUseCase,
-          updateVendorUseCase,
-          setVendorStatusUseCase,
-          listVendorsUseCase,
-          rotateVendorSessionUseCase,
-          revokeVendorSessionUseCase);
+  @InjectMocks private VendorController controller;
 
   @Test
   void createVendor_shouldReturnOneTimeSessionTokenWithoutCaching() {
@@ -86,7 +87,7 @@ class VendorControllerTest {
   @Test
   void listVendors_shouldReturnPaginatedVendors() {
     var vendorView = mock(VendorView.VendorView1.class);
-    var useCaseResponse = new ListVendorsUseCase.Response(List.of(vendorView), 15L, 2, 10, 1);
+    var useCaseResponse = new GetAllVendorsUseCase.Response(List.of(vendorView), 15L, 2, 10, 1);
     var vendorDTO = new VendorDTO().vendorId(UUID.randomUUID()).name("Test Vendor");
     var paginationDTO =
         new VendorPaginationDTO()
@@ -96,11 +97,11 @@ class VendorControllerTest {
             .totalElements(15L)
             .totalPages(2);
 
-    when(listVendorsUseCase.execute(any(ListVendorsUseCase.Query.class)))
+    when(getAllVendorsUseCase.execute(any(GetAllVendorsUseCase.Query.class)))
         .thenReturn(useCaseResponse);
     when(restMapper.fromDomain(useCaseResponse)).thenReturn(paginationDTO);
 
-    var response = controller.listVendors(1, 10, false, "Akwa");
+    var response = controller.listVendors(1, 10, false, "Akwa", "name,desc");
 
     assertThat(response.getStatusCode().value()).isEqualTo(200);
     assertThat(response.getBody().getPage()).isEqualTo(1);
@@ -109,20 +110,21 @@ class VendorControllerTest {
     assertThat(response.getBody().getTotalPages()).isEqualTo(2);
     assertThat(response.getBody().getContent()).hasSize(1);
 
-    verify(listVendorsUseCase)
+    verify(getAllVendorsUseCase)
         .execute(
             argThat(
                 q ->
                     q.page() == 1
                         && q.size() == 10
                         && q.isActive() == false
-                        && q.name().equals("Akwa")));
+                        && q.name().equals("Akwa")
+                        && q.sort().equals("name,desc")));
     verify(restMapper).fromDomain(useCaseResponse);
   }
 
   @Test
   void listVendors_withDefaults_shouldUseDefaultPageAndSize() {
-    var useCaseResponse = new ListVendorsUseCase.Response(List.of(), 0L, 0, 20, 0);
+    var useCaseResponse = new GetAllVendorsUseCase.Response(List.of(), 0L, 0, 20, 0);
     var paginationDTO =
         new VendorPaginationDTO()
             .content(List.of())
@@ -131,25 +133,30 @@ class VendorControllerTest {
             .totalElements(0L)
             .totalPages(0);
 
-    when(listVendorsUseCase.execute(any(ListVendorsUseCase.Query.class)))
+    when(getAllVendorsUseCase.execute(any(GetAllVendorsUseCase.Query.class)))
         .thenReturn(useCaseResponse);
     when(restMapper.fromDomain(useCaseResponse)).thenReturn(paginationDTO);
 
-    var response = controller.listVendors(null, null, null, null);
+    var response = controller.listVendors(null, null, null, null, null);
 
     assertThat(response.getStatusCode().value()).isEqualTo(200);
-    assertThat(response.getBody().getPage()).isEqualTo(0);
+    assertThat(response.getBody().getPage()).isZero();
     assertThat(response.getBody().getSize()).isEqualTo(20);
 
-    verify(listVendorsUseCase)
+    verify(getAllVendorsUseCase)
         .execute(
             argThat(
-                q -> q.page() == 0 && q.size() == 20 && q.isActive() == null && q.name() == null));
+                q ->
+                    q.page() == 0
+                        && q.size() == 20
+                        && q.isActive() == null
+                        && q.name() == null
+                        && q.sort() == null));
   }
 
   @Test
   void listVendors_withActiveTrue_shouldPassActiveFilter() {
-    var useCaseResponse = new ListVendorsUseCase.Response(List.of(), 5L, 1, 20, 0);
+    var useCaseResponse = new GetAllVendorsUseCase.Response(List.of(), 5L, 1, 20, 0);
     var paginationDTO =
         new VendorPaginationDTO()
             .content(List.of())
@@ -158,15 +165,18 @@ class VendorControllerTest {
             .totalElements(5L)
             .totalPages(1);
 
-    when(listVendorsUseCase.execute(any(ListVendorsUseCase.Query.class)))
+    when(getAllVendorsUseCase.execute(any(GetAllVendorsUseCase.Query.class)))
         .thenReturn(useCaseResponse);
     when(restMapper.fromDomain(useCaseResponse)).thenReturn(paginationDTO);
 
-    var response = controller.listVendors(0, 20, true, null);
+    var response = controller.listVendors(0, 20, true, null, "createdAt,asc");
 
     assertThat(response.getStatusCode().value()).isEqualTo(200);
     assertThat(response.getBody().getTotalElements()).isEqualTo(5);
 
-    verify(listVendorsUseCase).execute(argThat(q -> q.isActive() == true && q.name() == null));
+    verify(getAllVendorsUseCase)
+        .execute(
+            argThat(
+                q -> q.isActive() == true && q.name() == null && q.sort().equals("createdAt,asc")));
   }
 }

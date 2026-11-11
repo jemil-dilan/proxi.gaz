@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-11-03 by `working/PXG-055` (PXG-055 complete: RFC 7807 error model; all tests pass)
+Last updated: 2026-11-11 by `working/PXG-058` (PXG-058 complete: vendor detail, session metadata, list sort, identity enrichment; unit/data/E2E pass per user)
 
 ## Critical Gate
 
@@ -12,7 +12,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
 | 0 — Foundations & Core Infrastructure | Implementation done; release outstanding | PXG-001–011 complete; manual-test gate explicitly waived; no Docker/GitHub staging release was produced |
-| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 are merged to `main`; CI is green per user confirmation. PXG-012C implemented Docker packaging and GitHub staging/release automation; **PXG-055** (error model) complete on branch; catalog/availability/geo work remains |
+| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–058 done (PXG-058 on `working/PXG-058`, tests pass per user). Remaining Epic 1.0: PXG-054, PXG-059–063. Catalog/availability/geo (Epic 1.2+) remain |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -22,8 +22,8 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | ID       | Name / Description                                      | Implemented | Unit tested | E2E tested | Notes |
 |----------|---------------------------------------------------------|-------------|-------------|------------|-------|
 | AUTH-01  | Admin login (JWT / session)                             | Implemented | Yes (user-reported) | Yes (user-reported) | Generic invalid-credential response; JWT settings and token ports |
-| AUTH-02  | Vendor session validation (long-lived token by admin)   | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | PXG-015 validates hashed bearer tokens; admin rotation/revocation replace or remove the active session. No automatic expiry is configured for long-lived pilot sessions |
-| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Implemented | Yes (PXG-012B, user-reported) | Yes (PXG-012B, user-reported) | JPA persists separate Vendor aggregate and PostGIS location; PXG-014 adds paginated admin listing, merged to main |
+| AUTH-02  | Vendor session validation (long-lived token by admin)   | Implemented | Yes (user-confirmed) | Yes (user-confirmed) | PXG-015 + PXG-058: hashed bearer tokens; soft revoke/rotate; `last_used_at` throttled; inactive vendor → 403-002; identity returns name/isActive |
+| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Implemented | Yes (user-confirmed) | Yes (user-confirmed) | PXG-014 listing + PXG-058 `GET /admin/vendors/{id}` with session metadata and list `sort` |
 | VEN-02   | Admin activates / deactivates vendor                    | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | Dedicated admin status endpoint is merged to main; production nearby-search exclusion remains in PXG-020 |
 | VEN-03   | Admin creates long-lived VendorSession                  | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | Rotation replaces the prior session; revocation removes active token record |
 | VEN-04   | CRUD VendorBrand (prices with/without exchange)         | No          | No          | No         |       |
@@ -64,7 +64,10 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-013 | Vendor activate/deactivate | Merged to `main`; CI green per user; nearby-search filtering remains in PXG-020 |
 | PXG-014 | List/filter Vendors | Merged to `main`; CI green per user |
 | PXG-015 | VendorSession management and validation | Merged to `main`; CI green per user |
-| PXG-055 | Error model & RFC 7807 Problem details | Complete on `working/PXG-055`; all tests pass (unit, data, E2E); ready for merge |
+| PXG-055 | Error model & RFC 7807 Problem details | Merged to `main` |
+| PXG-056 | Security schemes & audience separation | Merged to `main` |
+| PXG-057 | Vendor DTO & validation fixes | Merged to `main` |
+| PXG-058 | Vendor detail, session metadata, identity enrichment | Complete on `working/PXG-058`; unit, data, and E2E suites pass per user; ready for merge |
 
 ## Architecture Updates
 
@@ -130,10 +133,12 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - Domain VOs/state machine, ports, base adapters, and AUTH-01 login/JWT exist. PXG-012B's User/Vendor repositories, domain mapping, and API edits pass the user-reported test suites. Vendor onboarding persists User, Vendor, and VendorSession through one transactional adapter. Generic password/token ports and JWT settings use infrastructure beans; `proxigaz.*` settings bind through `Configurations`/`ConfigurationsImpl`. Demo projection selection still passes REST wire codes into application use cases and remains a separate architecture gap.
 - Admin bootstrap is opt-in through environment properties; it hashes the supplied password and skips an existing email. PXG-010 owns login/JWT; Sprint 1 PXG-020 owns production PostGIS nearby search.
 - Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
-- PXG-013–015 are merged to `main`. PXG-016–021 remain for the rest of Sprint 1.
-- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits; PXG-012 was based on PXG-011 by user direction).
+- PXG-013–015 and PXG-055–057 are merged to `main`. PXG-058 completes vendor detail, list sort, session soft-revoke metadata, and identity enrichment on `working/PXG-058`.
+- Remaining Epic 1.0: PXG-054 (demo cleanup), PXG-059–063. Epic 1.2+ (catalog/availability/geo) remains.
+- All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits).
 
 ## Next recommended action
 
-1. Configure the GitHub `staging` environment and host secrets, and execute the alpha staging workflow to test PXG-012C end-to-end.
-2. Complete the remaining Sprint 1 tasks: PXG-016–021, including catalog/availability and PostGIS nearby search with inactive vendors excluded.
+1. Merge PXG-058, then continue Epic 1.0 with PXG-059 (admin auth hardening) or PXG-054 (remove Demo leftovers), per priority.
+2. Configure the GitHub `staging` environment and host secrets, and execute the alpha staging workflow to test PXG-012C end-to-end.
+3. Complete Epic 1.2+ (PXG-016–021): catalog/availability and PostGIS nearby search with inactive vendors excluded.

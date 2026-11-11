@@ -6,6 +6,7 @@ package cm.jemil.proxi.gaz.config;
 
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
+import cm.jemil.proxi.gaz.application.usecase.UpdateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.ValidateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.interfaces.rest.Constants;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 @EnableWebSecurity
@@ -36,12 +38,15 @@ public class SecurityConfig {
   public SecurityFilterChain vendorSecurityFilterChain(
       HttpSecurity http,
       ValidateVendorSessionUseCase validateVendorSessionUseCase,
-      ProblemDetailsAuthenticationEntryPoint authenticationEntryPoint) {
+      ProblemDetailsAuthenticationEntryPoint authenticationEntryPoint,
+      UpdateVendorSessionUseCase updateVendorSessionUseCase,
+      ObjectMapper objectMapper) {
     http.securityMatcher(Constants.PATH_VENDOR_SESSION)
         .csrf(csrf -> csrf.requireCsrfProtectionMatcher(_ -> false))
         .authorizeHttpRequests(authorize -> authorize.anyRequest().hasAuthority(Scopes.VENDOR))
         .addFilterBefore(
-            new VendorSessionAuthenticationFilter(validateVendorSessionUseCase),
+            new VendorSessionAuthenticationFilter(
+                validateVendorSessionUseCase, updateVendorSessionUseCase, objectMapper),
             AnonymousAuthenticationFilter.class)
         .exceptionHandling(
             exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint))
