@@ -15,6 +15,8 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.UserApi;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +31,19 @@ class UserController implements UserApi {
 
   private final RestMapper restMapper;
   private final LoginAdminUseCase loginAdminUseCase;
+  private final HttpServletRequest request;
 
   @Override
   public ResponseEntity<LoginResponseDTO> adminLogin(AdminLoginDTO request) {
-    var result = loginAdminUseCase.execute(restMapper.toCommand(request));
+    String clientIp = extractClientIp();
+    var result = loginAdminUseCase.execute(restMapper.toCommand(request, clientIp));
     return ResponseEntity.status(OK).body(restMapper.fromDomain(result));
+  }
+
+  private String extractClientIp() {
+    // Use the direct remote address only until a trusted-proxy / X-Forwarded-For
+    // allowlist is configured; clients must not be able to spoof the lockout key.
+    return request.getRemoteAddr();
   }
 
   @Override
@@ -59,12 +69,19 @@ class UserController implements UserApi {
     String emailClaim = token.getClaimAsString("email");
     var userId = UserId.from(subjectId);
 
+    // JWT stores space-separated scopes in the standard "scope" claim
+    String scopeClaim = token.getClaimAsString("scope");
+    List<String> roles =
+        scopeClaim == null || scopeClaim.isBlank()
+            ? List.of()
+            : List.of(scopeClaim.trim().split("\\s+"));
+
     Email email;
     try {
       email = Email.from(emailClaim);
     } catch (InvalidDomainValueException _) {
       return ResponseEntity.status(UNAUTHORIZED).build();
     }
-    return ResponseEntity.ok(restMapper.fromDomain(userId, email));
+    return ResponseEntity.ok(restMapper.fromDomain(userId, email, roles));
   }
 }

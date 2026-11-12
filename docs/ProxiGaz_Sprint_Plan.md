@@ -195,7 +195,7 @@ Acceptance criteria
 - Responses carrying a token (`createVendor`, `rotateVendorSession`) send `Cache-Control: no-store`.
 - Tests: E for each of the above.
 
-**PXG-059 ⬜ Admin auth hardening** (M)
+**PXG-059 🟨 Admin auth hardening** (M)
 - `POST /admin/auth/login`: per email+IP lockout/backoff (e.g. 5 failures / 15 min → 429 `Retry-After`) via the `RateLimiter` port introduced here as an in-memory token bucket (D17); constant-time password check path for unknown emails.
 - `AdminProfileDTO` gains `roles[]`; `AdminLoginDTO.password` gets `minLength`; token lifetime configurable; failed/successful logins logged without credentials.
 - Tests: U bucket logic with `FakeClock`; E lockout then recovery.

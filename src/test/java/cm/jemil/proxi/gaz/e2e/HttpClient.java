@@ -60,10 +60,13 @@ public class HttpClient {
     lastResponse =
         new LastRequestResponse(HttpStatusCode.valueOf(statusCode), extractErrorCode(body));
     lastResponseBody = body == null ? "" : body;
+    this.lastResponseHeaders = new java.util.HashMap<>();
   }
 
   public void recordResponse(int statusCode, String body, Map<String, String> headers) {
-    recordResponse(statusCode, body);
+    lastResponse =
+        new LastRequestResponse(HttpStatusCode.valueOf(statusCode), extractErrorCode(body));
+    lastResponseBody = body == null ? "" : body;
     this.lastResponseHeaders =
         headers != null ? new java.util.HashMap<>(headers) : new java.util.HashMap<>();
   }
@@ -77,11 +80,15 @@ public class HttpClient {
   }
 
   public String getLastResponseHeader(String headerName) {
-    return lastResponseHeaders.get(headerName);
+    return lastResponseHeaders.entrySet().stream()
+        .filter(entry -> entry.getKey().equalsIgnoreCase(headerName))
+        .map(Map.Entry::getValue)
+        .findFirst()
+        .orElse(null);
   }
 
   public boolean hasHeader(String headerName) {
-    return lastResponseHeaders.containsKey(headerName);
+    return lastResponseHeaders.keySet().stream().anyMatch(key -> key.equalsIgnoreCase(headerName));
   }
 
   public boolean headerContains(String headerName, String value) {

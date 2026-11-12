@@ -67,11 +67,6 @@ public final class User {
     return Set.copyOf(roles);
   }
 
-  /** Returns a defensive copy of the role set. */
-  public Set<UserRole> getRoles() {
-    return Set.copyOf(roles);
-  }
-
   public Optional<Email> email() {
     return Optional.ofNullable(email);
   }

@@ -14,6 +14,7 @@ import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
 import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
+import cm.jemil.proxi.gaz.domain.user.TooManyLoginAttemptsException;
 import cm.jemil.proxi.gaz.domain.vendor.InvalidVendorSessionException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorInactiveException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
@@ -92,6 +93,26 @@ class DomainExceptionTranslator {
         "Invalid request",
         ex.getMessage(),
         null);
+  }
+
+  @ExceptionHandler(TooManyLoginAttemptsException.class)
+  public ResponseEntity<ProblemDetail> handleTooManyLoginAttempts(
+      TooManyLoginAttemptsException ex) {
+    var problem =
+        ProblemDetail.builder()
+            .type(buildProblemType(ex.getErrorCode()))
+            .title(ex.getErrorCode().description())
+            .status(HttpStatus.TOO_MANY_REQUESTS.value())
+            .code(ex.getErrorCode().value())
+            .correlationId(CorrelationIdHolder.get())
+            .detail(ex.getMessage())
+            .timestamp(Instant.now())
+            .errors(null)
+            .build();
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+        .header(HttpHeaders.CONTENT_TYPE, PROBLEM_MEDIA_TYPE)
+        .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+        .body(problem);
   }
 
   @ExceptionHandler(DomainException.class)
