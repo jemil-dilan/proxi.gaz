@@ -301,6 +301,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   /admin/auth/me:
     get:
       tags:
@@ -523,6 +525,7 @@ components:
         password:
           type: "string"
           format: "password"
+          minLength: 8
           writeOnly: true
     LoginResponseDTO:
       type: "object"
@@ -546,6 +549,7 @@ components:
       required:
         - "id"
         - "email"
+        - "roles"
       properties:
         id:
           type: "string"
@@ -553,6 +557,11 @@ components:
         email:
           type: "string"
           format: "email"
+        roles:
+          type: "array"
+          items:
+            type: "string"
+          description: "List of admin roles"
     DemoDTO:
       type: "object"
       required:
@@ -910,7 +919,12 @@ components:
           schema:
             $ref: "#/components/schemas/ProblemDTO"
     TooManyRequests:
-      description: "Too Many Requests - Rate limit exceeded"
+      description: "Too Many Requests - Rate limit exceeded. Retry after the time specified in Retry-After."
+      headers:
+        Retry-After:
+          description: "Seconds to wait before retrying"
+          schema:
+            type: "integer"
       content:
         application/problem+json:
           schema:

@@ -9,7 +9,9 @@ import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.JwtSettings;
 import cm.jemil.proxi.gaz.application.outbound.PasswordVerifier;
+import cm.jemil.proxi.gaz.application.outbound.RateLimiter;
 import cm.jemil.proxi.gaz.infrastructure.security.BCryptPasswordVerifier;
+import cm.jemil.proxi.gaz.infrastructure.security.InMemoryTokenBucketRateLimiter;
 import cm.jemil.proxi.gaz.infrastructure.security.NimbusAccessTokenIssuer;
 import cm.jemil.proxi.gaz.infrastructure.security.ProxigazJwtSettings;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
@@ -59,6 +61,11 @@ public class SecurityBeans {
   public AccessTokenIssuer accessTokenIssuer(
       JwtEncoder jwtEncoder, Clock clock, JwtSettings jwtSettings) {
     return new NimbusAccessTokenIssuer(jwtEncoder, clock, jwtSettings);
+  }
+
+  @Bean
+  public RateLimiter rateLimiter(Clock clock) {
+    return new InMemoryTokenBucketRateLimiter(clock);
   }
 
   private SecretKeySpec jwtSecretKey(JwtSettings jwtSettings) {

@@ -36,3 +36,21 @@ Feature: Admin authentication
     Given I am connected with an admin token with subject 'not-a-user-id'
     When I try to access the protected admin profile
     Then The last request failed with the http status 'UNAUTHORIZED' and error code ''
+
+  Scenario: Repeated failed logins lock out then recover after the window
+    Given I am connected with the scopes ''
+    When I try to log in as admin with email 'lockout-pxg059@example.test' and password 'wrong-password'
+    And I try to log in as admin with email 'lockout-pxg059@example.test' and password 'wrong-password'
+    And I try to log in as admin with email 'lockout-pxg059@example.test' and password 'wrong-password'
+    And I try to log in as admin with email 'lockout-pxg059@example.test' and password 'wrong-password'
+    And I try to log in as admin with email 'lockout-pxg059@example.test' and password 'wrong-password'
+    When I try to log in as admin with email 'lockout-pxg059@example.test' and password 'wrong-password'
+    Then The last request failed with the http status 'TOO_MANY_REQUESTS' and error code 'PROXIGAZ-429-001'
+    And the last response has a Retry-After header
+    When the login rate-limit window expires
+    And I try to log in as admin with email 'lockout-pxg059@example.test' and password 'wrong-password'
+    Then The last request failed with the http status 'UNAUTHORIZED' and error code 'PROXIGAZ-401-000'
+    When I log in as admin with email 'pxg010-admin@example.test' and password 'PXG010-test-password' from bootstrapped class
+    Then the login succeeds and returns an access token
+    When I access the protected admin profile
+    Then the admin profile is returned for 'pxg010-admin@example.test'

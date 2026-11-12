@@ -5,12 +5,17 @@
 package cm.jemil.proxi.gaz.e2e.steps;
 
 import static io.restassured.RestAssured.given;
+import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import cm.jemil.proxi.gaz.application.outbound.Clock;
+import cm.jemil.proxi.gaz.application.outbound.RateLimiter;
 import cm.jemil.proxi.gaz.e2e.HttpClient;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
+import cm.jemil.proxi.gaz.infrastructure.security.InMemoryTokenBucketRateLimiter;
+import cm.jemil.proxi.gaz.infrastructure.time.FakeClock;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java8.En;
 import io.restassured.http.ContentType;
@@ -34,9 +39,21 @@ public class AdminSteps implements En {
   private static final String PROFILE_PATH = "/admin/auth/me";
 
   public AdminSteps(
-      HttpClient httpClient, JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder) {
+      HttpClient httpClient,
+      JdbcTemplate jdbcTemplate,
+      PasswordEncoder passwordEncoder,
+      RateLimiter rateLimiter,
+      Clock clock) {
 
     this.jdbcClient = JdbcClient.create(jdbcTemplate);
+
+    Before(
+        () -> {
+          if (rateLimiter instanceof InMemoryTokenBucketRateLimiter inMemory) {
+            inMemory.clear();
+          }
+        });
+
     When(
         "I log in as admin with email {string} and password {string} from bootstrapped class",
         (String email, String password) -> {
@@ -80,7 +97,11 @@ public class AdminSteps implements En {
                   .when()
                   .body(adminLoginDTO)
                   .post(LOGIN_PATH);
-          httpClient.recordResponse(response.statusCode(), response.getBody().asString());
+          httpClient.recordResponse(
+              response.statusCode(),
+              response.getBody().asString(),
+              response.headers().asList().stream()
+                  .collect(toMap(h -> h.getName(), h -> h.getValue(), (a, b) -> a)));
         });
 
     Then(
@@ -121,6 +142,25 @@ public class AdminSteps implements En {
         "the admin profile is returned for {string}",
         (String email) -> {
           assertThat(this.adminProfileDTO.getEmail()).isEqualTo(email);
+          assertThat(this.adminProfileDTO.getRoles()).contains("admin");
+        });
+
+    And(
+        "the last response has a Retry-After header",
+        () -> {
+          assertThat(httpClient.hasHeader("Retry-After")).isTrue();
+          assertThat(Integer.parseInt(httpClient.getLastResponseHeader("Retry-After")))
+              .isPositive();
+        });
+
+    When(
+        "the login rate-limit window expires",
+        () -> {
+          if (!(clock instanceof FakeClock fakeClock)) {
+            throw new IllegalStateException(
+                "E2E clock must be FakeClock to advance rate-limit window");
+          }
+          fakeClock.setFixedInstant(fakeClock.now().plusSeconds(901));
         });
 
     And(
