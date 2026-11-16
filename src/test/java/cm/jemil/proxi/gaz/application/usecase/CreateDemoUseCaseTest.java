@@ -154,10 +154,11 @@ class CreateDemoUseCaseTest {
   @Test
   void execute_shouldThrowAlreadyExists_whenNameAlreadyExists() {
     // Given
+    Command command = validCommand();
     given(demoRepository.existsByName(DemoName.from(NAME))).willReturn(true);
 
     // When / Then
-    assertThatThrownBy(() -> createDemoUseCase.execute(validCommand()))
+    assertThatThrownBy(() -> createDemoUseCase.execute(command))
         .isInstanceOf(DemoAlreadyExistsException.class);
     then(demoRepository).should(never()).insert(any(Demo.class));
     then(domainEventPublisher).should(never()).publishDemoCreatedEvent(any());

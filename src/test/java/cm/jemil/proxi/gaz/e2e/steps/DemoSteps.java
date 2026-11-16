@@ -77,7 +77,7 @@ public class DemoSteps implements En {
               jdbcClient.sql("SELECT c_id FROM t_demo").query(String.class).list();
           List<String> expectedAbsent =
               dataTable.asMaps().stream().map(data -> data.get("id")).toList();
-          assertThat(idsInsideDatabase).doesNotContainAnyElementsOf(expectedAbsent);
+          assertThat(idsInsideDatabase).isNotEmpty().doesNotContainAnyElementsOf(expectedAbsent);
         });
 
     And(

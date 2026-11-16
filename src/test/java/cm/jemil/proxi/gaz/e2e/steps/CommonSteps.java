@@ -25,7 +25,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 
 public class CommonSteps implements En {
 
-  private final HttpClient httpClient;
   private final JwtEncoder jwtEncoder;
   private final JdbcClient jdbcClient;
   private final int port;
@@ -35,7 +34,6 @@ public class CommonSteps implements En {
       JwtEncoder jwtEncoder,
       JdbcTemplate jdbcTemplate,
       Environment environment) {
-    this.httpClient = httpClient;
     this.jwtEncoder = jwtEncoder;
     this.jdbcClient = JdbcClient.create(jdbcTemplate);
     this.port = environment.getRequiredProperty("local.server.port", Integer.class);

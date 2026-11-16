@@ -135,7 +135,7 @@ class DemoTest {
 
     // When / Then
     assertThat(one).isEqualTo(other);
-    assertThat(one.hashCode()).isEqualTo(other.hashCode());
+    assertThat(one.hashCode()).hasSameHashCodeAs(other.hashCode());
     assertThat(one).isNotEqualTo(different);
   }
 

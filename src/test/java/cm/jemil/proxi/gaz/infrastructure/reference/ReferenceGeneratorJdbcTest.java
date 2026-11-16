@@ -21,7 +21,7 @@ class ReferenceGeneratorJdbcTest {
   @Test
   void generateForDemo_shouldReturnZeroPaddedSequenceValue() {
     // Given
-    when(jdbcTemplate.queryForObject(eq("SELECT nextval('seq_demo_reference')"), eq(Long.class)))
+    when(jdbcTemplate.queryForObject("SELECT nextval('seq_demo_reference')", eq(Long.class)))
         .thenReturn(101L);
 
     // When
@@ -34,7 +34,7 @@ class ReferenceGeneratorJdbcTest {
   @Test
   void generateForDemo_shouldPadToThreeDigits() {
     // Given
-    when(jdbcTemplate.queryForObject(eq("SELECT nextval('seq_demo_reference')"), eq(Long.class)))
+    when(jdbcTemplate.queryForObject("SELECT nextval('seq_demo_reference')", eq(Long.class)))
         .thenReturn(7L);
 
     // When

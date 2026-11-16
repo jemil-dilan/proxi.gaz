@@ -189,15 +189,16 @@ class VendorRepositoryDataTest {
 
     var secondUser = User.createVendor(null, createdAt);
     var secondVendor = vendor(secondUser, "Token owner two", "+237699002032", 4.06, 9.71, true);
+    VendorSession vendorSession = VendorSession.of(
+            secondVendor.getId(),
+            new VendorSessionTokenHash("same-token-hash"),
+            createdAt);
     assertThatThrownBy(
             () ->
                 onboardingRepository.insert(
                     secondUser,
                     secondVendor,
-                    VendorSession.of(
-                        secondVendor.getId(),
-                        new VendorSessionTokenHash("same-token-hash"),
-                        createdAt)))
+                        vendorSession))
         .isInstanceOf(DataIntegrityViolationException.class);
     assertThat(userRepository.findById(secondUser.getId())).isEmpty();
     assertThatThrownBy(() -> vendorRepository.findById(secondVendor.getId()))

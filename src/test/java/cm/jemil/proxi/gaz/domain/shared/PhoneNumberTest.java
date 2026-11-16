@@ -24,7 +24,8 @@ class PhoneNumberTest {
 
   @Test
   void from_shouldRejectValueLongerThanStorageLimit() {
-    assertThatThrownBy(() -> PhoneNumber.from("1".repeat(33)))
+    String repeat = "1".repeat(33);
+    assertThatThrownBy(() -> PhoneNumber.from(repeat))
         .isInstanceOf(InvalidDomainValueException.class);
   }
 }

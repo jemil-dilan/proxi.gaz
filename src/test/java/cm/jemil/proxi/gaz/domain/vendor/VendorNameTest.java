@@ -24,7 +24,8 @@ class VendorNameTest {
 
   @Test
   void from_shouldRejectNameLongerThanStorageLimit() {
-    assertThatThrownBy(() -> VendorName.from("v".repeat(256)))
+    String repeat = "v".repeat(256);
+    assertThatThrownBy(() -> VendorName.from(repeat))
         .isInstanceOf(InvalidDomainValueException.class);
   }
 }

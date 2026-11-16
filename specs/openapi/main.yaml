@@ -56,14 +56,7 @@ paths:
           in: "query"
           required: false
           schema:
-            type: "string"
-            enum:
-              - "name,asc"
-              - "name,desc"
-              - "createdAt,asc"
-              - "createdAt,desc"
-            default: "name,asc"
-          description: "Sort field and direction. Default is name,asc."
+            $ref: "#/components/schemas/SortDTO"
       responses:
         "200":
           description: "Page of vendors matching the filters"
@@ -832,6 +825,15 @@ components:
         isActive:
           type: "boolean"
           description: "Whether the vendor is active"
+    SortDTO:
+      type: "string"
+      enum:
+        - "NAME,ASC"
+        - "NAME,DESC"
+        - "CREATED_AT,ASC"
+        - "CREATED_AT,DESC"
+      default: "NAME,ASC"
+      description: "Sort field and direction. Default is name,asc."
     ProblemDTO:
       type: "object"
       description: "RFC 7807 Problem Details"

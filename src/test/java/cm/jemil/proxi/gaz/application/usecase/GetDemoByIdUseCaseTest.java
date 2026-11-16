@@ -67,8 +67,9 @@ class GetDemoByIdUseCaseTest {
 
   @Test
   void execute_shouldThrowFieldsExtractionCodeNotSupported_whenCodeIsUnsupported() {
+    Query query = new Query(DEMO_ID, "UNSUPPORTED_CODE");
     // When / Then
-    assertThatThrownBy(() -> getDemoByIdUseCase.execute(new Query(DEMO_ID, "UNSUPPORTED_CODE")))
+    assertThatThrownBy(() -> getDemoByIdUseCase.execute(query))
         .isInstanceOf(FieldsExtractionCodeNotSupported.class);
     then(demoRepository).should(never()).loadAsView1(DemoId.from(DEMO_ID));
     then(demoRepository).should(never()).loadAsView2(DemoId.from(DEMO_ID));
@@ -76,9 +77,10 @@ class GetDemoByIdUseCaseTest {
 
   @Test
   void execute_shouldThrowNullPointerException_whenDemoIdIsNull() {
+    Query query = new Query(null, Constants.FIELDS_TO_EXTRACT_1);
     // When / Then
     assertThatThrownBy(
-            () -> getDemoByIdUseCase.execute(new Query(null, Constants.FIELDS_TO_EXTRACT_1)))
+            () -> getDemoByIdUseCase.execute(query))
         .isInstanceOf(NullPointerException.class);
   }
 

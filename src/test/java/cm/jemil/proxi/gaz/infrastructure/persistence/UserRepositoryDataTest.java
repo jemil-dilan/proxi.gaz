@@ -44,9 +44,10 @@ class UserRepositoryDataTest {
   @Test
   void insert_shouldRejectDuplicateEmail() {
     var email = Email.from("duplicate-" + UUID.randomUUID() + "@example.test");
+    User user = newAdmin(email);
     repository.insert(newAdmin(email));
 
-    assertThatThrownBy(() -> repository.insert(newAdmin(email)))
+    assertThatThrownBy(() -> repository.insert(user))
         .isInstanceOf(DataIntegrityViolationException.class);
   }
 

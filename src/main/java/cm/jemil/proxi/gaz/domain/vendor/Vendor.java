@@ -20,13 +20,13 @@ public class Vendor {
 
   private final VendorId id;
   private final UserId userId;
-  private VendorName name;
-  private PhoneNumber phone;
-  private GeoPoint location;
-  private AddressText addressText;
-  private boolean isStation;
-  private @Nullable DeliveryFeeType deliveryFeeType;
-  private @Nullable Money deliveryFeeAmount;
+  private final VendorName name;
+  private final PhoneNumber phone;
+  private final GeoPoint location;
+  private final AddressText addressText;
+  private final boolean isStation;
+  private final @Nullable DeliveryFeeType deliveryFeeType;
+  private final @Nullable Money deliveryFeeAmount;
   private boolean active;
 
   public Vendor(

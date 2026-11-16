@@ -26,7 +26,8 @@ class AddressTextTest {
 
   @Test
   void from_shouldRejectTextLongerThanStorageLimit() {
-    assertThatThrownBy(() -> AddressText.from("x".repeat(513)))
+    String repeat = "x".repeat(513);
+    assertThatThrownBy(() -> AddressText.from(repeat))
         .isInstanceOf(InvalidDomainValueException.class);
   }
 }

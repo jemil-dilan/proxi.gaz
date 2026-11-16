@@ -18,12 +18,13 @@ class NonLocalSecretsEnvironmentPostProcessorTest {
 
   @Test
   void productionWithDevPlaceholder_fails() {
+    SpringApplication springApplication = new SpringApplication();
     MockEnvironment env = new MockEnvironment();
     env.setActiveProfiles("production");
     env.setProperty(
         "proxigaz.security.jwt.secret", NonLocalSecretsValidator.LOCAL_DEV_JWT_PLACEHOLDER);
 
-    assertThatThrownBy(() -> processor.postProcessEnvironment(env, new SpringApplication()))
+    assertThatThrownBy(() -> processor.postProcessEnvironment(env, springApplication))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("local development placeholder");
   }

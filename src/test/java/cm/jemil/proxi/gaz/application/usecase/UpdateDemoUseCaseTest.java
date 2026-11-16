@@ -110,12 +110,13 @@ class UpdateDemoUseCaseTest {
   @Test
   void execute_shouldThrowAlreadyExists_whenNameUsedByAnotherDemo() {
     // Given
+    Command input = new Command(DEMO_ID, NAME, DESCRIPTION);
     Demo demo = existingDemo("Initial Demo");
     given(demoRepository.load(DemoId.from(DEMO_ID))).willReturn(demo);
     given(demoRepository.existsByNameAndIdNot(NAME, DemoId.from(DEMO_ID))).willReturn(true);
 
     // When / Then
-    assertThatThrownBy(() -> updateDemoUseCase.execute(new Command(DEMO_ID, NAME, DESCRIPTION)))
+    assertThatThrownBy(() -> updateDemoUseCase.execute(input))
         .isInstanceOf(DemoAlreadyExistsException.class);
     then(demoRepository).should(never()).update(any(Demo.class));
     then(domainEventPublisher).should(never()).publishDemoUpdatedEvent(any());
@@ -124,10 +125,11 @@ class UpdateDemoUseCaseTest {
   @Test
   void execute_shouldPropagateNotFound_whenDemoDoesNotExist() {
     // Given
+    Command command = new Command(DEMO_ID, NAME, DESCRIPTION);
     given(demoRepository.load(DemoId.from(DEMO_ID))).willThrow(new DemoNotFoundException());
 
     // When / Then
-    assertThatThrownBy(() -> updateDemoUseCase.execute(new Command(DEMO_ID, NAME, DESCRIPTION)))
+    assertThatThrownBy(() -> updateDemoUseCase.execute(command))
         .isInstanceOf(DemoNotFoundException.class);
     then(demoRepository).should(never()).update(any(Demo.class));
   }

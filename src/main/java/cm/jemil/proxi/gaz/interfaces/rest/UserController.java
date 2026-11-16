@@ -40,12 +40,6 @@ class UserController implements UserApi {
     return ResponseEntity.status(OK).body(restMapper.fromDomain(result));
   }
 
-  private String extractClientIp() {
-    // Use the direct remote address only until a trusted-proxy / X-Forwarded-For
-    // allowlist is configured; clients must not be able to spoof the lockout key.
-    return request.getRemoteAddr();
-  }
-
   @Override
   public ResponseEntity<AdminProfileDTO> getAdminProfile() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -83,5 +77,11 @@ class UserController implements UserApi {
       return ResponseEntity.status(UNAUTHORIZED).build();
     }
     return ResponseEntity.ok(restMapper.fromDomain(userId, email, roles));
+  }
+
+  private String extractClientIp() {
+    // Use the direct remote address only until a trusted-proxy / X-Forwarded-For
+    // allowlist is configured; clients must not be able to spoof the lockout key.
+    return request.getRemoteAddr();
   }
 }

@@ -65,7 +65,7 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers(HttpMethod.POST, Constants.PATH_ADMIN_LOGIN)
                     .permitAll()
-                    .requestMatchers(Constants.PATH_ADMIN_AUTH)
+                    .requestMatchers(Constants.PATH_ADMIN_AUTH_ROLE)
                     .hasAuthority(Scopes.ADMIN)
                     .requestMatchers(Constants.PATH_ADMIN_VENDORS)
                     .hasAuthority(Scopes.ADMIN)

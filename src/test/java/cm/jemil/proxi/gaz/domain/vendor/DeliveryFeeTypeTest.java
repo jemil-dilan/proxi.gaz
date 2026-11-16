@@ -25,7 +25,8 @@ class DeliveryFeeTypeTest {
 
   @Test
   void from_shouldRejectTypeLongerThanStorageLimit() {
-    assertThatThrownBy(() -> DeliveryFeeType.from("x".repeat(33)))
+    String repeat = "x".repeat(33);
+    assertThatThrownBy(() -> DeliveryFeeType.from(repeat))
         .isInstanceOf(InvalidDomainValueException.class);
   }
 }
