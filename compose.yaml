@@ -14,11 +14,10 @@ services:
       retries: 20
 
   app:
-    build:
-      context: .
-      args:
-        APP_VERSION: ${APP_VERSION:-0.0.0-local}
+    # Built with Jib (there is no Dockerfile):
+    #   ./gradlew jibDockerBuild -Djib.to.image=proxigaz:local
     image: proxigaz:local
+    pull_policy: never
     depends_on:
       db:
         condition: service_healthy
