@@ -10,9 +10,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import cm.jemil.proxi.gaz.application.outbound.AuditLogPort;
+import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
+import cm.jemil.proxi.gaz.domain.audit.AuditAction;
+import cm.jemil.proxi.gaz.domain.audit.AuditEntry;
+import cm.jemil.proxi.gaz.domain.audit.AuditMetadata;
 import cm.jemil.proxi.gaz.domain.shared.AddressText;
 import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
 import cm.jemil.proxi.gaz.domain.shared.Money;
@@ -23,21 +29,30 @@ import cm.jemil.proxi.gaz.domain.vendor.Vendor;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
+import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class UpdateVendorUseCaseTest {
 
+  private static final UserId ADMIN = UserId.generate();
+
   private final VendorRepository repository = mock(VendorRepository.class);
-  private final UpdateVendorUseCase useCase = new UpdateVendorUseCase(repository);
+  private final AuditLogPort auditLog = mock(AuditLogPort.class);
+  private final Clock clock = mock(Clock.class);
+  private final UpdateVendorUseCase useCase =
+      new UpdateVendorUseCase(repository, auditLog, UnitOfWorkStubs.runningWork(), clock);
 
   @Test
   void execute_shouldUpdateProfileAndPreserveVendorAndUserIdentity() {
+    when(clock.now()).thenReturn(Instant.EPOCH);
     var userId = UserId.generate();
     var vendor = vendor(VendorId.generate(), userId, "Before", true);
     when(repository.findById(vendor.getId())).thenReturn(vendor);
 
     useCase.execute(
+        ADMIN,
         new UpdateVendorUseCase.Command(
             vendor.getId(),
             VendorName.from("After"),
@@ -72,8 +87,59 @@ class UpdateVendorUseCaseTest {
             Money.fcfa(1500));
     when(repository.findById(vendorId)).thenThrow(new VendorNotFoundException());
 
-    assertThatThrownBy(() -> useCase.execute(command)).isInstanceOf(VendorNotFoundException.class);
+    assertThatThrownBy(() -> useCase.execute(ADMIN, command))
+        .isInstanceOf(VendorNotFoundException.class);
     verify(repository, never()).update(any(Vendor.class));
+    verifyNoInteractions(auditLog);
+  }
+
+  @Test
+  void execute_shouldRecordTheNamesOfTheChangedFieldsOnly() {
+    when(clock.now()).thenReturn(Instant.EPOCH);
+    var vendor = vendor(VendorId.generate(), UserId.generate(), "Before", true);
+    when(repository.findById(vendor.getId())).thenReturn(vendor);
+
+    useCase.execute(
+        ADMIN,
+        new UpdateVendorUseCase.Command(
+            vendor.getId(),
+            VendorName.from("After"),
+            PhoneNumber.from("+237699002009"),
+            vendor.getLocation(),
+            vendor.getAddressText(),
+            vendor.isStation(),
+            vendor.getDeliveryFeeType(),
+            vendor.getDeliveryFeeAmount()));
+
+    var captor = ArgumentCaptor.forClass(AuditEntry.class);
+    verify(auditLog).record(captor.capture());
+    var entry = captor.getValue();
+    assertThat(entry.adminUserId()).isEqualTo(ADMIN);
+    assertThat(entry.action()).isEqualTo(AuditAction.VENDOR_UPDATED);
+    assertThat(entry.targetId()).isEqualTo(vendor.id());
+    assertThat(entry.metadata()).isEqualTo(AuditMetadata.updated(List.of("name", "phone")));
+    assertThat(entry.toString()).doesNotContain("+237699002009", "After");
+  }
+
+  @Test
+  void execute_shouldWriteOnlyInsideTheUnitOfWork() {
+    var outside =
+        new UpdateVendorUseCase(repository, auditLog, UnitOfWorkStubs.notRunningWork(), clock);
+    var vendor = vendor(VendorId.generate(), UserId.generate(), "Before", true);
+
+    outside.execute(
+        ADMIN,
+        new UpdateVendorUseCase.Command(
+            vendor.getId(),
+            vendor.getName(),
+            vendor.getPhone(),
+            vendor.getLocation(),
+            vendor.getAddressText(),
+            vendor.isStation(),
+            vendor.getDeliveryFeeType(),
+            vendor.getDeliveryFeeAmount()));
+
+    verifyNoInteractions(repository, auditLog);
   }
 
   private Vendor vendor(VendorId id, UserId userId, String name, boolean active) {

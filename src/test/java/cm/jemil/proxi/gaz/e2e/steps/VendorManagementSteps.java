@@ -129,6 +129,8 @@ public class VendorManagementSteps implements En {
                   .collect(toMap(h -> h.getName(), h -> h.getValue(), (a, b) -> a)));
           this.vendorOnboardingResponseDTO = response.as(VendorOnboardingResponseDTO.class);
           issuedSessionTokens.add(vendorOnboardingResponseDTO.getSessionToken());
+          httpClient.setLastVendorId(vendorOnboardingResponseDTO.getVendorId());
+          httpClient.addIssuedVendorToken(vendorOnboardingResponseDTO.getSessionToken());
         });
 
     When(
@@ -412,6 +414,7 @@ public class VendorManagementSteps implements En {
                   .extract()
                   .as(VendorSessionTokenDTO.class);
           issuedSessionTokens.add(this.vendorSessionTokenDTO.getSessionToken());
+          httpClient.addIssuedVendorToken(this.vendorSessionTokenDTO.getSessionToken());
         });
 
     When(
@@ -441,6 +444,7 @@ public class VendorManagementSteps implements En {
         "I try to update a vendor with the following data",
         (DataTable dataTable) -> {
           var missingId = UUID.randomUUID();
+          httpClient.setLastVendorId(missingId);
           var response =
               given()
                   .contentType(ContentType.JSON)

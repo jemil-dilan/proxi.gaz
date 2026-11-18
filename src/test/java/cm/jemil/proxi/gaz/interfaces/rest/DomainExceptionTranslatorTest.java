@@ -16,6 +16,9 @@ import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
 import cm.jemil.proxi.gaz.domain.order.OrderStatus;
 import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validation;
+import jakarta.validation.constraints.Min;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -149,4 +152,27 @@ class DomainExceptionTranslatorTest {
     assertThat(problem.correlationId()).isNotNull();
     assertThat(problem.timestamp()).isNotNull();
   }
+
+  @Test
+  void handleConstraintViolation_shouldReturnBadRequestNamingTheParameterNotTheValue() {
+    var validator = Validation.buildDefaultValidatorFactory().getValidator();
+    var violations = validator.validate(new PageQuery(0));
+    var exception = new ConstraintViolationException(violations);
+
+    var response = translator.handleConstraintViolation(exception);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    var problem = response.getBody();
+    assertThat(problem).isNotNull();
+    assertThat(problem.code()).isEqualTo("PROXIGAZ-400-002");
+    assertThat(problem.errors())
+        .singleElement()
+        .satisfies(
+            error -> {
+              assertThat(error).containsEntry("field", "size");
+              assertThat(error.get("message")).isNotBlank();
+            });
+  }
+
+  private record PageQuery(@Min(1) int size) {}
 }

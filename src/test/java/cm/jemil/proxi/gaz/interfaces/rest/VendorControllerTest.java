@@ -5,10 +5,13 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
@@ -25,6 +28,8 @@ import cm.jemil.proxi.gaz.domain.shared.AddressText;
 import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
 import cm.jemil.proxi.gaz.domain.shared.Money;
 import cm.jemil.proxi.gaz.domain.shared.PhoneNumber;
+import cm.jemil.proxi.gaz.domain.shared.UserId;
+import cm.jemil.proxi.gaz.domain.user.InvalidAdminTokenException;
 import cm.jemil.proxi.gaz.domain.vendor.DeliveryFeeType;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
@@ -32,13 +37,18 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorStatusUpdateDTO;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 @ExtendWith(MockitoExtension.class)
 class VendorControllerTest {
@@ -54,6 +64,53 @@ class VendorControllerTest {
   @Mock private GetVendorSessionUseCase getVendorSessionUseCase;
 
   @InjectMocks private VendorController controller;
+
+  @AfterEach
+  void clearSecurityContext() {
+    SecurityContextHolder.clearContext();
+  }
+
+  @Test
+  void setVendorStatus_shouldPassTheAuthenticatedAdminToTheUseCase() {
+    var adminId = UUID.randomUUID();
+    var vendorId = UUID.randomUUID();
+    authenticateAdmin(adminId.toString());
+
+    var response =
+        controller.setVendorStatus(vendorId, new VendorStatusUpdateDTO().isActive(false));
+
+    assertThat(response.getStatusCode().value()).isEqualTo(204);
+    verify(setVendorStatusUseCase).execute(UserId.from(adminId), vendorId, false);
+  }
+
+  @Test
+  void adminWrites_shouldRejectATokenWhoseSubjectIsNotAUserId() {
+    authenticateAdmin("not-a-uuid");
+    var vendorId = UUID.randomUUID();
+
+    assertThatThrownBy(() -> controller.revokeVendorSession(vendorId))
+        .isInstanceOf(InvalidAdminTokenException.class);
+    verifyNoInteractions(revokeVendorSessionUseCase);
+  }
+
+  @Test
+  void adminWrites_shouldRejectARequestWithoutAnAdminToken() {
+    var vendorId = UUID.randomUUID();
+
+    assertThatThrownBy(() -> controller.rotateVendorSession(vendorId))
+        .isInstanceOf(InvalidAdminTokenException.class);
+    verifyNoInteractions(rotateVendorSessionUseCase);
+  }
+
+  private static void authenticateAdmin(String subject) {
+    var jwt =
+        Jwt.withTokenValue("token")
+            .header("alg", "HS256")
+            .subject(subject)
+            .claim("scope", "admin")
+            .build();
+    SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
+  }
 
   @Test
   void createVendor_shouldReturnOneTimeSessionTokenWithoutCaching() {
@@ -74,7 +131,9 @@ class VendorControllerTest {
                 DeliveryFeeType.from("flat"),
                 Money.fcfa(1200),
                 true));
-    when(createVendorUseCase.execute(any())).thenReturn(result);
+    var adminId = UUID.randomUUID();
+    authenticateAdmin(adminId.toString());
+    when(createVendorUseCase.execute(eq(UserId.from(adminId)), any())).thenReturn(result);
     when(restMapper.fromDomain(result)).thenReturn(responseBody);
 
     var response = controller.createVendor(new CreateVendorDTO());

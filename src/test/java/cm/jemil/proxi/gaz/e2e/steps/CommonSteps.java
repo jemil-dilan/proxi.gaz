@@ -12,6 +12,7 @@ import io.cucumber.java8.En;
 import io.restassured.RestAssured;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Locale;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ public class CommonSteps implements En {
   private final JwtEncoder jwtEncoder;
   private final JdbcClient jdbcClient;
   private final int port;
+  private final String adminEmail;
 
   public CommonSteps(
       HttpClient httpClient,
@@ -37,6 +39,7 @@ public class CommonSteps implements En {
     this.jwtEncoder = jwtEncoder;
     this.jdbcClient = JdbcClient.create(jdbcTemplate);
     this.port = environment.getRequiredProperty("local.server.port", Integer.class);
+    this.adminEmail = environment.getRequiredProperty("proxigaz.admin.bootstrap.email");
 
     Before(
         _ -> {
@@ -54,7 +57,7 @@ public class CommonSteps implements En {
         "I am connected with the scopes {string}",
         (String scopes) -> {
           httpClient.setScopes(scopes);
-          httpClient.setAccessToken(buildAccessToken(scopes));
+          httpClient.setAccessToken(buildAccessToken(subjectFor(scopes), scopes));
         });
 
     Given(
@@ -134,11 +137,26 @@ public class CommonSteps implements En {
         });
   }
 
-  private String buildAccessToken(String scopes) {
+  /**
+   * Admin tokens carry the bootstrapped admin's user id as subject, exactly like a token issued by
+   * {@code POST /admin/auth/login}: admin writes are audited against that user.
+   */
+  private String subjectFor(String scopes) {
+    if (!List.of(scopes.trim().split("\\s+")).contains("admin")) {
+      return "proxigaz-e2e-user";
+    }
+    return jdbcClient
+        .sql("SELECT c_id::text FROM t_users WHERE c_email = ?")
+        .param(adminEmail)
+        .query(String.class)
+        .single();
+  }
+
+  private String buildAccessToken(String subject, String scopes) {
     var now = Instant.now();
     var claims =
         JwtClaimsSet.builder()
-            .subject("proxigaz-e2e-user")
+            .subject(subject)
             .issuedAt(now)
             .expiresAt(now.plus(5, ChronoUnit.MINUTES))
             .claim("scope", scopes)
