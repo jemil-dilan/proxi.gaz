@@ -3,10 +3,15 @@ openapi: "3.0.3"
 info:
   title: "PROXIGAZ"
   description: "REST API endpoints for PROXIGAZ"
-  version: "2026-W40"
+  version: "0.1.0-dev"
+  contact:
+    name: "ProxiGaz backend maintainers"
+    url: "https://github.com/jemil-dilan/proxi.gaz"
 servers:
   - url: "https://api.proxigaz.cm"
+    description: Production
   - url: "http://localhost:8080"
+    description: Local development
 tags:
   - name: "Demo"
     description: "Demo operations"
@@ -20,6 +25,7 @@ paths:
       tags:
         - "Vendor"
       summary: "List and filter vendors"
+      description: "Returns a 0-based page of vendors. `isActive` filters by activation status, `name` is a case-insensitive contains match, and `sort` defaults to `name,asc`."
       operationId: "listVendors"
       security:
         - adminAuth: []
@@ -56,7 +62,14 @@ paths:
           in: "query"
           required: false
           schema:
-            $ref: "#/components/schemas/SortDTO"
+            type: "string"
+            enum:
+              - "name,asc"
+              - "name,desc"
+              - "createdAt,asc"
+              - "createdAt,desc"
+            default: "name,asc"
+          description: "Sort field and direction. Default is name,asc."
       responses:
         "200":
           description: "Page of vendors matching the filters"
@@ -70,10 +83,13 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - "Vendor"
       summary: "Create a vendor"
+      description: "Creates the owning user, the vendor and its first session in one transaction. The raw `sessionToken` is returned only in this response; only its hash is stored."
       operationId: "createVendor"
       security:
         - adminAuth: []
@@ -108,11 +124,14 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /admin/vendors/{vendorId}:
     get:
       tags:
         - "Vendor"
       summary: "Get vendor details"
+      description: "Returns one vendor with its active-session metadata."
       operationId: "getVendor"
       security:
         - adminAuth: []
@@ -132,10 +151,13 @@ paths:
                 $ref: "#/components/schemas/VendorDTO"
         "404":
           $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - "Vendor"
       summary: "Replace vendor details"
+      description: "Replaces the vendor profile (full replacement). Activation changes only through `PUT /admin/vendors/{vendorId}/status`."
       operationId: "updateVendor"
       security:
         - adminAuth: []
@@ -163,11 +185,14 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /admin/vendors/{vendorId}/status:
     put:
       tags:
         - "Vendor"
       summary: "Set vendor activation status"
+      description: "Activates or deactivates a vendor. An inactive vendor's session is rejected with `PROXIGAZ-403-002`."
       operationId: "setVendorStatus"
       security:
         - adminAuth: []
@@ -190,16 +215,19 @@ paths:
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
-          $ref: "#/components/responses/UnprocessableEntity"
+          $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /admin/vendors/{vendorId}/session:
     post:
       tags:
         - "Vendor"
       summary: "Rotate the vendor session token"
+      description: "Issues a new vendor session token and invalidates the previous one immediately. The raw token is returned only in this response."
       operationId: "rotateVendorSession"
       security:
         - adminAuth: []
@@ -228,10 +256,13 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     delete:
       tags:
         - "Vendor"
       summary: "Revoke the vendor session token"
+      description: "Revokes the vendor's active session; no token works until a new one is issued."
       operationId: "revokeVendorSession"
       security:
         - adminAuth: []
@@ -251,11 +282,14 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /vendor/session:
     get:
       tags:
         - "Vendor"
       summary: "Return the authenticated vendor identity"
+      description: "Validates the vendor bearer session and returns the vendor identity. A valid token for an inactive vendor returns 403 `PROXIGAZ-403-002`."
       operationId: "getVendorSession"
       security:
         - vendorSessionAuth: []
@@ -270,11 +304,14 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /admin/auth/login:
     post:
       tags:
         - "User"
       summary: "Authenticate an admin user"
+      description: "Exchanges admin credentials for a JWT. Repeated failures for the same email and IP are throttled with 429 and a `Retry-After` header."
       operationId: "adminLogin"
       security: []
       requestBody:
@@ -296,11 +333,14 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /admin/auth/me:
     get:
       tags:
         - "User"
       summary: "Return the authenticated admin identity"
+      description: "Returns the identity and roles of the authenticated admin."
       operationId: "getAdminProfile"
       security:
         - adminAuth: []
@@ -315,6 +355,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /demo:
     get:
       tags:
@@ -347,6 +389,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - "Demo"
@@ -377,6 +421,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "409":
           $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /demo/{demoId}:
     get:
       tags:
@@ -416,10 +462,13 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - "Demo"
       summary: "Replace an existing demo"
+      description: "Replaces an existing Demo (reference scaffold)."
       operationId: "updateDemo"
       security:
         - oAuth:
@@ -451,10 +500,13 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     delete:
       tags:
         - "Demo"
       summary: "Delete an existing demo"
+      description: "Deletes an existing Demo (reference scaffold)."
       operationId: "deleteDemo"
       security:
         - oAuth:
@@ -476,6 +528,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 components:
   securitySchemes:
     adminAuth:
@@ -825,15 +879,6 @@ components:
         isActive:
           type: "boolean"
           description: "Whether the vendor is active"
-    SortDTO:
-      type: "string"
-      enum:
-        - "NAME,ASC"
-        - "NAME,DESC"
-        - "CREATED_AT,ASC"
-        - "CREATED_AT,DESC"
-      default: "NAME,ASC"
-      description: "Sort field and direction. Default is name,asc."
     ProblemDTO:
       type: "object"
       description: "RFC 7807 Problem Details"
@@ -927,18 +972,6 @@ components:
           description: "Seconds to wait before retrying"
           schema:
             type: "integer"
-      content:
-        application/problem+json:
-          schema:
-            $ref: "#/components/schemas/ProblemDTO"
-    UnprocessableEntity:
-      description: "Unprocessable Entity - Validation failed"
-      content:
-        application/problem+json:
-          schema:
-            $ref: "#/components/schemas/ProblemDTO"
-    Locked:
-      description: "Locked - Resource is locked"
       content:
         application/problem+json:
           schema:

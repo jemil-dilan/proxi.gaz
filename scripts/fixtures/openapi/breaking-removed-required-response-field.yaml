@@ -1,0 +1,46 @@
+---
+openapi: "3.0.3"
+info:
+  title: "Breaking-change fixture"
+  description: "Revision removing the required response field `name` used to self-test the breaking-change check."
+  version: "0.0.0-fixture"
+servers:
+  - url: "http://localhost:8080"
+    description: "Local development"
+tags:
+  - name: "Vendor"
+    description: "Vendor operations"
+paths:
+  /vendors/{vendorId}:
+    get:
+      tags:
+        - "Vendor"
+      summary: "Fetch a vendor"
+      description: "Fetch a vendor by id."
+      operationId: "getVendor"
+      parameters:
+        - name: "vendorId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "Vendor found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorDTO"
+        "404":
+          description: "Vendor not found"
+components:
+  schemas:
+    VendorDTO:
+      type: "object"
+      required:
+        - "vendorId"
+      properties:
+        vendorId:
+          type: "string"
+          format: "uuid"

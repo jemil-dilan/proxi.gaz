@@ -286,7 +286,7 @@ public class VendorManagementSteps implements En {
     When(
         "I list vendors at page {int} with size {int}, active {string}, name {string}, and sort"
             + " {string}",
-            this::listVendors);
+        this::listVendors);
 
     Then(
         "the vendor page metadata is page {int}, size {int}, total elements {int}, total pages"
@@ -294,7 +294,7 @@ public class VendorManagementSteps implements En {
         (Integer page, Integer size, Integer totalElements, Integer totalPages) -> {
           var response = httpClient.getLastResponse();
           var body = JsonPath.from(httpClient.getLastResponseBody());
-          assertThat(response.status().value()).isEqualTo(200);
+          assertThat(response.status().value()).as(httpClient.getLastResponseBody()).isEqualTo(200);
           assertThat(body.getInt("page")).isEqualTo(page);
           assertThat(body.getInt("size")).isEqualTo(size);
           assertThat(body.getInt("totalElements")).isEqualTo(totalElements);
@@ -506,17 +506,21 @@ public class VendorManagementSteps implements En {
                   """,
                   this.vendorOnboardingResponseDTO.getVendorId());
 
-          assertThat(actual).containsEntry("c_name",expected.get("name"));
-          assertThat(actual).containsEntry("c_phone",expected.get("phone"));
+          assertThat(actual).containsEntry("c_name", expected.get("name"));
+          assertThat(actual).containsEntry("c_phone", expected.get("phone"));
           assertThat(((Number) actual.get("latitude")).doubleValue())
               .isCloseTo(Double.parseDouble(expected.get("latitude")), within(0.000001));
           assertThat(((Number) actual.get("longitude")).doubleValue())
               .isCloseTo(Double.parseDouble(expected.get("longitude")), within(0.000001));
-            assertThat(actual).containsEntry("c_address_text",expected.get("addressText"));
-            assertThat(actual).containsEntry("c_is_station",expected.get("isStation"));
-            assertThat(actual).containsEntry("c_delivery_fee_type",expected.get("deliveryFeeType"));
-            assertThat(actual).containsEntry("c_delivery_fee_amount",Integer.parseInt(expected.get("deliveryFeeAmount")));
-            assertThat(actual).containsEntry("c_is_active",Boolean.parseBoolean(expected.get("isActive")));
+          assertThat(actual).containsEntry("c_address_text", expected.get("addressText"));
+          assertThat(actual)
+              .containsEntry("c_is_station", Boolean.parseBoolean(expected.get("isStation")));
+          assertThat(actual).containsEntry("c_delivery_fee_type", expected.get("deliveryFeeType"));
+          assertThat(actual)
+              .containsEntry(
+                  "c_delivery_fee_amount", Integer.parseInt(expected.get("deliveryFeeAmount")));
+          assertThat(actual)
+              .containsEntry("c_is_active", Boolean.parseBoolean(expected.get("isActive")));
         });
 
     When(

@@ -79,8 +79,7 @@ class GetDemoByIdUseCaseTest {
   void execute_shouldThrowNullPointerException_whenDemoIdIsNull() {
     Query query = new Query(null, Constants.FIELDS_TO_EXTRACT_1);
     // When / Then
-    assertThatThrownBy(
-            () -> getDemoByIdUseCase.execute(query))
+    assertThatThrownBy(() -> getDemoByIdUseCase.execute(query))
         .isInstanceOf(NullPointerException.class);
   }
 

@@ -27,10 +27,10 @@ public record VendorListSort(Field field, Direction direction) {
       return DEFAULT;
     }
     return switch (sort) {
-      case "NAME,ASC" -> new VendorListSort(Field.NAME, Direction.ASC);
-      case "NAME,DESC" -> new VendorListSort(Field.NAME, Direction.DESC);
-      case "CREATED_AT,ASC" -> new VendorListSort(Field.CREATED_AT, Direction.ASC);
-      case "CREATED_AT,DESC" -> new VendorListSort(Field.CREATED_AT, Direction.DESC);
+      case "name,asc" -> new VendorListSort(Field.NAME, Direction.ASC);
+      case "name,desc" -> new VendorListSort(Field.NAME, Direction.DESC);
+      case "createdAt,asc" -> new VendorListSort(Field.CREATED_AT, Direction.ASC);
+      case "createdAt,desc" -> new VendorListSort(Field.CREATED_AT, Direction.DESC);
       default -> throw new InvalidDomainValueException("unsupported vendor sort: " + sort);
     };
   }

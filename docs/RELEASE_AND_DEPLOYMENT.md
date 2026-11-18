@@ -11,6 +11,14 @@ Every completed sprint produces a staging deployment, release notes, and a versi
 5. Review and accept the staging deployment through GitHub's protected `release-approval` environment. The approver must verify the sprint acceptance scenarios before approving publication. Only after approval does the workflow create the annotated Git tag and publish the GitHub Release, including the immutable image reference in the release notes.
 6. After product acceptance, deploy the same image digest to production. Do not rebuild the image between staging and production.
 
+## API contract versioning
+
+`specs/openapi/main.yaml` is the contract of record. Its `info.version` stays at the development marker `0.1.0-dev`; the repository never claims an unreleased version.
+
+- **Every PR and push to `main`** runs the `OpenAPI Contract` CI job: Spectral lint (`scripts/validate-openapi.sh`, rules in `.spectral.yaml`) and an oasdiff breaking-change check of the PR's contract against the target branch (`scripts/check-openapi-breaking.sh`). Removing a required response field, removing an endpoint, or adding a required request field fails the job.
+- **Intentional breaking changes** (allowed before 1.0) need the PR label `contract-breaking-approved`; add it, then re-run the job. Record the change under "API and database impact" in the sprint's release notes. On `main` the check only warns, because the change was gated at review.
+- **Every release** generates `openapi-<version>.yaml` with `scripts/prepare_openapi_release.py`: `info.version` equals the release version (the tag without `v`), and the repository variable `STAGING_API_URL` (https) is added to `servers` when set. The file is linted, uploaded as a workflow artifact, and attached to the GitHub Release. Clients generate code from that file, not from `main`.
+
 ## Pilot deployment
 
 Docker Compose on a small VPS is the initial pilot deployment approach. The repository includes a local app + PostGIS stack in `compose.yaml`, a staging app definition in `compose.staging.yaml`, a non-root multi-stage `Dockerfile`, and a GitHub release workflow. The staging database must be a separate, persistent PostgreSQL/PostGIS instance; it must not share the disposable application container lifecycle.

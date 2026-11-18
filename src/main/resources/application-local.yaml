@@ -10,3 +10,8 @@ proxigaz:
   security:
     jwt:
       secret: "${JWT_SECRET:proxigaz-dev-secret-key-0123456789abcdef0123456789abcdef}"
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

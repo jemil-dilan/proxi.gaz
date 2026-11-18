@@ -29,7 +29,6 @@ import cm.jemil.proxi.gaz.domain.vendor.DeliveryFeeType;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
-import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.SortDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
@@ -90,7 +89,6 @@ class VendorControllerTest {
     var vendorView = mock(VendorView.VendorView1.class);
     var useCaseResponse = new GetAllVendorsUseCase.Response(List.of(vendorView), 15L, 2, 10, 1);
     var vendorDTO = new VendorDTO().vendorId(UUID.randomUUID()).name("Test Vendor");
-    var sortDTO = SortDTO.NAME_DESC;
     var paginationDTO =
         new VendorPaginationDTO()
             .content(List.of(vendorDTO))
@@ -103,7 +101,7 @@ class VendorControllerTest {
         .thenReturn(useCaseResponse);
     when(restMapper.fromDomain(useCaseResponse)).thenReturn(paginationDTO);
 
-    var response = controller.listVendors(1, 10, false, "Akwa", sortDTO);
+    var response = controller.listVendors(1, 10, false, "Akwa", "name,desc");
 
     assertThat(response.getStatusCode().value()).isEqualTo(200);
     assertThat(response.getBody().getPage()).isEqualTo(1);
@@ -120,7 +118,7 @@ class VendorControllerTest {
                         && q.size() == 10
                         && q.isActive() == false
                         && q.name().equals("Akwa")
-                        && q.sort().equals("NAME,DESC")));
+                        && q.sort().equals("name,desc")));
     verify(restMapper).fromDomain(useCaseResponse);
   }
 
@@ -159,7 +157,6 @@ class VendorControllerTest {
   @Test
   void listVendors_withActiveTrue_shouldPassActiveFilter() {
     var useCaseResponse = new GetAllVendorsUseCase.Response(List.of(), 5L, 1, 20, 0);
-    var sortDTO= SortDTO.CREATED_AT_ASC;
     var paginationDTO =
         new VendorPaginationDTO()
             .content(List.of())
@@ -172,7 +169,7 @@ class VendorControllerTest {
         .thenReturn(useCaseResponse);
     when(restMapper.fromDomain(useCaseResponse)).thenReturn(paginationDTO);
 
-    var response = controller.listVendors(0, 20, true, null, sortDTO);
+    var response = controller.listVendors(0, 20, true, null, "createdAt,asc");
 
     assertThat(response.getStatusCode().value()).isEqualTo(200);
     assertThat(response.getBody().getTotalElements()).isEqualTo(5);
@@ -180,6 +177,6 @@ class VendorControllerTest {
     verify(getAllVendorsUseCase)
         .execute(
             argThat(
-                q -> q.isActive() == true && q.name() == null && q.sort().equals("CREATED_AT,ASC")));
+                q -> q.isActive() == true && q.name() == null && q.sort().equals("createdAt,asc")));
   }
 }

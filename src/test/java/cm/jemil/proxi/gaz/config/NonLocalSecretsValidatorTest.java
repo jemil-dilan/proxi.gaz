@@ -49,7 +49,7 @@ class NonLocalSecretsValidatorTest {
     assertThatThrownBy(
             () ->
                 NonLocalSecretsValidator.validate(
-                        profiles, NonLocalSecretsValidator.LOCAL_DEV_JWT_PLACEHOLDER))
+                    profiles, NonLocalSecretsValidator.LOCAL_DEV_JWT_PLACEHOLDER))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("local development placeholder");
   }

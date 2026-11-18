@@ -5,7 +5,6 @@
 package cm.jemil.proxi.gaz.application.usecase;
 
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
-import cm.jemil.proxi.gaz.application.views.VendorView;
 import cm.jemil.proxi.gaz.application.views.VendorView.VendorView1;
 import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
 import cm.jemil.proxi.gaz.domain.vendor.VendorListSort;

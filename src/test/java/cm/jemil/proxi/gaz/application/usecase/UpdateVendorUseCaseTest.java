@@ -60,7 +60,8 @@ class UpdateVendorUseCaseTest {
   @Test
   void execute_shouldFailWhenVendorDoesNotExist() {
     var vendorId = VendorId.generate();
-    UpdateVendorUseCase.Command command = new UpdateVendorUseCase.Command(
+    UpdateVendorUseCase.Command command =
+        new UpdateVendorUseCase.Command(
             vendorId,
             VendorName.from("After"),
             PhoneNumber.from("+237699002002"),
@@ -71,11 +72,7 @@ class UpdateVendorUseCaseTest {
             Money.fcfa(1500));
     when(repository.findById(vendorId)).thenThrow(new VendorNotFoundException());
 
-    assertThatThrownBy(
-            () ->
-                useCase.execute(
-                        command))
-        .isInstanceOf(VendorNotFoundException.class);
+    assertThatThrownBy(() -> useCase.execute(command)).isInstanceOf(VendorNotFoundException.class);
     verify(repository, never()).update(any(Vendor.class));
   }
 

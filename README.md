@@ -8,7 +8,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
 | Sprint 0 — Foundations | Done (`PXG-001`–`PXG-011`) |
-| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`–`PXG-015` and Epic 1.0 `PXG-055`–`PXG-059` done; Epic 1.2 and geo search remain) |
+| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`–`PXG-015` and Epic 1.0 `PXG-055`–`PXG-060` done; Epic 1.2 and geo search remain) |
 | Sprints 2–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
@@ -26,7 +26,8 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - Config profiles: `local` (default, development defaults allowed), `staging`, `production` (secrets required via env); see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - The `local` Liquibase context seeds a development-only admin (`admin@proxigaz.local` / `password`) and five fictional vendors in central Douala. Seed data is excluded from staging and production contexts.
-- CI: Spotless + unit / data / e2e tests on GitHub Actions.
+- CI: Spotless + unit / data / e2e tests on GitHub Actions, plus an OpenAPI contract job: Spectral lint and an oasdiff breaking-change check against the target branch.
+- API docs (`/v3/api-docs`, Swagger UI) are public on the `local` and `staging` profiles only; production does not serve them.
 
 Admin login (AUTH-01) includes JWT auth plus PXG-059 hardening (email+IP lockout → `429` / `Retry-After`, roles on `/admin/auth/me`, password `minLength`). Vendor management (VEN-01–03) and vendor session validation/rotation are implemented. Vendor brands/availability, production geo search, orders, fallback, and reviews are **not** implemented yet — see `status.md` use-case table.
 
@@ -59,6 +60,14 @@ Tests:
 ./gradlew test
 ./gradlew dataTest
 ./gradlew e2eTest
+```
+
+OpenAPI contract checks (Node.js 22+ for Spectral; oasdiff installs to `~/.local/bin`):
+
+```bash
+scripts/validate-openapi.sh            # lint specs/openapi/main.yaml
+scripts/install-oasdiff.sh             # pinned, checksum-verified
+scripts/check-openapi-breaking.sh <base.yaml> specs/openapi/main.yaml
 ```
 
 ## Commits

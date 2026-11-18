@@ -1,0 +1,52 @@
+# OpenAPI lint rules for specs/openapi/main.yaml (PXG-060, US-1.0.1 AC1).
+# Run locally: scripts/validate-openapi.sh   CI fails on severity "error".
+extends:
+  - spectral:oas
+
+functionsDir: "./scripts/spectral-functions"
+functions:
+  - requiredPropertiesDefined
+
+rules:
+  # Contract hygiene required by US-1.0.1 AC1.
+  operation-operationId: error
+  operation-operationId-unique: error
+  operation-tag-defined: error
+  oas3-schema: error
+  oas3-unused-component: error
+  oas3-valid-media-example: error
+  oas3-valid-schema-example: error
+
+  # Documentation quality: reported, not blocking.
+  operation-description: warn
+  info-contact: warn
+  info-description: error
+
+  proxigaz-operation-documents-client-errors:
+    description: "Every operation documents at least one 4xx response."
+    message: "Operation must document at least one 4xx response (use components/responses)."
+    severity: error
+    given: "$.paths[*][get,put,post,delete,patch].responses"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          patternProperties:
+            "^4[0-9]{2}$": {}
+          anyOf:
+            - required: ["400"]
+            - required: ["401"]
+            - required: ["403"]
+            - required: ["404"]
+            - required: ["409"]
+            - required: ["422"]
+            - required: ["423"]
+            - required: ["429"]
+
+  proxigaz-required-properties-defined:
+    description: "Names in `required` are declared in `properties`."
+    severity: error
+    given: "$.components.schemas..[?(@ && @.type === 'object' && @.required)]"
+    then:
+      function: requiredPropertiesDefined

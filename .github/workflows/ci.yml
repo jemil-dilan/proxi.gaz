@@ -14,6 +14,81 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  api-contract:
+    name: OpenAPI Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout repository with history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pinned oasdiff
+        run: |
+          scripts/install-oasdiff.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Lint OpenAPI contract
+        run: scripts/validate-openapi.sh
+
+      - name: Test lint ruleset
+        run: scripts/test-openapi-lint.sh
+
+      - name: Test breaking-change detection
+        run: scripts/test-openapi-breaking.sh
+
+      - name: Test release contract generation
+        run: python3 -m unittest scripts.tests.test_prepare_openapi_release -v
+
+      # Pre-1.0 some breaking changes are intentional: add the PR label
+      # `contract-breaking-approved`, then re-run this job. Labels are read
+      # at run time so a re-run sees a label added after the PR event.
+      - name: Compare with target branch contract
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]]; then
+            echo "No previous commit is available as a contract baseline; skipping diff."
+            exit 0
+          fi
+
+          git fetch --no-tags origin "$BASE_SHA" --depth=1
+          git show "FETCH_HEAD:specs/openapi/main.yaml" > "$RUNNER_TEMP/openapi-base.yaml"
+
+          if scripts/check-openapi-breaking.sh \
+            "$RUNNER_TEMP/openapi-base.yaml" \
+            "specs/openapi/main.yaml"; then
+            exit 0
+          fi
+
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            echo "::warning title=Breaking API change on main::Merged change was gated at PR review; record it in the release notes."
+            exit 0
+          fi
+
+          if [[ -n "$PR_NUMBER" ]] && gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
+              --json labels --jq '.labels[].name' | grep -Fxq "contract-breaking-approved"; then
+            echo "::warning title=Breaking API change approved::PR is labelled contract-breaking-approved; record the change in the release notes."
+            exit 0
+          fi
+
+          echo "::error title=Breaking API change::Fix the contract, or label the PR contract-breaking-approved and re-run this job."
+          exit 1
+
   spotless:
     name: Spotless Check
     runs-on: ubuntu-latest

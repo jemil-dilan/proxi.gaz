@@ -1,0 +1,41 @@
+---
+openapi: "3.0.3"
+info:
+  title: "Lint-violation fixture"
+  description: "Deliberately invalid contract used to self-test the Spectral ruleset."
+  version: "0.0.0-fixture"
+servers:
+  - url: "http://localhost:8080"
+    description: "Local development"
+tags:
+  - name: "Vendor"
+    description: "Vendor operations"
+paths:
+  /vendors:
+    get:
+      tags:
+        - "Vendor"
+      summary: "List vendors without operationId or error responses"
+      description: "Violates operation-operationId and proxigaz-operation-documents-client-errors."
+      responses:
+        "200":
+          description: "Vendors"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VendorDTO"
+components:
+  schemas:
+    VendorDTO:
+      type: "object"
+      required:
+        - "vendorId"
+        - "phantom"
+      properties:
+        vendorId:
+          type: "string"
+    UnusedDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"

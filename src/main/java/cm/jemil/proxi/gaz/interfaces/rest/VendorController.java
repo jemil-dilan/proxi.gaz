@@ -17,7 +17,6 @@ import cm.jemil.proxi.gaz.config.VendorPrincipal;
 import cm.jemil.proxi.gaz.domain.vendor.InvalidVendorSessionException;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.VendorApi;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
-import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.SortDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorOnboardingResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorPaginationDTO;
@@ -27,7 +26,6 @@ import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorStatusUpdateD
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.VendorUpdateDTO;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,10 +56,11 @@ class VendorController implements VendorApi {
   }
 
   @Override
-  public ResponseEntity<VendorPaginationDTO> listVendors(Integer page, Integer size, @Nullable Boolean isActive, @Nullable String name, SortDTO sort) {
+  public ResponseEntity<VendorPaginationDTO> listVendors(
+      Integer page, Integer size, Boolean isActive, String name, String sort) {
     var result =
-            getAllVendorsUseCase.execute(
-                    new Query(page == null ? 0 : page, size == null ? 20 : size, isActive, name, sort.getValue()));
+        getAllVendorsUseCase.execute(
+            new Query(page == null ? 0 : page, size == null ? 20 : size, isActive, name, sort));
     return ResponseEntity.ok().body(restMapper.fromDomain(result));
   }
 
