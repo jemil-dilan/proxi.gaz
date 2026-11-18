@@ -128,7 +128,7 @@ Follow this order strictly. Do not write implementation code before its correspo
 
 ## Core Domain Rules (never violate)
 
-These rules come from the final specification (Cadrage v1.5 + MVP Spec v1.2). Any implementation that breaks them is incorrect.
+These rules come from the final specification (Cadrage v1.4 + MVP Spec v1.2; baseline confirmed in PXG-062). Any implementation that breaks them is incorrect.
 
 1. **No paid SMS / WhatsApp recurring cost in the pilot.** All messaging goes through `NotificationChannel` (Web Push first) and `OtpProvider` (null / reduced in pilot). A trigger exists: if reported fake-order rate > 10 %, activate reverse-WhatsApp OTP later.
 2. **Order statuses and transitions** must follow the defined state machine (En attente → Confirmée → En cours → Livrée → Livrée & Vérifiée / Expirée / Annulée / Échouée). Use `order_offers` for the multi-vendor fallback (max 3 attempts). Offer duration is **configurable and still an open decision** (proposed 10–12 min; may be shortened after manual test).

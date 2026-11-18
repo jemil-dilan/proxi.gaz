@@ -2,7 +2,7 @@
 
 **Version:** 2.0
 **Date:** 2026-10-31
-**Based on:** Cadrage v1.4 (plan v1.4 cited v1.5 — see PXG-062) + MVP Specification v1.2 + `ProxiGaz_Project_Analysis.md` v1.0 (decisions D1–D20)
+**Based on:** Cadrage v1.4 (authoritative baseline, confirmed in PXG-062; no v1.5 exists) + MVP Specification v1.2 + `ProxiGaz_Project_Analysis.md` v1.0 (decisions D1–D20, ratified as [ADRs](adr/README.md))
 **Language:** English
 **Scope:** Backend only (API, domain, persistence, jobs, admin endpoints). The PWA is a separate track; this plan publishes **contract milestones** so that it can run in parallel.
 **Rules:** All work follows `ProxiGaz_Implementation_Guideline.md` and `docs/RELEASE_AND_DEPLOYMENT.md`.
@@ -208,7 +208,7 @@ Acceptance criteria
 - Migration `t_admin_audit_log` (Analysis §4.3). An `AuditLogPort` called by the vendor use cases (create, update, status, rotate, revoke) inside the business transaction. `GET /admin/audit-log?targetType&targetId` (paginated) for the operator.
 - Tests: I rollback of the business change also rolls back the audit row; E no secret in metadata.
 
-**PXG-062 ⬜ Documentation reconciliation & ADRs** (S)
+**PXG-062 ✅ Documentation reconciliation & ADRs** (S)
 - Record decisions D1–D20 as ADRs in `docs/adr/` (one short file each, status accepted/rejected); fix the Cadrage v1.4/v1.5 reference; update `status.md` with gates G1/G2 and their current state; mark PXG-005/009 notes.
 
 **PXG-063 ⬜ API scenario scripts** (M)
