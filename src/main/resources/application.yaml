@@ -24,3 +24,8 @@ proxigaz:
       enabled: "${PROXIGAZ_ADMIN_BOOTSTRAP_ENABLED:false}"
       email: "${PROXIGAZ_ADMIN_BOOTSTRAP_EMAIL:}"
       password: "${PROXIGAZ_ADMIN_BOOTSTRAP_PASSWORD:}"
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

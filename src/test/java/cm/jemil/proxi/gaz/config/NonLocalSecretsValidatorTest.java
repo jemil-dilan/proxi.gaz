@@ -35,7 +35,9 @@ class NonLocalSecretsValidatorTest {
   @ParameterizedTest
   @ValueSource(strings = {"staging", "production"})
   void nonLocal_rejectsMissingSecret(String profile) {
-    assertThatThrownBy(() -> NonLocalSecretsValidator.validate(Set.of(profile), " "))
+    String jwtSecret = " ";
+    Set<String> profiles = Set.of(profile);
+    assertThatThrownBy(() -> NonLocalSecretsValidator.validate(profiles, jwtSecret))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("JWT_SECRET");
   }
@@ -43,10 +45,11 @@ class NonLocalSecretsValidatorTest {
   @ParameterizedTest
   @ValueSource(strings = {"staging", "production"})
   void nonLocal_rejectsLocalDevPlaceholder(String profile) {
+    Set<String> profiles = Set.of(profile);
     assertThatThrownBy(
             () ->
                 NonLocalSecretsValidator.validate(
-                    Set.of(profile), NonLocalSecretsValidator.LOCAL_DEV_JWT_PLACEHOLDER))
+                    profiles, NonLocalSecretsValidator.LOCAL_DEV_JWT_PLACEHOLDER))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("local development placeholder");
   }
@@ -54,7 +57,8 @@ class NonLocalSecretsValidatorTest {
   @ParameterizedTest
   @ValueSource(strings = {"staging", "production"})
   void nonLocal_rejectsShortSecret(String profile) {
-    assertThatThrownBy(() -> NonLocalSecretsValidator.validate(Set.of(profile), "too-short"))
+    Set<String> profiles = Set.of(profile);
+    assertThatThrownBy(() -> NonLocalSecretsValidator.validate(profiles, "too-short"))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("at least");
   }

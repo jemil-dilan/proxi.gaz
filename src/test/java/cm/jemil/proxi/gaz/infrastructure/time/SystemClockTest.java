@@ -18,8 +18,7 @@ class SystemClockTest {
     Instant result = clock.now();
     Instant after = Instant.now();
 
-    assertThat(result).isAfterOrEqualTo(before);
-    assertThat(result).isBeforeOrEqualTo(after);
+    assertThat(result).isAfterOrEqualTo(before).isBeforeOrEqualTo(after);
   }
 
   @Test

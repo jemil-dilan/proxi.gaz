@@ -35,7 +35,4 @@ interface VendorSessionSpringRepository extends JpaRepository<VendorSessionJpa, 
       WHERE vs.vendorId = :vendorId AND vs.revokedAt IS NULL
       """)
   void softDeleteByVendorId(@Param("vendorId") UUID vendorId);
-
-  // Hard delete - for cleanup, not normal operations
-  void deleteByVendorId(UUID vendorId);
 }

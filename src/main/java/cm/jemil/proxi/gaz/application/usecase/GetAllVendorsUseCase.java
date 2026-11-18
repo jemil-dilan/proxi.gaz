@@ -5,7 +5,7 @@
 package cm.jemil.proxi.gaz.application.usecase;
 
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
-import cm.jemil.proxi.gaz.application.views.VendorView;
+import cm.jemil.proxi.gaz.application.views.VendorView.VendorView1;
 import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
 import cm.jemil.proxi.gaz.domain.vendor.VendorListSort;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
@@ -52,7 +52,7 @@ public class GetAllVendorsUseCase {
   }
 
   public record Response(
-      List<VendorView.VendorView1> vendors,
+      List<VendorView1> vendors,
       long totalElements,
       int totalPages,
       int pageSize,

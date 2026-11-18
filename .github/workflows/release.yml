@@ -101,6 +101,48 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
+      - name: Set up Node.js for contract validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pinned oasdiff and validate contract fixtures
+        run: |
+          scripts/install-oasdiff.sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/bin:$PATH"
+          scripts/test-openapi-breaking.sh
+          python3 -m unittest scripts.tests.test_prepare_openapi_release -v
+
+      - name: Prepare and lint versioned OpenAPI release artifact
+        env:
+          VERSION: ${{ inputs.version }}
+          STAGING_API_URL: ${{ vars.STAGING_API_URL }}
+        run: |
+          set -euo pipefail
+
+          OUTPUT="$RUNNER_TEMP/openapi-${VERSION}.yaml"
+          ARGS=(
+            --source specs/openapi/main.yaml
+            --output "$OUTPUT"
+            --version "$VERSION"
+          )
+          if [[ -n "${STAGING_API_URL:-}" ]]; then
+            ARGS+=(--staging-url "$STAGING_API_URL")
+          fi
+
+          python3 scripts/prepare_openapi_release.py "${ARGS[@]}"
+          scripts/validate-openapi.sh "$OUTPUT"
+          grep -Fq "  version: \"${VERSION}\"" "$OUTPUT"
+
+      - name: Upload versioned OpenAPI contract artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-${{ inputs.version }}
+          path: ${{ runner.temp }}/openapi-${{ inputs.version }}.yaml
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Set up Java 25
         uses: actions/setup-java@v6
         with:
@@ -255,6 +297,12 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
+      - name: Download versioned OpenAPI contract
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-${{ needs.verify.outputs.version }}
+          path: ${{ runner.temp }}/release-artifacts
+
       - name: Create annotated Git tag and GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -330,3 +378,8 @@ jobs:
 
             echo "GitHub Release $TAG successfully created."
           fi
+
+          gh release upload "$TAG" \
+            "${RUNNER_TEMP}/release-artifacts/openapi-${VERSION}.yaml" \
+            --clobber
+          echo "Published versioned OpenAPI contract for $TAG."

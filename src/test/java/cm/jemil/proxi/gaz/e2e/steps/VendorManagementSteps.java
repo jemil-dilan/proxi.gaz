@@ -61,8 +61,8 @@ public class VendorManagementSteps implements En {
                         VALUES (?, NULL, NULL, NOW())
                         ON CONFLICT (c_id) DO NOTHING
                         """;
-                    var userId = UUID.randomUUID();
-                    jdbcTemplate.update(sql, userId);
+                    var id = UUID.randomUUID();
+                    jdbcTemplate.update(sql, id);
 
                     sql =
                         """
@@ -70,7 +70,7 @@ public class VendorManagementSteps implements En {
                         VALUES (?, 'VENDOR')
                         ON CONFLICT (c_user_id, c_role) DO NOTHING
                         """;
-                    jdbcTemplate.update(sql, userId);
+                    jdbcTemplate.update(sql, id);
 
                     sql =
                         """
@@ -83,7 +83,7 @@ public class VendorManagementSteps implements En {
                     jdbcTemplate.update(
                         sql,
                         vendorId,
-                        userId,
+                        id,
                         row.get("name"),
                         row.get("phone"),
                         Double.parseDouble(row.get("longitude")),
@@ -286,9 +286,7 @@ public class VendorManagementSteps implements En {
     When(
         "I list vendors at page {int} with size {int}, active {string}, name {string}, and sort"
             + " {string}",
-        (Integer page, Integer size, String active, String name, String sort) -> {
-          listVendors(page, size, active, name, sort);
-        });
+        this::listVendors);
 
     Then(
         "the vendor page metadata is page {int}, size {int}, total elements {int}, total pages"
@@ -296,7 +294,7 @@ public class VendorManagementSteps implements En {
         (Integer page, Integer size, Integer totalElements, Integer totalPages) -> {
           var response = httpClient.getLastResponse();
           var body = JsonPath.from(httpClient.getLastResponseBody());
-          assertThat(response.status().value()).isEqualTo(200);
+          assertThat(response.status().value()).as(httpClient.getLastResponseBody()).isEqualTo(200);
           assertThat(body.getInt("page")).isEqualTo(page);
           assertThat(body.getInt("size")).isEqualTo(size);
           assertThat(body.getInt("totalElements")).isEqualTo(totalElements);
@@ -508,20 +506,21 @@ public class VendorManagementSteps implements En {
                   """,
                   this.vendorOnboardingResponseDTO.getVendorId());
 
-          assertThat(actual.get("c_name")).isEqualTo(expected.get("name"));
-          assertThat(actual.get("c_phone")).isEqualTo(expected.get("phone"));
+          assertThat(actual).containsEntry("c_name", expected.get("name"));
+          assertThat(actual).containsEntry("c_phone", expected.get("phone"));
           assertThat(((Number) actual.get("latitude")).doubleValue())
               .isCloseTo(Double.parseDouble(expected.get("latitude")), within(0.000001));
           assertThat(((Number) actual.get("longitude")).doubleValue())
               .isCloseTo(Double.parseDouble(expected.get("longitude")), within(0.000001));
-          assertThat(actual.get("c_address_text")).isEqualTo(expected.get("addressText"));
-          assertThat(actual.get("c_is_station"))
-              .isEqualTo(Boolean.parseBoolean(expected.get("isStation")));
-          assertThat(actual.get("c_delivery_fee_type")).isEqualTo(expected.get("deliveryFeeType"));
-          assertThat(actual.get("c_delivery_fee_amount"))
-              .isEqualTo(Integer.parseInt(expected.get("deliveryFeeAmount")));
-          assertThat(actual.get("c_is_active"))
-              .isEqualTo(Boolean.parseBoolean(expected.get("isActive")));
+          assertThat(actual).containsEntry("c_address_text", expected.get("addressText"));
+          assertThat(actual)
+              .containsEntry("c_is_station", Boolean.parseBoolean(expected.get("isStation")));
+          assertThat(actual).containsEntry("c_delivery_fee_type", expected.get("deliveryFeeType"));
+          assertThat(actual)
+              .containsEntry(
+                  "c_delivery_fee_amount", Integer.parseInt(expected.get("deliveryFeeAmount")));
+          assertThat(actual)
+              .containsEntry("c_is_active", Boolean.parseBoolean(expected.get("isActive")));
         });
 
     When(

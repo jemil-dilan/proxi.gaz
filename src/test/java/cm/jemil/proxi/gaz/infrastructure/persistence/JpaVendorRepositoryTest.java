@@ -4,6 +4,7 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -40,5 +41,22 @@ class JpaVendorRepositoryTest {
     when(springRepository.findAggregateById(vendor.id())).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> repository.update(vendor)).isInstanceOf(VendorNotFoundException.class);
+  }
+
+  @Test
+  void containsPattern_shouldBeEmptyWhenNoNameFilterIsGiven() {
+    assertThat(JpaVendorRepository.containsPattern(null)).isEmpty();
+  }
+
+  @Test
+  void containsPattern_shouldLowerCaseTheName() {
+    assertThat(JpaVendorRepository.containsPattern(VendorName.from("Gaz AKWA")))
+        .isEqualTo("gaz akwa");
+  }
+
+  @Test
+  void containsPattern_shouldEscapeLikeWildcardsAndEscapeCharacter() {
+    assertThat(JpaVendorRepository.containsPattern(VendorName.from("100%_Gaz\\")))
+        .isEqualTo("100\\%\\_gaz\\\\");
   }
 }

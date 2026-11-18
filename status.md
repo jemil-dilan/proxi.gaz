@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-11-12 by `working/PXG-059` (PXG-059 complete: admin auth hardening committed/pushed per user)
+Last updated: 2026-11-18 by `working/PXG-060` (PXG-060 complete: contract CI, SemVer, versioning; pending PR)
 
 ## Critical Gate
 
@@ -12,7 +12,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
 | 0 — Foundations & Core Infrastructure | Implementation done; release outstanding | PXG-001–011 complete; manual-test gate explicitly waived; no Docker/GitHub staging release was produced |
-| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–059 done. Remaining Epic 1.0: PXG-054, PXG-060–063. Catalog/availability/geo (Epic 1.2+) remain |
+| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–060 done. Remaining Epic 1.0: PXG-054 (Demo excluded), PXG-061–063. Catalog/availability/geo (Epic 1.2+) remain |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -68,7 +68,8 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-056 | Security schemes & audience separation | Merged to `main` |
 | PXG-057 | Vendor DTO & validation fixes | Merged to `main` |
 | PXG-058 | Vendor detail, session metadata, identity enrichment | Merged / complete per prior session |
-| PXG-059 | Admin auth hardening | Done on `working/PXG-059`; committed/pushed per user |
+| PXG-059 | Admin auth hardening | Merged to `main` (PR #28) |
+| PXG-060 | Contract CI, SemVer, versioning | Done on `working/PXG-060`; Spectral lint + oasdiff breaking check in CI, versioned contract attached to releases. Awaiting PR + throwaway-PR proof |
 
 ## Architecture Updates
 
@@ -128,18 +129,27 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - PXG-007: outbound ports for `Clock`, `OtpProvider`, `NotificationChannel`, and `GeoQueryPort`.
 - PXG-008: `SystemClock`/`FakeClock`, null OTP, logging notification, and in-memory geo test adapters.
 
+- PXG-060 (2026-11-18): the PXG-059 Sonar-fix commit had been made on local `main` (unpushed) with scope `PXG-60`; moved to `working/PXG-060` as `refactor(PXG-060)` and local `main` reset to `origin/main`. That commit also failed `spotlessJavaCheck` and broke 6 unit tests and 2 e2e scenarios: it changed the public `GET /admin/vendors` `sort` values to `NAME,ASC`/`CREATED_AT,DESC` (a breaking change, caught by the new oasdiff gate), the generated `SortDTO` enum failed to bind its default value (400), a Mockito matcher was mixed with a raw value, and an e2e assertion compared a boolean to a string. PXG-060 restored the merged inline `sort` parameter (`name,asc`…), the controller/test, the matchers and the assertion; full suite green afterwards.
+- PXG-060: `GET /admin/vendors` without a `name` filter failed on PostgreSQL (`function lower(bytea) does not exist`, untyped null parameter). The interim `COALESCE` edit did not fix it; the adapter now always binds an escaped, lower-cased contains pattern. Covered by data tests.
+- PXG-060: `/v3/api-docs` and Swagger UI were served in every profile (secured by deny-all). Now disabled by default and in production, public on `local`/`staging`.
+- PXG-060 contract fixes: `setVendorStatus` 401 referenced the 422 response; unused `Locked` (423) and `UnprocessableEntity` (422) responses removed until PXG-036 / PXG-016 use them; shared 500 referenced by every operation.
+- Open (not PXG-060): `getVendor` documents no 401/403 and returns `VendorDTO` rather than the `VendorDetailDTO` named in the plan; `vendorSessionAuth` declares `bearerFormat: JWT` though tokens are opaque; `bearerAuth`/`oAuth` schemes remain (Demo uses `oAuth`). `docs/RELEASE_AND_DEPLOYMENT.md` still references removed `scripts/deploy-staging.sh` / `compose.staging.yaml`, and `TASK_PXG-012C.md` was never deleted — PXG-062 reconciliation.
+- Demo scaffold is kept by owner decision (2026-11-17) despite PXG-054's wording; PXG-054 must exclude Demo.
+
 ## Architecture notes relevant to next task
 
 - PostgreSQL + PostGIS are ready. Liquibase v3 consolidates identity in `t_users`; PXG-012B adds the explicit unique `t_vendors.c_user_id` foreign key in v4 while preserving vendor IDs and downstream foreign keys.
 - Domain VOs/state machine, ports, base adapters, and AUTH-01 login/JWT exist. PXG-012B's User/Vendor repositories, domain mapping, and API edits pass the user-reported test suites. Vendor onboarding persists User, Vendor, and VendorSession through one transactional adapter. Generic password/token ports and JWT settings use infrastructure beans; `proxigaz.*` settings bind through `Configurations`/`ConfigurationsImpl`. Demo projection selection still passes REST wire codes into application use cases and remains a separate architecture gap.
 - Admin bootstrap is opt-in through environment properties; it hashes the supplied password and skips an existing email. PXG-010 owns login/JWT; Sprint 1 PXG-020 owns production PostGIS nearby search.
 - Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
-- PXG-013–015 and PXG-055–058 are merged / complete. PXG-059 hardens AUTH-01 (lockout, roles on `/me`, RateLimiter D17) on `working/PXG-059`.
-- Remaining Epic 1.0: PXG-054, PXG-060–063. Epic 1.2+ (catalog/availability/geo) remains.
+- PXG-013–015 and PXG-055–059 are merged. PXG-060 adds the `OpenAPI Contract` CI job (`scripts/validate-openapi.sh`, `.spectral.yaml`, `scripts/check-openapi-breaking.sh`); every new endpoint must lint clean (operationId, at least one 4xx, 500 via `components/responses/InternalServerError`, no unused components, `required` names declared).
+- Contract `info.version` stays `0.1.0-dev`; releases stamp the tag version via `scripts/prepare_openapi_release.py`. Breaking changes need the PR label `contract-breaking-approved`.
+- Remaining Epic 1.0: PXG-054 (keep Demo), PXG-061–063. Epic 1.2+ (catalog/availability/geo) remains.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits).
 
 ## Next recommended action
 
-1. Merge PXG-059 (and CI workflow fix for Dependency-Check `others` / report path if not already included), then continue Epic 1.0 with PXG-054 or PXG-060–063.
-2. Configure the GitHub `staging` environment and host secrets, and execute the alpha staging workflow to test PXG-012C end-to-end.
-3. Complete Epic 1.2+ (PXG-016–021): catalog/availability and PostGIS nearby search with inactive vendors excluded.
+1. Open the PXG-060 PR, then prove the gate: a throwaway PR removing a required response field must fail `OpenAPI Contract`. Optionally set the `STAGING_API_URL` repository variable.
+2. Continue Epic 1.0: PXG-061 (admin audit log), PXG-062 (ADRs + doc reconciliation), PXG-063 (scenario scripts), PXG-054 (template leftovers, keeping Demo).
+3. Configure the GitHub `staging` environment and host secrets, and execute the alpha staging workflow end-to-end.
+4. Complete Epic 1.2+ (PXG-064, PXG-016, PXG-065, PXG-017, PXG-020/021, PXG-066/067).

@@ -65,10 +65,11 @@ class DeleteDemoUseCaseTest {
   @Test
   void execute_shouldThrowNotFound_whenDemoDoesNotExist() {
     // Given
+    Command input = new Command(DEMO_ID);
     given(demoRepository.existsById(DemoId.from(DEMO_ID))).willReturn(false);
 
     // When / Then
-    assertThatThrownBy(() -> deleteDemoUseCase.execute(new Command(DEMO_ID)))
+    assertThatThrownBy(() -> deleteDemoUseCase.execute(input))
         .isInstanceOf(DemoNotFoundException.class);
     then(demoRepository).should(never()).delete(DemoId.from(DEMO_ID));
     then(domainEventPublisher)

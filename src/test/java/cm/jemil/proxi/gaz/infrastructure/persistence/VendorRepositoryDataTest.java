@@ -10,14 +10,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorOnboardingRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
+import cm.jemil.proxi.gaz.application.views.VendorView;
 import cm.jemil.proxi.gaz.domain.shared.AddressText;
 import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
 import cm.jemil.proxi.gaz.domain.shared.Money;
+import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
 import cm.jemil.proxi.gaz.domain.shared.PhoneNumber;
 import cm.jemil.proxi.gaz.domain.user.User;
 import cm.jemil.proxi.gaz.domain.vendor.DeliveryFeeType;
 import cm.jemil.proxi.gaz.domain.vendor.Vendor;
+import cm.jemil.proxi.gaz.domain.vendor.VendorListSort;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSession;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSessionTokenHash;
@@ -189,15 +192,10 @@ class VendorRepositoryDataTest {
 
     var secondUser = User.createVendor(null, createdAt);
     var secondVendor = vendor(secondUser, "Token owner two", "+237699002032", 4.06, 9.71, true);
-    assertThatThrownBy(
-            () ->
-                onboardingRepository.insert(
-                    secondUser,
-                    secondVendor,
-                    VendorSession.of(
-                        secondVendor.getId(),
-                        new VendorSessionTokenHash("same-token-hash"),
-                        createdAt)))
+    VendorSession vendorSession =
+        VendorSession.of(
+            secondVendor.getId(), new VendorSessionTokenHash("same-token-hash"), createdAt);
+    assertThatThrownBy(() -> onboardingRepository.insert(secondUser, secondVendor, vendorSession))
         .isInstanceOf(DataIntegrityViolationException.class);
     assertThat(userRepository.findById(secondUser.getId())).isEmpty();
     assertThatThrownBy(() -> vendorRepository.findById(secondVendor.getId()))
@@ -208,6 +206,72 @@ class VendorRepositoryDataTest {
                 Integer.class,
                 secondVendor.getId().value()))
         .isZero();
+  }
+
+  @Test
+  void loadAllVendors_withoutFilters_shouldListVendorsWhenNameParameterIsNull() {
+    var marker = "Unfiltered " + UUID.randomUUID().toString().substring(0, 8);
+    var vendor = persistVendor(marker, "+237699003001", true);
+
+    var page =
+        vendorRepository.loadAllVendors(
+            new PaginationFetchRequest(100, 0),
+            null,
+            null,
+            new VendorListSort(VendorListSort.Field.CREATED_AT, VendorListSort.Direction.DESC));
+
+    assertThat(page.total()).isPositive();
+    assertThat(page.stream().map(VendorView.VendorView1::getVendorId))
+        .contains(vendor.getId().value());
+  }
+
+  @Test
+  void loadAllVendors_shouldApplyCaseInsensitiveContainsNameAndActiveFilters() {
+    var marker = "Filter " + UUID.randomUUID().toString().substring(0, 8);
+    var active = persistVendor(marker + " Active", "+237699003002", true);
+    var inactive = persistVendor(marker + " Inactive", "+237699003003", false);
+
+    var byName =
+        vendorRepository.loadAllVendors(
+            new PaginationFetchRequest(100, 0),
+            null,
+            VendorName.from(marker.toUpperCase()),
+            VendorListSort.DEFAULT);
+    var inactiveByName =
+        vendorRepository.loadAllVendors(
+            new PaginationFetchRequest(100, 0),
+            false,
+            VendorName.from(marker.toLowerCase()),
+            VendorListSort.DEFAULT);
+
+    assertThat(byName.total()).isEqualTo(2);
+    assertThat(byName.stream().map(VendorView.VendorView1::getVendorId))
+        .containsExactly(active.getId().value(), inactive.getId().value());
+    assertThat(inactiveByName.total()).isEqualTo(1);
+    assertThat(inactiveByName.stream().map(VendorView.VendorView1::getVendorId))
+        .containsExactly(inactive.getId().value());
+
+    var wildcardOnly =
+        vendorRepository.loadAllVendors(
+            new PaginationFetchRequest(100, 0),
+            null,
+            VendorName.from(marker + "%"),
+            VendorListSort.DEFAULT);
+    assertThat(wildcardOnly.total()).as("%% is matched literally, not as a wildcard").isZero();
+  }
+
+  private Vendor persistVendor(String name, String phone, boolean active) {
+    var createdAt = CreatedAt.from(Instant.now());
+    var user = User.createVendor(null, createdAt);
+    var vendor = vendor(user, name, phone, 4.051, 9.702, active);
+    onboardingRepository.insert(
+        user,
+        vendor,
+        VendorSession.of(
+            vendor.getId(),
+            new VendorSessionTokenHash("list-hash-" + UUID.randomUUID()),
+            createdAt));
+    return vendor;
   }
 
   private Vendor vendor(

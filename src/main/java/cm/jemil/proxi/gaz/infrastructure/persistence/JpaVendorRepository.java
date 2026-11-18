@@ -14,6 +14,7 @@ import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.domain.vendor.VendorListSort;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
+import java.util.Locale;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -51,7 +52,7 @@ class JpaVendorRepository implements VendorRepository {
       @Nullable Boolean isActive,
       @Nullable VendorName vendorName,
       VendorListSort sort) {
-    var name = Optional.ofNullable(vendorName).map(VendorName::value).orElse(null);
+    var name = containsPattern(vendorName);
     var pageable =
         PageRequest.of(
             paginationFetchRequest.page(), paginationFetchRequest.limit(), toSpringSort(sort));
@@ -82,6 +83,22 @@ class JpaVendorRepository implements VendorRepository {
               return vendorSpringRepository.save(vendorJpa);
             })
         .orElseThrow(VendorNotFoundException::new);
+  }
+
+  /**
+   * Lower-cased, LIKE-escaped name fragment; empty matches every vendor. Never null: an untyped
+   * null parameter is bound as {@code bytea} by PostgreSQL and breaks {@code LOWER(...)}.
+   */
+  static String containsPattern(@Nullable VendorName vendorName) {
+    if (vendorName == null) {
+      return "";
+    }
+    return vendorName
+        .value()
+        .toLowerCase(Locale.ROOT)
+        .replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_");
   }
 
   private static Sort toSpringSort(VendorListSort sort) {

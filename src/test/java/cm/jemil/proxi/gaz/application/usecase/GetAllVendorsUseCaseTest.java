@@ -73,7 +73,7 @@ class GetAllVendorsUseCaseTest {
     var response = useCase.execute(query);
 
     // Then
-    assertThat(response.totalElements()).isEqualTo(0);
+    assertThat(response.totalElements()).isZero();
     then(repository)
         .should()
         .loadAllVendors(new PaginationFetchRequest(20, 0), null, null, VendorListSort.DEFAULT);

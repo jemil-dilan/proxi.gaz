@@ -9,8 +9,9 @@ public final class Constants {
   public static final String DEMO = "demo";
   public static final String PATH_DEMO = "/demo";
   public static final String PATH_DEMO_ID = PATH_DEMO + "/{demoId}";
-  public static final String PATH_ADMIN_LOGIN = "/admin/auth/login";
-  public static final String PATH_ADMIN_AUTH = "/admin/auth/**";
+  public static final String PATH_ADMIN_AUTH = "/admin/auth";
+  public static final String PATH_ADMIN_LOGIN = PATH_ADMIN_AUTH + "/login";
+  public static final String PATH_ADMIN_AUTH_ROLE = PATH_ADMIN_AUTH + "/**";
   public static final String PATH_ADMIN_VENDORS = "/admin/vendors/**";
   public static final String PATH_VENDOR_SESSION = "/vendor/**";
   public static final String FIELDS_TO_EXTRACT_CODE = "fieldsToExtractCode";

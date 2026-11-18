@@ -9,6 +9,9 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 import cm.jemil.proxi.gaz.application.usecase.UpdateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.application.usecase.ValidateVendorSessionUseCase;
 import cm.jemil.proxi.gaz.interfaces.rest.Constants;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -24,10 +27,24 @@ import tools.jackson.databind.ObjectMapper;
 @EnableWebSecurity
 public class SecurityConfig {
 
+  /**
+   * Public, unauthenticated endpoints: health always; API docs and Swagger UI only when springdoc
+   * enables them for the active profile (local and staging, never production).
+   */
   @Order(0)
   @Bean
-  public SecurityFilterChain healthEndpoints(HttpSecurity http) {
-    return http.securityMatcher("/actuator/health/**")
+  public SecurityFilterChain publicEndpoints(
+      HttpSecurity http,
+      @Value("${springdoc.api-docs.enabled:false}") boolean apiDocsEnabled,
+      @Value("${springdoc.swagger-ui.enabled:false}") boolean swaggerUiEnabled) {
+    var paths = new ArrayList<String>(List.of("/actuator/health/**"));
+    if (apiDocsEnabled) {
+      paths.addAll(List.of("/v3/api-docs", "/v3/api-docs/**"));
+    }
+    if (swaggerUiEnabled) {
+      paths.addAll(List.of("/swagger-ui.html", "/swagger-ui/**"));
+    }
+    return http.securityMatcher(paths.toArray(String[]::new))
         .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
         .build();
   }
@@ -65,7 +82,7 @@ public class SecurityConfig {
                 authorize
                     .requestMatchers(HttpMethod.POST, Constants.PATH_ADMIN_LOGIN)
                     .permitAll()
-                    .requestMatchers(Constants.PATH_ADMIN_AUTH)
+                    .requestMatchers(Constants.PATH_ADMIN_AUTH_ROLE)
                     .hasAuthority(Scopes.ADMIN)
                     .requestMatchers(Constants.PATH_ADMIN_VENDORS)
                     .hasAuthority(Scopes.ADMIN)

@@ -46,14 +46,14 @@ interface VendorSpringRepository extends JpaRepository<VendorJpa, UUID> {
                   WHERE vs2.vendorId = v.id AND vs2.revokedAt IS NULL
               )
               WHERE (:active is null or v.active = :active)
-              AND (:name IS NULL OR LOWER(v.name) LIKE LOWER(CONCAT('%', :name, '%')))
+              AND LOWER(v.name) LIKE CONCAT('%', :name, '%') ESCAPE '\\'
           """,
       countQuery =
           """
               SELECT COUNT(v.id)
               FROM VendorJpa v
               WHERE (:active is null or v.active = :active)
-              AND (:name IS NULL OR LOWER(v.name) LIKE LOWER(CONCAT('%', :name, '%')))
+              AND LOWER(v.name) LIKE CONCAT('%', :name, '%') ESCAPE '\\'
           """)
   Page<VendorView1> loadAllVendorView(
       @Param("active") Boolean active, @Param("name") String name, Pageable pageable);

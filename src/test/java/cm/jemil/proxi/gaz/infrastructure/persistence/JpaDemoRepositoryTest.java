@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
+import cm.jemil.proxi.gaz.application.views.DemoView;
 import cm.jemil.proxi.gaz.domain.demo.Demo;
 import cm.jemil.proxi.gaz.domain.demo.DemoDescription;
 import cm.jemil.proxi.gaz.domain.demo.DemoId;
@@ -71,7 +72,7 @@ class JpaDemoRepositoryTest {
 
     // Then
     assertThat(views)
-        .extracting(view -> view.getDemoId())
+        .extracting(DemoView.DemoView1::getDemoId)
         .contains(SEEDED_ID)
         .doesNotContain(SEEDED_DELETED_ID);
   }
