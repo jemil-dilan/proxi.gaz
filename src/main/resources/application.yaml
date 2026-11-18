@@ -10,6 +10,9 @@ spring:
     enabled: true
   jpa:
     open-in-view: false
+    properties:
+      hibernate:
+        log_slow_query: "${PROXIGAZ_SLOW_QUERY_MS:500}"
 management:
   endpoints:
     web:
@@ -29,3 +32,9 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+logging:
+  pattern:
+    correlation: "[%X{correlationId:-}] "
+  level:
+    cm.jemil.proxi.gaz: "INFO"
+    org.hibernate.SQL_SLOW: "INFO"

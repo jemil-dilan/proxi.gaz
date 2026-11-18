@@ -15,3 +15,7 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+logging:
+  level:
+    org.hibernate.SQL: "DEBUG"
+    org.springframework.jdbc.core.JdbcTemplate: "DEBUG"
