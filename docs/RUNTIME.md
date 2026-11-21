@@ -33,6 +33,18 @@ docker compose down
 
 The stack uses development-only credentials and seed data. `docker compose down -v` deletes the local database volume.
 
+### API scenarios
+
+`api-scenarios/` holds versioned [Hurl](https://hurl.dev) scenarios (`sprint-N/*.hurl`) and one environment file per target (`env/local.env`, `env/staging.env`). `scripts/run-api-scenarios.sh <env>` waits for `/actuator/health`, then runs every scenario with a unique vendor name and phone, so it can be repeated against shared data; it writes a JUnit report to `build/api-scenarios/junit.xml`. It uses a local `hurl` (`scripts/install-hurl.sh`, Hurl 8.1.0) when that binary runs, otherwise the official Hurl image pinned by digest. The prebuilt Linux binary needs `libxml2.so.2`; Ubuntu 26.04 ships `libxml2.so.16`, so there the Docker image is used.
+
+| Variable | Purpose |
+|----------|---------|
+| `PROXIGAZ_SCENARIO_BASE_URL` | Overrides `base_url` of the environment file |
+| `PROXIGAZ_SCENARIO_ADMIN_EMAIL` / `PROXIGAZ_SCENARIO_ADMIN_PASSWORD` | Admin account used by the scenario; required for staging (never committed) |
+| `PROXIGAZ_SCENARIO_HEALTH_TIMEOUT` | Seconds to wait for the health check (default 180; raise it for hosts that sleep when idle) |
+
+`--reset-local` rebuilds the image and restarts the local stack on a fresh database (the seed-reset step). CI runs the scenarios on every PR (job `API Scenarios`); `.github/workflows/api-scenarios.yml` runs them on demand against a deployed environment using the `PROXIGAZ_SCENARIO_ADMIN_*` secrets of that GitHub environment.
+
 ```bash
 # Local app (default profile: local — defaults in application-local.yaml)
 ./gradlew bootRun

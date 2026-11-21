@@ -211,7 +211,7 @@ Acceptance criteria
 **PXG-062 ✅ Documentation reconciliation & ADRs** (S)
 - Record decisions D1–D20 as ADRs in `docs/adr/` (one short file each, status accepted/rejected); fix the Cadrage v1.4/v1.5 reference; update `status.md` with gates G1/G2 and their current state; mark PXG-005/009 notes.
 
-**PXG-063 ⬜ API scenario scripts** (M)
+**PXG-063 🟡 API scenario scripts** (M) — *collection, runner and CI job done (2026-11-18); open until the staging run passes*
 - A versioned collection (Bruno/Postman/`.http` files + a runner script usable in CI against staging) with environments and a seed-reset step. Sprint 1 scenario: admin login → create vendor → keep one-time token → vendor `GET /vendor/session` → set brand + availability → public nearby → quote. Each later sprint extends it (PXG-022…, 036…, 048…).
 - Done when: the runner executes the whole scenario green on staging.
 
