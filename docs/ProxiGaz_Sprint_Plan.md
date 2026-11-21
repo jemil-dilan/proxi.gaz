@@ -2,7 +2,7 @@
 
 **Version:** 2.0
 **Date:** 2026-10-31
-**Based on:** Cadrage v1.4 (plan v1.4 cited v1.5 — see PXG-062) + MVP Specification v1.2 + `ProxiGaz_Project_Analysis.md` v1.0 (decisions D1–D20)
+**Based on:** Cadrage v1.4 (authoritative baseline, confirmed in PXG-062; no v1.5 exists) + MVP Specification v1.2 + `ProxiGaz_Project_Analysis.md` v1.0 (decisions D1–D20, ratified as [ADRs](adr/README.md))
 **Language:** English
 **Scope:** Backend only (API, domain, persistence, jobs, admin endpoints). The PWA is a separate track; this plan publishes **contract milestones** so that it can run in parallel.
 **Rules:** All work follows `ProxiGaz_Implementation_Guideline.md` and `docs/RELEASE_AND_DEPLOYMENT.md`.
@@ -167,22 +167,22 @@ Acceptance criteria
 - Delete `/demo` endpoints, `DemoDTO`, `DemoCreateDTO`, `DemoUpdateDTO`, `CreationResponseDTO` (if unused), the `oAuth` security scheme and the `Demo` tag, plus the matching code, tests and seed.
 - Done when: a repo-wide search for `Demo`/`oAuth` returns nothing; contract lint passes.
 
-**PXG-055 ⬜ Error model & code registry** (M)
+**PXG-055 ✅ Error model & code registry** (M)
 - Add `components/schemas/Problem` (RFC 7807 + `code`, `correlationId`, `errors[{field, message}]`) and reusable `components/responses` for 400, 401, 403, 404, 409, 422, 423, 429, 500; reference them from every operation.
-- Create `docs/ERROR_CODES.md`: `PROXIGAZ-400-001 VALIDATION_FAILED`, `401-001 TOKEN_INVALID`, `403-001 FORBIDDEN_AUDIENCE`, `403-002 VENDOR_INACTIVE`, `404-001 RESOURCE_NOT_FOUND`, `409-001 DUPLICATE_PHONE`, `409-002 DUPLICATE_EMAIL`, `429-001 RATE_LIMITED`, `500-001 INTERNAL_ERROR`. Later sprints append (e.g. `409-010 MAX_ACTIVE_ORDERS`, `409-011 PRICE_CHANGED`, `409-012 OFFER_NOT_ACTIONABLE`, `423-001 CODE_LOCKED`).
+- Create `docs/ERROR_CODES.md` with the registry of implemented codes (see the file); a code is added only with the task that implements it. Later sprints append (e.g. `409-010 MAX_ACTIVE_ORDERS`, `409-011 PRICE_CHANGED`, `409-012 OFFER_NOT_ACTIONABLE`, `423-001 CODE_LOCKED`).
 - Global exception mapper; stack traces never leave the server.
-- Tests: I — one per mapped error; contract test that all documented codes exist in the registry.
+- Tests: I — one per mapped error; `ErrorCodesDocumentationTest` asserts that the registry and `ErrorCodes` declare the same codes.
 
-**PXG-056 ⬜ Security schemes & audience separation** (M)
+**PXG-056 ✅ Security schemes & audience separation** (M)
 - Replace `bearerAuth` by `adminAuth` (HTTP bearer, JWT) and `vendorSessionAuth` (HTTP bearer, opaque). Apply per route group (`/admin/**` → adminAuth, `/vendor/**` → vendorSessionAuth, public routes `security: []`).
 - JWT carries an audience claim (`admin`); vendor guard rejects JWTs, admin guard rejects opaque tokens.
 - Tests: E — admin token on vendor route → 401/403; vendor token on admin route → 401/403; revoked vendor token → 401.
 
-**PXG-057 ⬜ Vendor DTO & validation fixes** (M)
+**PXG-057 ✅ Vendor DTO & validation fixes** (M)
 - Unify the field name to **`addressText`** in create, update and read DTOs (R8).
 - `VendorUpdateDTO`: remove `isActive` from `required` (activation only via `PUT …/status`); decide PUT semantics: full replacement, `addressText` required in both create and update.
 - `deliveryFeeType`: enum `NONE | FIXED` (extendable); rule: `FIXED` ⇒ `deliveryFeeAmount > 0`, `NONE` ⇒ amount absent or 0 (documented via description + enforced by validator; add `oneOf` if the generator copes).
-- `phone`: normalise to E.164 and validate `^\+237[26]\d{8}$` (D14); duplicate phone → `409 PROXIGAZ-409-001`; duplicate email → `409-002`.
+- `phone`: normalise to E.164 and validate `^\+237[26]\d{8}$` (D14); duplicate phone or email → `409` (add `409-001`/`409-002` with the implementation; see `status.md` → Known gaps).
 - `latitude`/`longitude`: keep range check and add a Cameroon bounding box guard (≈ lat 1.6–13.1, lon 8.4–16.2) → catches swapped coordinates (K11).
 - Add `createdAt`, `updatedAt` to `VendorDTO`; add `email` (nullable) to `VendorDTO`; return `Location` header on 201.
 - Tests: U validators; I migration/unique constraints; E create → read round-trip returns identical fields.
@@ -208,7 +208,7 @@ Acceptance criteria
 - Migration `t_admin_audit_log` (Analysis §4.3). An `AuditLogPort` called by the vendor use cases (create, update, status, rotate, revoke) inside the business transaction. `GET /admin/audit-log?targetType&targetId` (paginated) for the operator.
 - Tests: I rollback of the business change also rolls back the audit row; E no secret in metadata.
 
-**PXG-062 ⬜ Documentation reconciliation & ADRs** (S)
+**PXG-062 ✅ Documentation reconciliation & ADRs** (S)
 - Record decisions D1–D20 as ADRs in `docs/adr/` (one short file each, status accepted/rejected); fix the Cadrage v1.4/v1.5 reference; update `status.md` with gates G1/G2 and their current state; mark PXG-005/009 notes.
 
 **PXG-063 ⬜ API scenario scripts** (M)

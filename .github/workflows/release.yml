@@ -181,6 +181,9 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      dockerhub-digest: ${{ steps.dockerhub-digest.outputs.digest }}
+      ghcr-digest: ${{ steps.ghcr-digest.outputs.digest }}
 
     permissions:
       contents: read
@@ -238,6 +241,18 @@ jobs:
           docker pull "$IMAGE:$VERSION"
           docker pull "$IMAGE:latest"
 
+      - name: Record Docker Hub digest
+        id: dockerhub-digest
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          IMAGE: docker.io/mohamednfonka/proxi.gaz
+        run: |
+          set -euo pipefail
+
+          DIGEST="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION" | cut -d@ -f2)"
+          test -n "$DIGEST"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+
       - name: Build and publish to GHCR
         env:
           VERSION: ${{ needs.verify.outputs.version }}
@@ -260,6 +275,18 @@ jobs:
 
           docker pull "$IMAGE:$VERSION"
           docker pull "$IMAGE:latest"
+
+      - name: Record GHCR digest
+        id: ghcr-digest
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          IMAGE: ghcr.io/jemil-dilan/proxi.gaz
+        run: |
+          set -euo pipefail
+
+          DIGEST="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION" | cut -d@ -f2)"
+          test -n "$DIGEST"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
       - name: Display production images
         env:
@@ -309,6 +336,8 @@ jobs:
           VERSION: ${{ needs.verify.outputs.version }}
           TAG: ${{ needs.verify.outputs.tag }}
           GITHUB_SHA: ${{ github.sha }}
+          DOCKERHUB_DIGEST: ${{ needs.publish-image.outputs.dockerhub-digest }}
+          GHCR_DIGEST: ${{ needs.publish-image.outputs.ghcr-digest }}
         shell: bash
         run: |
           set -euo pipefail
@@ -353,12 +382,14 @@ jobs:
               "### Docker Hub" \
               "\`docker.io/mohamednfonka/proxi.gaz:${VERSION}\`" \
               "\`docker.io/mohamednfonka/proxi.gaz:latest\`" \
+              "digest: \`${DOCKERHUB_DIGEST}\`" \
               ""
 
             printf '%s\n' \
               "### GitHub Container Registry" \
               "\`ghcr.io/jemil-dilan/proxi.gaz:${VERSION}\`" \
-              "\`ghcr.io/jemil-dilan/proxi.gaz:latest\`"
+              "\`ghcr.io/jemil-dilan/proxi.gaz:latest\`" \
+              "digest: \`${GHCR_DIGEST}\`"
           } > /tmp/release-notes.md
 
           RELEASE_FLAGS=()

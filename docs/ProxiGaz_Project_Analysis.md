@@ -3,6 +3,7 @@
 **Version:** 1.0 — 2026-10-31
 **Inputs analysed:** Cadrage v1.4, MVP Specification v1.2, Sprint Plan v1.4, `main.yaml` (OpenAPI `2026-W40`).
 **Not available to me:** Cadrage v1.5, Manual Test Plan, `ProxiGaz_Implementation_Guideline.md`, `status.md`, `docs/RELEASE_AND_DEPLOYMENT.md`, source code. Anything marked **(verify)** depends on them.
+**Baseline (PXG-062, 2026-11-18):** Cadrage **v1.4** is the authoritative version; no v1.5 was ever supplied.
 **Companion document:** `ProxiGaz_Sprint_Plan.md` v2.0 (built from this analysis).
 
 ---
@@ -45,7 +46,7 @@ Client: nearby → quote → create order ──► Order EN_ATTENTE + Offer #1 
 
 | # | Finding | Evidence | Resolution in Plan v2.0 |
 |---|---|---|---|
-| R1 | Plan cites **Cadrage v1.5**, but its history and the files provided are v1.4 | Plan header vs history | PXG-062: record the version baseline; supply v1.5 or correct the header |
+| R1 | Plan cites **Cadrage v1.5**, but its history and the files provided are v1.4 | Plan header vs history | **Resolved (PXG-062):** baseline is v1.4; headers corrected |
 | R2 | Plan schema names (`admin_users`, `vendors`) contradict the User-aggregate decision and the real `t_`/`c_` naming | PXG-005, PXG-009 vs PXG-012B | Table names updated; PXG-005/009 marked as superseded by the implemented model |
 | R3 | `is_open_now` is listed under **VendorBrand** but a shop is open or closed as a whole | PXG-016 | Moved to **Vendor** (`is_open_now`) — Decision D12 |
 | R4 | Spec Sprint 3 holds fallback; plan Sprint 2 holds fallback **and** the slice (13 tasks / 2 weeks) | Spec §7 vs plan | Sprint 2 split into **2a** (slice) and **2b** (push, expiry, fallback) |
@@ -67,31 +68,31 @@ Client: nearby → quote → create order ──► Order EN_ATTENTE + Offer #1 
 
 ## 3. Decisions register
 
-Status **Proposed** = my recommendation, needs your ratification (record as ADR in PXG-062). Items marked **Spec** already come from the documents.
+All decisions were ratified on 2026-11-18 (PXG-062) and are recorded as ADRs in [`docs/adr/`](adr/README.md); amendments and implementation state live in each ADR, not in this table.
 
 | ID | Decision | Rationale | Status |
 |---|---|---|---|
-| D1 | **Gate G1**: manual test numbers (or a dated written waiver in `status.md`) required before PXG-022 | Cadrage principle; Sprints 0–1 are low-regret, Sprint 2+ is the real investment | Proposed |
-| D2 | `OFFER_TTL_SECONDS=600`, `OFFER_MAX_ATTEMPTS=3` (both configurable), escalation at 300 s. Worst case 30 min, not 36 | Low end of the spec range; consistent with median ≤ 12 min KPI | Proposed |
-| D3 | **Fallback price rule B**: automatic fallback only to offers with `total ≤ quoted_total`. Higher prices only through admin override after a phone call with the client. Log how many candidates were excluded by price (`FALLBACK_PRICE_EXCLUDED`) | Option A needs a client notification channel that does not exist; spec allows B | Proposed |
-| D4 | **Fallback eligibility**: same brand + size, vendor active, open now, brand currently available, not already offered for this order, within search radius of the client (delivery). **Ranking**: distance ↑, reliability ↓ (NULL = neutral 50), total ↑, vendor id | Deterministic and testable | Proposed |
-| D4b | **Pickup orders have no automatic fallback** (client would have to go elsewhere); they end `EXPIREE` and appear in the admin list. Revisit with pilot data | Avoid sending a client to an unexpected place | Proposed |
-| D5 | Money model: `quoted_total` (order), `unit_price_snapshot` + `delivery_fee_snapshot` + `total_snapshot` (offer), `final_total` (order, set at acceptance, always ≤ quoted) | Price integrity + KPI data | Proposed |
-| D6 | **No client push in MVP.** Client polls `GET /orders/track/{token}`; `NotificationChannel` serves vendors and admin only | Clients are anonymous; keeps cost at zero | Proposed |
-| D7 | Confirmation code is generated at order creation, returned to the client (create response + tracking while `CONFIRMEE`/`EN_COURS`), **never** sent to vendor endpoints. Stored in clear (the client must be able to display it); protection = 3 attempts + lock | Required by the display need | Proposed |
-| D8 | After 3 wrong codes: code is **locked**, order stays `EN_COURS`, appears in "needs attention"; admin resolves (force `LIVREE` or `ECHOUEE`) with audit | A vendor may have delivered and mistyped | Proposed |
-| D9 | Vendor withdrawal after accepting → `ECHOUEE` (terminal, counts against reliability); admin may re-dispatch manually | Simple; avoids hidden retry loops | Proposed |
-| D10 | `tracking_token` ≥ 128 bits random, **stored hashed** (SHA-256); raw value returned once. Order also has a short `public_ref` (e.g. `PG-7K3M9`) for phone/WhatsApp support | A DB leak must not expose tracking links | Proposed |
-| D11 | Vendor session token: ≥ 256 bits, prefix for lookup + SHA-256 hash, `last_used_at`, no expiry but revocable/rotatable; valid token on **inactive** vendor → `403 PROXIGAZ-403-002` | Long sessions are a spec requirement | Proposed |
-| D12 | `is_open_now` is a **Vendor** attribute; `is_available` + `available_until` stay on **VendorBrand**. Vendor availability rule: `vendor.is_active ∧ vendor.is_open_now ∧ brand.is_available ∧ brand.available_until > :now` | Domain correctness; spec's single "Ouvert maintenant" toggle | Proposed |
-| D13 | Time: all `TIMESTAMPTZ` in UTC; API in ISO-8601 UTC; display in Africa/Douala is a frontend concern; SQL receives `:now` from the `Clock` port, never `now()` | Testability with `FakeClock` | Proposed |
-| D14 | Phone: store E.164 `+237` + 9 digits (`^\+237[26]\d{8}$`), accept local input formats, normalise at the edge | Uniform limits and block list | Proposed |
-| D15 | Errors: RFC 7807 `application/problem+json` with `code` = `PROXIGAZ-{HTTP}-{NNN}`, `correlationId`, optional `errors[]` | Matches the `PROXIGAZ-409-000` convention in the contract | Proposed |
-| D16 | Public nearby does **not** expose vendor phone; vendor phone and exact client coordinates/phone are revealed only **after acceptance** (to client / vendor respectively) | Privacy + prevents bypassing the platform before confirmation | Proposed |
-| D17 | Rate limiting behind a `RateLimiter` port, in-memory token bucket (single instance in pilot); `X-Forwarded-For` trusted only from the configured proxy | Free-tier single instance; no Redis | Proposed |
-| D18 | Reliability score: rolling 30 days, `100 × (1 − (0.5·refused + 1.0·expired + 2.0·withdrawn) / offers)` clamped to [0,100]; `NULL` below 5 offers; weights configurable; admin-only visibility | Simple, explainable | Proposed |
-| D19 | Client data retention: 180 days after terminal state, client phone replaced by HMAC and location nulled; block list keeps raw phone | Data minimisation (cadrage §8) | Proposed — legal check (non-code) |
-| D20 | Settings (radius, TTL, attempts, escalation delay) come from **environment config**; read-only `GET /admin/settings` | Avoid building a settings CRUD for the pilot | Proposed |
+| D1 | **Gate G1**: manual test numbers (or a dated written waiver in `status.md`) required before PXG-022 | Cadrage principle; Sprints 0–1 are low-regret, Sprint 2+ is the real investment | Accepted — [ADR 0001](adr/0001-demand-gate-g1.md) |
+| D2 | `OFFER_TTL_SECONDS=600`, `OFFER_MAX_ATTEMPTS=3` (both configurable), escalation at 300 s. Worst case 30 min, not 36 | Low end of the spec range; consistent with median ≤ 12 min KPI | Accepted — [ADR 0002](adr/0002-offer-ttl-and-attempts.md) |
+| D3 | **Fallback price rule B**: automatic fallback only to offers with `total ≤ quoted_total`. Higher prices only through admin override after a phone call with the client. Log how many candidates were excluded by price (`FALLBACK_PRICE_EXCLUDED`) | Option A needs a client notification channel that does not exist; spec allows B | Accepted — [ADR 0003](adr/0003-fallback-price-rule-b.md) |
+| D4 | **Fallback eligibility**: same brand + size, vendor active, open now, brand currently available, not already offered for this order, within search radius of the client (delivery). **Ranking**: distance ↑, reliability ↓ (NULL = neutral 50), total ↑, vendor id | Deterministic and testable | Accepted — [ADR 0004](adr/0004-fallback-eligibility-and-ranking.md) |
+| D4b | **Pickup orders have no automatic fallback** (client would have to go elsewhere); they end `EXPIREE` and appear in the admin list. Revisit with pilot data | Avoid sending a client to an unexpected place | Accepted — [ADR 0004](adr/0004-fallback-eligibility-and-ranking.md) |
+| D5 | Money model: `quoted_total` (order), `unit_price_snapshot` + `delivery_fee_snapshot` + `total_snapshot` (offer), `final_total` (order, set at acceptance, always ≤ quoted) | Price integrity + KPI data | Accepted — [ADR 0005](adr/0005-money-model.md) |
+| D6 | **No client push in MVP.** Client polls `GET /orders/track/{token}`; `NotificationChannel` serves vendors and admin only | Clients are anonymous; keeps cost at zero | Accepted — [ADR 0006](adr/0006-no-client-push.md) |
+| D7 | Confirmation code is generated at order creation, returned to the client (create response + tracking while `CONFIRMEE`/`EN_COURS`), **never** sent to vendor endpoints. Stored in clear (the client must be able to display it); protection = 3 attempts + lock | Required by the display need | Accepted — [ADR 0007](adr/0007-confirmation-code-handling.md) |
+| D8 | After 3 wrong codes: code is **locked**, order stays `EN_COURS`, appears in "needs attention"; admin resolves (force `LIVREE` or `ECHOUEE`) with audit | A vendor may have delivered and mistyped | Accepted — [ADR 0008](adr/0008-locked-confirmation-code.md) |
+| D9 | Vendor withdrawal after accepting → `ECHOUEE` (terminal, counts against reliability); admin may re-dispatch manually | Simple; avoids hidden retry loops | Accepted — [ADR 0009](adr/0009-vendor-withdrawal.md) |
+| D10 | `tracking_token` ≥ 128 bits random, **stored hashed** (SHA-256); raw value returned once. Order also has a short `public_ref` (e.g. `PG-7K3M9`) for phone/WhatsApp support | A DB leak must not expose tracking links | Accepted — [ADR 0010](adr/0010-tracking-token-and-public-ref.md) |
+| D11 | Vendor session token: ≥ 256 bits, prefix for lookup + SHA-256 hash, `last_used_at`, no expiry but revocable/rotatable; valid token on **inactive** vendor → `403 PROXIGAZ-403-002` | Long sessions are a spec requirement | Accepted — [ADR 0011](adr/0011-vendor-session-token.md) |
+| D12 | `is_open_now` is a **Vendor** attribute; `is_available` + `available_until` stay on **VendorBrand**. Vendor availability rule: `vendor.is_active ∧ vendor.is_open_now ∧ brand.is_available ∧ brand.available_until > :now` | Domain correctness; spec's single "Ouvert maintenant" toggle | Accepted — [ADR 0012](adr/0012-open-now-on-vendor.md) |
+| D13 | Time: all `TIMESTAMPTZ` in UTC; API in ISO-8601 UTC; display in Africa/Douala is a frontend concern; SQL receives `:now` from the `Clock` port, never `now()` | Testability with `FakeClock` | Accepted — [ADR 0013](adr/0013-time-handling.md) |
+| D14 | Phone: store E.164 `+237` + 9 digits (`^\+237[26]\d{8}$`), accept local input formats, normalise at the edge | Uniform limits and block list | Accepted — [ADR 0014](adr/0014-phone-number-format.md) |
+| D15 | Errors: RFC 7807 `application/problem+json` with `code` = `PROXIGAZ-{HTTP}-{NNN}`, `correlationId`, optional `errors[]` | Matches the `PROXIGAZ-409-000` convention in the contract | Accepted — [ADR 0015](adr/0015-error-model-rfc7807.md) |
+| D16 | Public nearby does **not** expose vendor phone; vendor phone and exact client coordinates/phone are revealed only **after acceptance** (to client / vendor respectively) | Privacy + prevents bypassing the platform before confirmation | Accepted — [ADR 0016](adr/0016-privacy-of-contact-details.md) |
+| D17 | Rate limiting behind a `RateLimiter` port, in-memory token bucket (single instance in pilot); `X-Forwarded-For` trusted only from the configured proxy | Free-tier single instance; no Redis | Accepted — [ADR 0017](adr/0017-rate-limiting.md) |
+| D18 | Reliability score: rolling 30 days, `100 × (1 − (0.5·refused + 1.0·expired + 2.0·withdrawn) / offers)` clamped to [0,100]; `NULL` below 5 offers; weights configurable; admin-only visibility | Simple, explainable | Accepted — [ADR 0018](adr/0018-reliability-score.md) |
+| D19 | Client data retention: 180 days after terminal state, client phone replaced by HMAC and location nulled; block list keeps raw phone | Data minimisation (cadrage §8) | Accepted — [ADR 0019](adr/0019-client-data-retention.md) (legal review before the pilot) |
+| D20 | Settings (radius, TTL, attempts, escalation delay) come from **environment config**; read-only `GET /admin/settings` | Avoid building a settings CRUD for the pilot | Accepted — [ADR 0020](adr/0020-settings-from-environment.md) |
 
 ---
 
