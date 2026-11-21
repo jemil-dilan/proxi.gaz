@@ -22,7 +22,7 @@ for arg in "$@"; do
   case "$arg" in
     --reset-local) RESET_LOCAL=true ;;
     -h | --help)
-      sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '2,/^set -euo/p' "${BASH_SOURCE[0]}" | sed '$d' | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     -*)
@@ -44,18 +44,22 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 2
 fi
 
-# Hurl: a working local binary, else the pinned official image (same version as install-hurl.sh).
-HURL_IMAGE="ghcr.io/orange-opensource/hurl:8.1.0@sha256:f8aed33658ba793ed53c5a5b2e57cadd9ec9322c8b56c550652c1f4cbaa241c5"
-if command -v hurl >/dev/null 2>&1 && hurl --version >/dev/null 2>&1; then
+# Hurl: a working local binary of the pinned version, else the pinned official image (keep both
+# in sync with scripts/install-hurl.sh).
+HURL_VERSION="8.1.0"
+HURL_IMAGE="ghcr.io/orange-opensource/hurl:${HURL_VERSION}@sha256:f8aed33658ba793ed53c5a5b2e57cadd9ec9322c8b56c550652c1f4cbaa241c5"
+if command -v hurl >/dev/null 2>&1 && hurl --version 2>/dev/null | head -1 | grep -Fq "hurl ${HURL_VERSION} "; then
   HURL=(hurl)
 elif command -v docker >/dev/null 2>&1; then
   # Host network so http://localhost reaches the local stack; the repository is mounted at the
-  # same path so scenario and report paths stay valid inside the container.
+  # same path so scenario and report paths stay valid inside the container. The admin password
+  # is passed by name (--env), so its value never appears in the process list.
   HURL=(docker run --rm --network host --user "$(id -u):$(id -g)"
+    --env HURL_SECRET_admin_password
     --volume "$ROOT:$ROOT" --workdir "$ROOT" "$HURL_IMAGE")
-  echo "Using the Hurl Docker image (no working local hurl binary)."
+  echo "Using the Hurl ${HURL_VERSION} Docker image (no local hurl ${HURL_VERSION} binary that runs)."
 else
-  echo "hurl is not available: run scripts/install-hurl.sh, or install Docker to use the Hurl image." >&2
+  echo "hurl ${HURL_VERSION} is not available: run scripts/install-hurl.sh, or install Docker to use the Hurl image." >&2
   exit 2
 fi
 
@@ -101,16 +105,17 @@ if [[ "$RESET_LOCAL" == true ]]; then
   )
 fi
 
-wait_for_health "$BASE_URL"
-
-RUN_ID="run$(date +%s)$((RANDOM % 1000))"
-# Local part of a +237 mobile number (6 + 8 digits); the scenario adds "+237".
-VENDOR_LOCAL_NUMBER="6$(printf '%08d' $(((RANDOM * 32768 + RANDOM) % 100000000)))"
 REPORT_DIR="$ROOT/build/api-scenarios"
 mkdir -p "$REPORT_DIR"
 # Hurl appends to an existing JUnit file; keep the report to this run only.
 rm -f "$REPORT_DIR/junit.xml"
 
+wait_for_health "$BASE_URL"
+
+# Fixed width (10-digit seconds + 3 digits) so one run id is never a prefix of another.
+RUN_ID="run$(date +%s)$(printf '%03d' $((RANDOM % 1000)))"
+# Local part of a +237 mobile number (6 + 8 digits); the scenario adds "+237".
+VENDOR_LOCAL_NUMBER="6$(printf '%08d' $(((RANDOM * 32768 + RANDOM) % 100000000)))"
 echo "Running API scenarios against $BASE_URL (run $RUN_ID)"
 shopt -s nullglob
 SCENARIOS=("$ROOT"/api-scenarios/sprint-*/*.hurl)
@@ -119,10 +124,13 @@ if ((${#SCENARIOS[@]} == 0)); then
   exit 2
 fi
 
+# Hurl reads HURL_SECRET_<name> as a secret variable and redacts it in its output; passing it
+# through the environment keeps the password out of the command line.
+export HURL_SECRET_admin_password="$ADMIN_PASSWORD"
+
 "${HURL[@]}" --test --jobs 1 \
   --variable "base_url=$BASE_URL" \
   --variable "admin_email=$ADMIN_EMAIL" \
-  --secret "admin_password=$ADMIN_PASSWORD" \
   --variable "run_id=$RUN_ID" \
   --variable "vendor_name=Scenario Vendor $RUN_ID" \
   --variable "vendor_local_number=$VENDOR_LOCAL_NUMBER" \

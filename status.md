@@ -19,7 +19,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
 | 0 — Foundations & Core Infrastructure | Implementation done; staging gate unmet | PXG-001–011 complete; manual-test gate explicitly waived; alpha releases `v0.1.0-alpha.1` and `v0.1.0-alpha.1.0` published; the staging deployment step has never run because no staging host exists |
-| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–062 done. Remaining Epic 1.0: PXG-054 (Demo excluded), PXG-063. Catalog/availability/geo (Epic 1.2+) remain |
+| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–062 done. Remaining Epic 1.0: PXG-054 (Demo excluded); PXG-063 done locally and in CI, open until its staging run. Catalog/availability/geo (Epic 1.2+) remain |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -78,7 +78,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 | PXG-059 | Admin auth hardening | Merged to `main` (PR #28) |
 | PXG-060 | Contract CI, SemVer, versioning | Merged to `main` (PR #29) |
 | PXG-061 | Admin audit log | Merged to `main` (PR #31); `t_admin_audit_log`, audited vendor writes in one transaction, `GET /admin/audit-log`; server logging (correlation ID, SQL per profile, slow queries) |
-| PXG-063 | API scenario scripts | Done on `working/PXG-063` (stacked on PXG-062) for local and CI: Hurl collection `api-scenarios/`, runner with seed reset, CI job `API Scenarios`, on-demand remote workflow. **Staging run pending** (no host) — the sprint plan's done-when is not met yet |
+| PXG-063 | API scenario scripts | Done on `working/PXG-063` for local and CI: Hurl collection `api-scenarios/`, runner with seed reset, CI job `API Scenarios`, on-demand remote workflow. **Staging run pending** (no host) — the sprint plan's done-when is not met yet |
 | PXG-062 | Documentation reconciliation & ADRs | Done on `working/PXG-062`; 25 ADRs, gates G1/G2, Cadrage v1.4 baseline, deployment docs aligned with Jib. Awaiting PR |
 
 ## Architecture Updates
@@ -163,7 +163,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 - PXG-013–015 and PXG-055–061 are merged. PXG-060 adds the `OpenAPI Contract` CI job (`scripts/validate-openapi.sh`, `.spectral.yaml`, `scripts/check-openapi-breaking.sh`); every new endpoint must lint clean (operationId, at least one 4xx, 500 via `components/responses/InternalServerError`, no unused components, `required` names declared).
 - Contract `info.version` stays `0.1.0-dev`; releases stamp the tag version via `scripts/prepare_openapi_release.py`. Breaking changes need the PR label `contract-breaking-approved`.
 - PXG-061: every new admin write use case must take the admin `UserId`, run inside `UnitOfWork.inTransaction`, and record an `AuditEntry` (allowlisted `AuditMetadata` only). PXG-064 brand CRUD adds `AuditTargetType.BRAND` and its actions.
-- Remaining Epic 1.0: PXG-054 (keep Demo), PXG-063. Epic 1.2+ (catalog/availability/geo) remains.
+- Remaining Epic 1.0: PXG-054 (keep Demo); PXG-063 open only for its staging run (no host yet). Epic 1.2+ (catalog/availability/geo) remains.
 - Decisions live in `docs/adr/`. When a task lands, update the "Implementation state" of the ADRs it touches; change a decision only by a dated amendment or a superseding ADR.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits).
 

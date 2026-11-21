@@ -165,7 +165,8 @@ jobs:
 
   api-scenarios:
     name: API Scenarios
-    runs-on: ubuntu-latest
+    # Pinned: the prebuilt Hurl binary needs libxml2.so.2, which Ubuntu 26.04 no longer ships.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: spotless
     steps:
@@ -197,7 +198,9 @@ jobs:
 
       - name: Collect application logs
         if: failure()
-        run: docker compose logs app > build/api-scenarios/app.log 2>&1 || true
+        run: |
+          mkdir -p build/api-scenarios
+          docker compose logs app > build/api-scenarios/app.log 2>&1 || true
 
       - name: Upload scenario report
         uses: actions/upload-artifact@v4

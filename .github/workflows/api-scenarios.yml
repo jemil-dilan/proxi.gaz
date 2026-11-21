@@ -23,7 +23,8 @@ permissions:
 jobs:
   scenarios:
     name: API scenarios against ${{ inputs.environment }}
-    runs-on: ubuntu-latest
+    # Pinned: the prebuilt Hurl binary needs libxml2.so.2, which Ubuntu 26.04 no longer ships.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: ${{ inputs.environment }}
     steps:

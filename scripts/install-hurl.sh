@@ -4,7 +4,7 @@
 # The binary links against the system libcurl and libxml2 (present on Ubuntu runners).
 set -euo pipefail
 
-HURL_VERSION="8.1.0"
+HURL_VERSION="8.1.0" # keep in sync with scripts/run-api-scenarios.sh
 declare -A HURL_SHA256=(
   [x86_64]="b497e7ab328100c507f1f3323ebe7cc5990d831ae4f9473b74d40b02971da4ca"
   [aarch64]="33c39409d4a24febb91d3766d3a5cb4074b7b86ad89d612f26fa35ab5e8cec79"
