@@ -102,7 +102,7 @@ Bind values contain password hashes, session-token hashes and phone numbers, so 
 
 - Images are built with **Jib** (`./gradlew jib` / `jibDockerBuild`; no Dockerfile): base `eclipse-temurin:25-jre`, non-root user `10001`, port `8080`, `-XX:MaxRAMPercentage=75.0`. The version comes from `-PappVersion`.
 - `compose.yaml` is the local app + PostGIS stack. There is no staging compose file or deploy script; staging hosting is still open.
-- `.github/workflows/release.yml` is manually dispatched from `main`. It reruns formatting, all test suites and the contract checks, publishes the image to Docker Hub and GHCR (version and `latest` tags), then waits for the `release-approval` environment before creating the annotated Git tag and GitHub Release with the versioned OpenAPI file.
+- `.github/workflows/release.yml` is manually dispatched from `main`. It reruns formatting, all test suites and the contract checks, publishes the image to Docker Hub and GHCR (version and `latest` tags), records the image digests in the release notes, then waits for the `release-approval` environment before creating the annotated Git tag and GitHub Release with the versioned OpenAPI file.
 - GitHub configuration, staging requirements, backup policy, and rollback behaviour are documented in `docs/RELEASE_AND_DEPLOYMENT.md`.
 
 The `local` Liquibase context seeds a development admin and five fictional central Douala vendors. `data_test` and `e2e` also opt into this seed for acceptance coverage; `staging` and `production` use their own contexts and exclude it. The local seed credentials are documented in the root README and must only be used for local development.

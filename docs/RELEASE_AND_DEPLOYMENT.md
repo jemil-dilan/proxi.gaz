@@ -6,7 +6,7 @@ Every completed sprint produces a staging deployment, release notes, and a versi
 
 1. Complete the sprint's implementation and acceptance criteria. The task owner runs the agreed unit, data, and E2E suites.
 2. From `main`, manually dispatch `.github/workflows/release.yml` with a version and matching `docs/releases/v<version>.md` notes. The `verify` job reruns formatting, all test suites and the contract checks, and prepares the versioned OpenAPI file.
-3. The `publish-image` job builds the image with **Jib** (no Dockerfile; base `eclipse-temurin:25-jre`, non-root user `10001`) and publishes it to Docker Hub (`docker.io/mohamednfonka/proxi.gaz`) and GHCR, tagged with the version and `latest`. The workflow appends the published image tags to the release notes; resolve the digest from the registry when deploying.
+3. The `publish-image` job builds the image with **Jib** (no Dockerfile; base `eclipse-temurin:25-jre`, non-root user `10001`) and publishes it to Docker Hub (`docker.io/mohamednfonka/proxi.gaz`) and GHCR, tagged with the version and `latest`. It resolves each image's immutable digest and appends the tags and digests to the release notes; deploy the digest.
 4. **Deploy that exact digest to staging** and run the sprint acceptance scenarios against it. This step is **manual and currently has no target**: no staging host is provisioned (see Pilot deployment).
 5. The `publish-release` job waits for approval in the protected `release-approval` environment. The approver confirms the acceptance scenarios passed, then the job creates the annotated Git tag and the GitHub Release with the OpenAPI file attached.
 6. After product acceptance, deploy the same image digest to production. Do not rebuild the image between staging and production.
