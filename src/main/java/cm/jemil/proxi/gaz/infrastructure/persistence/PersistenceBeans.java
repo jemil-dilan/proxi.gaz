@@ -63,8 +63,9 @@ public class PersistenceBeans {
   @Bean
   AuditLogPort auditLogPort(
       AdminAuditLogSpringRepository auditSpringRepository,
-      UserSpringRepository userSpringRepository) {
-    return new JpaAuditLogRepository(auditSpringRepository, userSpringRepository);
+      UserSpringRepository userSpringRepository,
+      JpaMapper jpaMapper) {
+    return new JpaAuditLogRepository(auditSpringRepository, userSpringRepository, jpaMapper);
   }
 
   @Bean

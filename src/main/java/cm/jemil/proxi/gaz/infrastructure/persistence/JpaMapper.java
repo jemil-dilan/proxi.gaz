@@ -4,6 +4,10 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
+import cm.jemil.proxi.gaz.domain.audit.AuditAction;
+import cm.jemil.proxi.gaz.domain.audit.AuditEntry;
+import cm.jemil.proxi.gaz.domain.audit.AuditMetadata;
+import cm.jemil.proxi.gaz.domain.audit.AuditTargetType;
 import cm.jemil.proxi.gaz.domain.demo.Demo;
 import cm.jemil.proxi.gaz.domain.demo.DemoDescription;
 import cm.jemil.proxi.gaz.domain.demo.DemoId;
@@ -23,6 +27,7 @@ import cm.jemil.proxi.gaz.domain.vendor.Vendor;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.domain.vendor.VendorName;
 import cm.jemil.proxi.gaz.domain.vendor.VendorSession;
+import java.util.Map;
 import java.util.Optional;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -34,6 +39,7 @@ import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(
@@ -152,4 +158,55 @@ interface JpaMapper {
   default Point toPoint(GeoPoint value) {
     return GEOMETRY_FACTORY.createPoint(new Coordinate(value.longitude(), value.latitude()));
   }
+
+  @Named("auditActionToString")
+  default String auditActionToString(AuditAction action) {
+    return action == null ? null : action.name();
+  }
+
+  @Named("auditActionFromString")
+  default AuditAction auditActionFromString(String action) {
+    return action == null ? null : AuditAction.valueOf(action);
+  }
+
+  @Named("auditTargetTypeToString")
+  default String auditTargetTypeToString(AuditTargetType targetType) {
+    return targetType == null ? null : targetType.name();
+  }
+
+  @Named("auditTargetTypeFromString")
+  default AuditTargetType auditTargetTypeFromString(String targetType) {
+    return targetType == null ? null : AuditTargetType.valueOf(targetType);
+  }
+
+  @Named("mapToAuditMetadata")
+  default AuditMetadata mapToAuditMetadata(Map<String, Object> values) {
+    return values == null ? null : AuditMetadata.of(values);
+  }
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "id", source = "entry.id.value")
+  @Mapping(target = "adminUserId", source = "entry.adminUserId.value")
+  @Mapping(target = "action", source = "entry.action", qualifiedByName = "auditActionToString")
+  @Mapping(
+      target = "targetType",
+      source = "entry.targetType",
+      qualifiedByName = "auditTargetTypeToString")
+  @Mapping(target = "targetId", source = "entry.targetId")
+  @Mapping(target = "metadata", source = "entry.metadata.values")
+  @Mapping(target = "createdAt", source = "entry.createdAt.value")
+  AdminAuditLogJpa toJpa(AuditEntry entry);
+
+  @BeanMapping(ignoreByDefault = true)
+  @Mapping(target = "id.value", source = "id")
+  @Mapping(target = "adminUserId.value", source = "adminUserId")
+  @Mapping(target = "action", source = "action", qualifiedByName = "auditActionFromString")
+  @Mapping(
+      target = "targetType",
+      source = "targetType",
+      qualifiedByName = "auditTargetTypeFromString")
+  @Mapping(target = "targetId", source = "targetId")
+  @Mapping(target = "metadata", source = "metadata", qualifiedByName = "mapToAuditMetadata")
+  @Mapping(target = "createdAt.value", source = "createdAt")
+  AuditEntry toDomain(AdminAuditLogJpa row);
 }

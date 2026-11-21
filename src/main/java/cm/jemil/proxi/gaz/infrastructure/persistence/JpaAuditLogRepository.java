@@ -6,15 +6,10 @@ package cm.jemil.proxi.gaz.infrastructure.persistence;
 
 import cm.jemil.proxi.gaz.application.outbound.AuditLogPort;
 import cm.jemil.proxi.gaz.application.views.AuditLogView;
-import cm.jemil.proxi.gaz.domain.audit.AuditAction;
 import cm.jemil.proxi.gaz.domain.audit.AuditEntry;
-import cm.jemil.proxi.gaz.domain.audit.AuditEntryId;
-import cm.jemil.proxi.gaz.domain.audit.AuditMetadata;
 import cm.jemil.proxi.gaz.domain.audit.AuditTargetType;
-import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.PageData;
 import cm.jemil.proxi.gaz.domain.shared.PaginationFetchRequest;
-import cm.jemil.proxi.gaz.domain.shared.UserId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -34,12 +29,13 @@ class JpaAuditLogRepository implements AuditLogPort {
 
   private final AdminAuditLogSpringRepository auditSpringRepository;
   private final UserSpringRepository userSpringRepository;
+  private final JpaMapper jpaMapper;
 
   /** MANDATORY: an audit row is only ever written as part of the business transaction. */
   @Override
   @Transactional(propagation = Propagation.MANDATORY)
   public void record(AuditEntry entry) {
-    auditSpringRepository.save(toJpa(entry));
+    auditSpringRepository.save(jpaMapper.toJpa(entry));
   }
 
   @Override
@@ -53,7 +49,7 @@ class JpaAuditLogRepository implements AuditLogPort {
     var page = auditSpringRepository.findAll(matching(targetType, targetId), pageable);
     var emails = adminEmails(page.map(AdminAuditLogJpa::getAdminUserId).toSet());
     var views =
-        page.map(row -> new AuditLogView(toDomain(row), emails.get(row.getAdminUserId())))
+        page.map(row -> new AuditLogView(jpaMapper.toDomain(row), emails.get(row.getAdminUserId())))
             .getContent();
     return new PageData<>(
         views, page.getTotalElements(), page.getTotalPages(), page.getSize(), page.getNumber());
@@ -81,28 +77,5 @@ class JpaAuditLogRepository implements AuditLogPort {
         .filter(user -> user.getEmail() != null)
         .forEach(user -> emails.put(user.getId(), user.getEmail()));
     return emails;
-  }
-
-  private static AdminAuditLogJpa toJpa(AuditEntry entry) {
-    var row = new AdminAuditLogJpa();
-    row.setId(entry.id().value());
-    row.setAdminUserId(entry.adminUserId().value());
-    row.setAction(entry.action().name());
-    row.setTargetType(entry.targetType().name());
-    row.setTargetId(entry.targetId());
-    row.setMetadata(new HashMap<>(entry.metadata().values()));
-    row.setCreatedAt(entry.createdAt().value());
-    return row;
-  }
-
-  private static AuditEntry toDomain(AdminAuditLogJpa row) {
-    return new AuditEntry(
-        AuditEntryId.from(row.getId()),
-        UserId.from(row.getAdminUserId()),
-        AuditAction.valueOf(row.getAction()),
-        AuditTargetType.valueOf(row.getTargetType()),
-        row.getTargetId(),
-        AuditMetadata.of(row.getMetadata()),
-        CreatedAt.from(row.getCreatedAt()));
   }
 }

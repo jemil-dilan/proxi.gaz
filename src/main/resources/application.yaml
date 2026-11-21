@@ -10,6 +10,7 @@ spring:
     enabled: true
   jpa:
     open-in-view: false
+    show_sql: true
     properties:
       hibernate:
         log_slow_query: "${PROXIGAZ_SLOW_QUERY_MS:500}"
