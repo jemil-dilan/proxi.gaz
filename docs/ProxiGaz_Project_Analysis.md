@@ -91,7 +91,7 @@ All decisions were ratified on 2026-11-18 (PXG-062) and are recorded as ADRs in 
 | D16 | Public nearby does **not** expose vendor phone; vendor phone and exact client coordinates/phone are revealed only **after acceptance** (to client / vendor respectively) | Privacy + prevents bypassing the platform before confirmation | Accepted — [ADR 0016](adr/0016-privacy-of-contact-details.md) |
 | D17 | Rate limiting behind a `RateLimiter` port, in-memory token bucket (single instance in pilot); `X-Forwarded-For` trusted only from the configured proxy | Free-tier single instance; no Redis | Accepted — [ADR 0017](adr/0017-rate-limiting.md) |
 | D18 | Reliability score: rolling 30 days, `100 × (1 − (0.5·refused + 1.0·expired + 2.0·withdrawn) / offers)` clamped to [0,100]; `NULL` below 5 offers; weights configurable; admin-only visibility | Simple, explainable | Accepted — [ADR 0018](adr/0018-reliability-score.md) |
-| D19 | Client data retention: 180 days after terminal state, client phone replaced by HMAC and location nulled; block list keeps raw phone | Data minimisation (cadrage §8) | Accepted — [ADR 0019](adr/0019-client-data-retention.md) |
+| D19 | Client data retention: 180 days after terminal state, client phone replaced by HMAC and location nulled; block list keeps raw phone | Data minimisation (cadrage §8) | Accepted — [ADR 0019](adr/0019-client-data-retention.md) (legal review before the pilot) |
 | D20 | Settings (radius, TTL, attempts, escalation delay) come from **environment config**; read-only `GET /admin/settings` | Avoid building a settings CRUD for the pilot | Accepted — [ADR 0020](adr/0020-settings-from-environment.md) |
 
 ---
