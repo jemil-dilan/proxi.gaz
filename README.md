@@ -8,7 +8,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
 | Sprint 0 — Foundations | Done (`PXG-001`–`PXG-011`) |
-| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`–`PXG-015` and Epic 1.0 `PXG-055`–`PXG-062` done; Epic 1.2 and geo search remain) |
+| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`–`PXG-015` and Epic 1.0 `PXG-055`–`PXG-062` done; `PXG-054` and `PXG-063` remain, plus Epic 1.2 and geo search) |
 | Sprints 2–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
