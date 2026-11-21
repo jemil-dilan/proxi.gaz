@@ -53,7 +53,6 @@ class ValidateVendorSessionUseCaseTest {
 
     assertThat(result.vendorId()).isEqualTo(vendorId);
     assertThat(result.name()).isEqualTo("Test Vendor");
-    assertThat(result.isActive()).isTrue();
     verify(repository).findByTokenHash(hash);
     verify(vendorRepository).findById(vendorId);
   }

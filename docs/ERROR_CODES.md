@@ -31,64 +31,63 @@ The `errors` array is only present for validation errors (400 responses).
 
 ## Error Code Registry
 
+The Title column is the exact value returned in the `title` field of the error response.
+
 ### 400 Bad Request
 
 | Code | Title | Description | HTTP Status |
 |------|-------|-------------|-------------|
-| `PROXIGAZ-400-000` | Fields Extraction Code Not Supported | The requested extraction code is not supported | 400 |
-| `PROXIGAZ-400-001` | Invalid Order Status Transition | Attempted to transition an order to an invalid status | 400 |
-| `PROXIGAZ-400-002` | Validation Failed | Request validation failed | 400 |
+| `PROXIGAZ-400-000` | FIELDS EXTRACTION CODE NOT SUPPORTED | The requested extraction code is not supported | 400 |
+| `PROXIGAZ-400-001` | INVALID ORDER STATUS TRANSITION | Attempted to transition an order to an invalid status | 400 |
+| `PROXIGAZ-400-002` | VALIDATION FAILED | Request validation failed | 400 |
 
 ### 401 Unauthorized
 
 | Code | Title | Description | HTTP Status |
 |------|-------|-------------|-------------|
-| `PROXIGAZ-401-000` | Invalid Credentials | Authentication failed due to invalid credentials | 401 |
-| `PROXIGAZ-401-001` | Token Invalid | The provided token is invalid or expired | 401 |
+| `PROXIGAZ-401-000` | INVALID CREDENTIALS | Authentication failed due to invalid credentials | 401 |
+| `PROXIGAZ-401-001` | TOKEN INVALID | The provided token is invalid or expired | 401 |
 
 ### 403 Forbidden
 
 | Code | Title | Description | HTTP Status |
 |------|-------|-------------|-------------|
-| `PROXIGAZ-403-001` | Forbidden Audience | The token has the wrong audience for this endpoint | 403 |
-| `PROXIGAZ-403-002` | Vendor Inactive | The vendor is inactive and cannot perform this action | 403 |
+| `PROXIGAZ-403-002` | VENDOR INACTIVE | The vendor is inactive and cannot perform this action | 403 |
 
 ### 404 Not Found
 
 | Code | Title | Description | HTTP Status |
 |------|-------|-------------|-------------|
-| `PROXIGAZ-404-000` | Demo Not Found | The requested demo was not found | 404 |
-| `PROXIGAZ-404-001` | User Not Found | The requested user was not found | 404 |
-| `PROXIGAZ-404-002` | Vendor Not Found | The requested vendor was not found | 404 |
+| `PROXIGAZ-404-000` | DEMO NOT FOUND | The requested demo was not found | 404 |
+| `PROXIGAZ-404-002` | VENDOR NOT FOUND | The requested vendor was not found | 404 |
 
 ### 409 Conflict
 
 | Code | Title | Description | HTTP Status |
 |------|-------|-------------|-------------|
-| `PROXIGAZ-409-000` | Demo Already Exists | A demo with this identifier already exists | 409 |
-| `PROXIGAZ-409-001` | Duplicate Phone | A vendor with this phone number already exists | 409 |
-| `PROXIGAZ-409-002` | Duplicate Email | A user with this email already exists | 409 |
+| `PROXIGAZ-409-000` | DEMO ALREADY EXISTS | A demo with this identifier already exists | 409 |
 
 ### 429 Too Many Requests
 
 | Code | Title | Description | HTTP Status |
 |------|-------|-------------|-------------|
-| `PROXIGAZ-429-001` | Rate Limited | Too many requests in the allowed time window | 429 |
+| `PROXIGAZ-429-001` | RATE LIMITED | Too many requests in the allowed time window | 429 |
 
 ### 500 Internal Server Error
 
 | Code | Title | Description | HTTP Status |
 |------|-------|-------------|-------------|
-| `PROXIGAZ-500-000` | Internal Server Error | An unexpected error occurred on the server | 500 |
+| `PROXIGAZ-500-000` | INTERNAL SERVER ERROR | An unexpected error occurred on the server | 500 |
 
 ## Problem Type URIs
 
 Each error code maps to a problem type URI following the pattern:
-`https://api.proxigaz.cm/probs/{problem-code}`
+`https://api.proxigaz.cm/probs/{problem-code}`, where `{problem-code}` is the lowercased
+error code.
 
 For example:
-- `PROXIGAZ-404-002` → `https://api.proxigaz.cm/probs/002`
-- `PROXIGAZ-409-001` → `https://api.proxigaz.cm/probs/001`
+- `PROXIGAZ-404-002` → `https://api.proxigaz.cm/probs/proxigaz-404-002`
+- `PROXIGAZ-409-000` → `https://api.proxigaz.cm/probs/proxigaz-409-000`
 
 ## Correlation ID
 
@@ -108,5 +107,6 @@ When adding new error codes:
 2. Add the code to this documentation file
 3. Ensure the domain exception uses the correct error code
 4. Verify the error code appears in the correct HTTP status code group
+5. Run `./gradlew test --tests '*ErrorCodesDocumentationTest'`; it fails when the enum and this registry diverge
 
 New error codes should follow the existing numbering scheme. When adding a new error code within an existing HTTP status code group, use the next available number.
