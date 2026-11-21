@@ -107,5 +107,6 @@ When adding new error codes:
 2. Add the code to this documentation file
 3. Ensure the domain exception uses the correct error code
 4. Verify the error code appears in the correct HTTP status code group
+5. Run `./gradlew test --tests '*ErrorCodesDocumentationTest'`; it fails when the enum and this registry diverge
 
 New error codes should follow the existing numbering scheme. When adding a new error code within an existing HTTP status code group, use the next available number.
