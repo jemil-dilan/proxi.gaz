@@ -21,8 +21,8 @@ public class GetVendorSessionUseCase {
       throw new VendorInactiveException();
     }
 
-    return new Response(vendor.getId(), vendor.getName(), vendor.isActive());
+    return new Response(vendor.getId(), vendor.getName());
   }
 
-  public record Response(VendorId vendorId, VendorName name, Boolean isActive) {}
+  public record Response(VendorId vendorId, VendorName name) {}
 }

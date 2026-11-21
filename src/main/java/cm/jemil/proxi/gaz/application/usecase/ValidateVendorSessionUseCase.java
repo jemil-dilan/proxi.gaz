@@ -29,8 +29,8 @@ public class ValidateVendorSessionUseCase {
     if (!vendor.isActive()) {
       throw new VendorInactiveException();
     }
-    return new Result(session.vendorId(), vendor.getName().value(), vendor.isActive());
+    return new Result(session.vendorId(), vendor.getName().value());
   }
 
-  public record Result(VendorId vendorId, String name, boolean isActive) {}
+  public record Result(VendorId vendorId, String name) {}
 }

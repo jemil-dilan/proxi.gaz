@@ -66,7 +66,10 @@ public record AuditMetadata(Map<String, Object> values) {
         switch (key) {
           case IS_ACTIVE, PREVIOUS_ACTIVE -> value instanceof Boolean;
           case CHANGED_FIELDS ->
-              value instanceof List<?> fields && fields.stream().allMatch(VENDOR_FIELDS::contains);
+              value instanceof List<?> fields
+                  && fields.stream()
+                      .allMatch(
+                          field -> field instanceof String name && VENDOR_FIELDS.contains(name));
           case null, default -> false;
         };
     if (!valid) {

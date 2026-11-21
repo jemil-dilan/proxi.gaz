@@ -212,7 +212,7 @@ interface RestMapper {
   @BeanMapping(ignoreByDefault = true)
   @Mapping(target = "vendorId", source = "vendorId")
   @Mapping(target = "name", source = "name.value")
-  @Mapping(target = "isActive", source = "isActive")
+  @Mapping(target = "isActive", constant = "true")
   VendorSessionIdentityDTO fromDomain(GetVendorSessionUseCase.Response response);
 
   @BeanMapping(ignoreByDefault = true)
