@@ -200,11 +200,11 @@ Acceptance criteria
 - `AdminProfileDTO` gains `roles[]`; `AdminLoginDTO.password` gets `minLength`; token lifetime configurable; failed/successful logins logged without credentials.
 - Tests: U bucket logic with `FakeClock`; E lockout then recovery.
 
-**PXG-060 ⬜ Contract CI, SemVer, versioning** (S)
+**PXG-060 ✅ Contract CI, SemVer, versioning** (S)
 - Add an OpenAPI linter (e.g. Spectral) and a breaking-change check (e.g. `openapi-diff`) to CI; `info.version` set from the release tag; add the staging server URL.
 - Done when: a PR that removes a required response field fails CI.
 
-**PXG-061 ⬜ Admin audit log** (M)
+**PXG-061 ✅ Admin audit log** (M)
 - Migration `t_admin_audit_log` (Analysis §4.3). An `AuditLogPort` called by the vendor use cases (create, update, status, rotate, revoke) inside the business transaction. `GET /admin/audit-log?targetType&targetId` (paginated) for the operator.
 - Tests: I rollback of the business change also rolls back the audit row; E no secret in metadata.
 

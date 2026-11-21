@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+	<changeSet id="PXG-061:1" author="Jemil-Dilan">
+		<comment>Append-only admin audit log (Analysis §4.3). The target is
+			polymorphic, so c_target_id has no foreign key. The admin
+			reference
+			keeps the default (no cascade), so an admin with audit
+			entries cannot
+			be deleted.</comment>
+		<createTable tableName="t_admin_audit_log">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_admin_audit_log" />
+			</column>
+			<column name="c_admin_user_id" type="uuid">
+				<constraints nullable="false"
+					foreignKeyName="fk_admin_audit_log_admin_user"
+					references="t_users(c_id)" deleteCascade="false" />
+			</column>
+			<column name="c_action" type="varchar(64)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_target_type" type="varchar(32)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_target_id" type="uuid">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_metadata" type="jsonb"
+				defaultValueComputed="'{}'::jsonb">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+			<!-- Insertion order: breaks created_at ties so "newest first" is deterministic. -->
+			<column name="c_seq" type="bigint" autoIncrement="true">
+				<constraints nullable="false" unique="true"
+					uniqueConstraintName="uq_admin_audit_log_seq" />
+			</column>
+		</createTable>
+		<createIndex tableName="t_admin_audit_log"
+			indexName="idx_admin_audit_log_target">
+			<column name="c_target_type" />
+			<column name="c_target_id" />
+			<column name="c_created_at" descending="true" />
+			<column name="c_seq" descending="true" />
+		</createIndex>
+		<createIndex tableName="t_admin_audit_log"
+			indexName="idx_admin_audit_log_created_at">
+			<column name="c_created_at" descending="true" />
+			<column name="c_seq" descending="true" />
+		</createIndex>
+	</changeSet>
+
+</databaseChangeLog>

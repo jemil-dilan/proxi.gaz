@@ -28,6 +28,28 @@ public class HttpClient {
 
   public UUID lastUpdatedId;
 
+  /** Vendor targeted by the last admin vendor step (created, or the missing id tried). */
+  private UUID lastVendorId;
+
+  /** Raw vendor session tokens issued in this scenario (create + rotate responses). */
+  private final java.util.List<String> issuedVendorTokens = new java.util.ArrayList<>();
+
+  public UUID getLastVendorId() {
+    return lastVendorId;
+  }
+
+  public void setLastVendorId(UUID lastVendorId) {
+    this.lastVendorId = lastVendorId;
+  }
+
+  public java.util.List<String> getIssuedVendorTokens() {
+    return java.util.List.copyOf(issuedVendorTokens);
+  }
+
+  public void addIssuedVendorToken(String token) {
+    issuedVendorTokens.add(token);
+  }
+
   public String getScopes() {
     return scopes;
   }

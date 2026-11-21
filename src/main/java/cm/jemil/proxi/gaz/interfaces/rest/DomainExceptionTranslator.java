@@ -13,11 +13,13 @@ import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
+import cm.jemil.proxi.gaz.domain.user.InvalidAdminTokenException;
 import cm.jemil.proxi.gaz.domain.user.InvalidCredentialsException;
 import cm.jemil.proxi.gaz.domain.user.TooManyLoginAttemptsException;
 import cm.jemil.proxi.gaz.domain.vendor.InvalidVendorSessionException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorInactiveException;
 import cm.jemil.proxi.gaz.domain.vendor.VendorNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,33 @@ class DomainExceptionTranslator {
             .orElse("request contains invalid fields");
     return buildProblemResponse(
         ErrorCodes.PROXIGAZ_400_002, HttpStatus.BAD_REQUEST, "Validation failed", detail, errors);
+  }
+
+  /**
+   * Raised by {@code @Validated} controllers when a query parameter breaks its contract bounds
+   * (e.g. {@code size=0}). Only the parameter name and the rule are returned, never the rejected
+   * value.
+   */
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<ProblemDetail> handleConstraintViolation(ConstraintViolationException ex) {
+    var errors =
+        ex.getConstraintViolations().stream()
+            .map(
+                violation ->
+                    Map.of(
+                        "field", lastNode(violation.getPropertyPath().toString()),
+                        "message", violation.getMessage()))
+            .toList();
+    return buildProblemResponse(
+        ErrorCodes.PROXIGAZ_400_002,
+        HttpStatus.BAD_REQUEST,
+        "Invalid query parameters",
+        "request contains invalid query parameters",
+        errors);
+  }
+
+  private static String lastNode(String propertyPath) {
+    return propertyPath.substring(propertyPath.lastIndexOf('.') + 1);
   }
 
   @ExceptionHandler(HandlerMethodValidationException.class)
@@ -136,7 +165,9 @@ class DomainExceptionTranslator {
       case DemoNotFoundException _, VendorNotFoundException _ -> HttpStatus.NOT_FOUND;
       case VendorInactiveException _ -> HttpStatus.FORBIDDEN;
       case DemoAlreadyExistsException _ -> HttpStatus.CONFLICT;
-      case InvalidCredentialsException _, InvalidVendorSessionException _ ->
+      case InvalidCredentialsException _,
+          InvalidVendorSessionException _,
+          InvalidAdminTokenException _ ->
           HttpStatus.UNAUTHORIZED;
       case FieldsExtractionCodeNotSupported _,
           InvalidOrderStatusTransitionException _,

@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.config;
 
 import cm.jemil.proxi.gaz.application.outbound.AccessTokenIssuer;
+import cm.jemil.proxi.gaz.application.outbound.AuditLogPort;
 import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
@@ -12,6 +13,7 @@ import cm.jemil.proxi.gaz.application.outbound.DomainEventPublisher;
 import cm.jemil.proxi.gaz.application.outbound.PasswordVerifier;
 import cm.jemil.proxi.gaz.application.outbound.RateLimiter;
 import cm.jemil.proxi.gaz.application.outbound.ReferenceGenerator;
+import cm.jemil.proxi.gaz.application.outbound.UnitOfWork;
 import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorOnboardingRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
@@ -23,6 +25,7 @@ import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.DeleteDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllVendorsUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetAuditLogUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetDemoByIdUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetVendorByIdUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetVendorSessionUseCase;
@@ -56,18 +59,34 @@ public class ProxiGazBeans {
       VendorOnboardingRepository onboardingRepository,
       VendorSessionTokenGenerator tokenGenerator,
       VendorSessionTokenHasher tokenHasher,
+      Clock clock,
+      AuditLogPort auditLog,
+      UnitOfWork unitOfWork) {
+    return new CreateVendorUseCase(
+        onboardingRepository, tokenGenerator, tokenHasher, clock, auditLog, unitOfWork);
+  }
+
+  @Bean
+  public UpdateVendorUseCase updateVendorUseCase(
+      VendorRepository vendorRepository,
+      AuditLogPort auditLog,
+      UnitOfWork unitOfWork,
       Clock clock) {
-    return new CreateVendorUseCase(onboardingRepository, tokenGenerator, tokenHasher, clock);
+    return new UpdateVendorUseCase(vendorRepository, auditLog, unitOfWork, clock);
   }
 
   @Bean
-  public UpdateVendorUseCase updateVendorUseCase(VendorRepository vendorRepository) {
-    return new UpdateVendorUseCase(vendorRepository);
+  public SetVendorStatusUseCase setVendorStatusUseCase(
+      VendorRepository vendorRepository,
+      AuditLogPort auditLog,
+      UnitOfWork unitOfWork,
+      Clock clock) {
+    return new SetVendorStatusUseCase(vendorRepository, auditLog, unitOfWork, clock);
   }
 
   @Bean
-  public SetVendorStatusUseCase setVendorStatusUseCase(VendorRepository vendorRepository) {
-    return new SetVendorStatusUseCase(vendorRepository);
+  public GetAuditLogUseCase getAuditLogUseCase(AuditLogPort auditLog) {
+    return new GetAuditLogUseCase(auditLog);
   }
 
   @Bean
@@ -89,15 +108,28 @@ public class ProxiGazBeans {
       VendorSessionRepository sessionRepository,
       VendorSessionTokenGenerator tokenGenerator,
       VendorSessionTokenHasher tokenHasher,
-      Clock clock) {
+      Clock clock,
+      AuditLogPort auditLog,
+      UnitOfWork unitOfWork) {
     return new RotateVendorSessionUseCase(
-        vendorRepository, sessionRepository, tokenGenerator, tokenHasher, clock);
+        vendorRepository,
+        sessionRepository,
+        tokenGenerator,
+        tokenHasher,
+        clock,
+        auditLog,
+        unitOfWork);
   }
 
   @Bean
   public RevokeVendorSessionUseCase revokeVendorSessionUseCase(
-      VendorRepository vendorRepository, VendorSessionRepository sessionRepository) {
-    return new RevokeVendorSessionUseCase(vendorRepository, sessionRepository);
+      VendorRepository vendorRepository,
+      VendorSessionRepository sessionRepository,
+      AuditLogPort auditLog,
+      UnitOfWork unitOfWork,
+      Clock clock) {
+    return new RevokeVendorSessionUseCase(
+        vendorRepository, sessionRepository, auditLog, unitOfWork, clock);
   }
 
   @Bean

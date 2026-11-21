@@ -78,6 +78,23 @@ Application settings use the single `proxigaz` root in `application.yaml` and bi
 | `PROXIGAZ_ADMIN_BOOTSTRAP_ENABLED` | Create the initial admin at startup when set to `true` | `false` (unset) |
 | `PROXIGAZ_ADMIN_BOOTSTRAP_EMAIL` | Initial admin email; required when bootstrap is enabled | unset |
 | `PROXIGAZ_ADMIN_BOOTSTRAP_PASSWORD` | Initial admin password; BCrypt-hashed before storage; required when enabled | unset |
+| `PROXIGAZ_SLOW_QUERY_MS` | Queries slower than this many milliseconds are logged on `org.hibernate.SQL_SLOW` | `500` |
+| `LOGGING_LEVEL_<LOGGER>` | Raise any logger without a redeploy, e.g. `LOGGING_LEVEL_ORG_HIBERNATE_SQL=DEBUG` | see [Logging](#logging) |
+
+## Logging
+
+Every log line carries the request correlation ID in brackets, e.g. `[9ab8fb4a-…]`. The same ID is returned in the `X-Correlation-Id` response header and in every problem response, so one request can be followed from the HTTP line through its SQL to any warning. A client may send its own `X-Correlation-Id` (letters, digits, `.`, `_`, `-`, at most 64 characters); anything else is replaced.
+
+| What | `local` | `staging` | `production` |
+|------|---------|-----------|--------------|
+| Request and response line (`HttpLoggingFilter`): 4xx at WARN, 5xx at ERROR | yes | yes | yes |
+| Slow queries (`org.hibernate.SQL_SLOW`, threshold `PROXIGAZ_SLOW_QUERY_MS`) | yes | yes | yes |
+| Every SQL statement, with `?` placeholders (`org.hibernate.SQL`, `JdbcTemplate`) | yes, formatted | yes | off |
+| SQL bind values (`org.hibernate.orm.jdbc.bind`) | yes | **never** | **never** |
+| Transaction begin/commit/rollback (`JpaTransactionManager`) | yes | off | off |
+| Application DEBUG (`cm.jemil.proxi.gaz`) | yes | off | off |
+
+Bind values contain password hashes, session-token hashes and phone numbers, so they are logged only on `local`; `LoggingConfigurationTest` fails if a shared profile enables them. To debug production temporarily, set `LOGGING_LEVEL_ORG_HIBERNATE_SQL=DEBUG` and restart, then remove it.
 
 ## Container and release workflow
 

@@ -9,6 +9,8 @@ import cm.jemil.proxi.gaz.domain.shared.GeoPoint;
 import cm.jemil.proxi.gaz.domain.shared.Money;
 import cm.jemil.proxi.gaz.domain.shared.PhoneNumber;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.Getter;
@@ -109,6 +111,29 @@ public class Vendor {
 
   public void deactivate() {
     active = false;
+  }
+
+  /**
+   * Names of the profile fields that differ in {@code updated}, in profile order. Activation is not
+   * part of the profile: it changes only through {@link #activate()} / {@link #deactivate()}.
+   */
+  public List<String> profileChangesTo(Vendor updated) {
+    var changed = new ArrayList<String>();
+    addIfChanged(changed, "name", name, updated.name);
+    addIfChanged(changed, "phone", phone, updated.phone);
+    addIfChanged(changed, "location", location, updated.location);
+    addIfChanged(changed, "addressText", addressText, updated.addressText);
+    addIfChanged(changed, "isStation", isStation, updated.isStation);
+    addIfChanged(changed, "deliveryFeeType", deliveryFeeType, updated.deliveryFeeType);
+    addIfChanged(changed, "deliveryFeeAmount", deliveryFeeAmount, updated.deliveryFeeAmount);
+    return List.copyOf(changed);
+  }
+
+  private static void addIfChanged(
+      List<String> changed, String field, @Nullable Object before, @Nullable Object after) {
+    if (!Objects.equals(before, after)) {
+      changed.add(field);
+    }
   }
 
   @Override

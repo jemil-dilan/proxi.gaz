@@ -57,4 +57,5 @@ The app listens on `127.0.0.1:8080` on the host; expose it through the host's TL
 - Take a database backup before production migrations and confirm that it is restorable.
 - Prefer application rollback to the previous image digest when the schema remains backward compatible. If a migration is not backward compatible, document a forward-fix procedure; do not assume restoring the application image reverses database changes.
 - Keep seed data and local-only configuration out of staging and production.
+- `t_admin_audit_log` (PXG-061, `v-7-admin-audit-log.xml`) is append-only and has no rollback changeset: dropping it destroys the audit trail. Its foreign key to `t_users` blocks deleting an admin who has audit entries.
 - Keep `/etc/proxi-gaz/staging.env`, Docker registry credentials, SSH keys, and database backups outside the repository and application image.

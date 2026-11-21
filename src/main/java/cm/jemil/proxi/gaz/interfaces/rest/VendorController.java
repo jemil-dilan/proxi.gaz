@@ -49,7 +49,9 @@ class VendorController implements VendorApi {
 
   @Override
   public ResponseEntity<VendorOnboardingResponseDTO> createVendor(CreateVendorDTO request) {
-    var result = createVendorUseCase.execute(restMapper.toCommand(request));
+    var result =
+        createVendorUseCase.execute(
+            AuthenticatedAdmin.currentAdminId(), restMapper.toCommand(request));
     return ResponseEntity.status(201)
         .cacheControl(CacheControl.noStore())
         .body(restMapper.fromDomain(result));
@@ -72,13 +74,15 @@ class VendorController implements VendorApi {
 
   @Override
   public ResponseEntity<Void> updateVendor(UUID vendorId, VendorUpdateDTO request) {
-    updateVendorUseCase.execute(restMapper.toCommand(vendorId, request));
+    updateVendorUseCase.execute(
+        AuthenticatedAdmin.currentAdminId(), restMapper.toCommand(vendorId, request));
     return ResponseEntity.noContent().build();
   }
 
   @Override
   public ResponseEntity<Void> setVendorStatus(UUID vendorId, VendorStatusUpdateDTO request) {
-    setVendorStatusUseCase.execute(vendorId, request.getIsActive());
+    setVendorStatusUseCase.execute(
+        AuthenticatedAdmin.currentAdminId(), vendorId, request.getIsActive());
     return ResponseEntity.noContent().build();
   }
 
@@ -102,13 +106,13 @@ class VendorController implements VendorApi {
 
   @Override
   public ResponseEntity<Void> revokeVendorSession(UUID vendorId) {
-    revokeVendorSessionUseCase.execute(vendorId);
+    revokeVendorSessionUseCase.execute(AuthenticatedAdmin.currentAdminId(), vendorId);
     return ResponseEntity.noContent().build();
   }
 
   @Override
   public ResponseEntity<VendorSessionTokenDTO> rotateVendorSession(UUID vendorId) {
-    var token = rotateVendorSessionUseCase.execute(vendorId);
+    var token = rotateVendorSessionUseCase.execute(AuthenticatedAdmin.currentAdminId(), vendorId);
     return ResponseEntity.status(201)
         .cacheControl(CacheControl.noStore())
         .body(new VendorSessionTokenDTO(token));

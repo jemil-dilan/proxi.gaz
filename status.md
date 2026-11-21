@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-11-18 by `working/PXG-060` (PXG-060 complete: contract CI, SemVer, versioning; pending PR)
+Last updated: 2026-11-18 by `working/PXG-061` (PXG-061 complete: admin audit log + server logging; pending PR)
 
 ## Critical Gate
 
@@ -12,7 +12,7 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
 | 0 — Foundations & Core Infrastructure | Implementation done; release outstanding | PXG-001–011 complete; manual-test gate explicitly waived; no Docker/GitHub staging release was produced |
-| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–060 done. Remaining Epic 1.0: PXG-054 (Demo excluded), PXG-061–063. Catalog/availability/geo (Epic 1.2+) remain |
+| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–061 done. Remaining Epic 1.0: PXG-054 (Demo excluded), PXG-062–063. Catalog/availability/geo (Epic 1.2+) remain |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -23,9 +23,9 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 |----------|---------------------------------------------------------|-------------|-------------|------------|-------|
 | AUTH-01  | Admin login (JWT / session)                             | Implemented | Yes (user-confirmed) | Yes (user-confirmed) | PXG-059: email+IP lockout (5/15m → 429-001 + Retry-After), dummy-hash path, roles on `/me`, password minLength; RateLimiter D17 |
 | AUTH-02  | Vendor session validation (long-lived token by admin)   | Implemented | Yes (user-confirmed) | Yes (user-confirmed) | PXG-015 + PXG-058: hashed bearer tokens; soft revoke/rotate; `last_used_at` throttled; inactive vendor → 403-002; identity returns name/isActive |
-| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Implemented | Yes (user-confirmed) | Yes (user-confirmed) | PXG-014 listing + PXG-058 `GET /admin/vendors/{id}` with session metadata and list `sort` |
-| VEN-02   | Admin activates / deactivates vendor                    | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | Dedicated admin status endpoint is merged to main; production nearby-search exclusion remains in PXG-020 |
-| VEN-03   | Admin creates long-lived VendorSession                  | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | Rotation replaces the prior session; revocation removes active token record |
+| VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Implemented | Yes (user-confirmed) | Yes (user-confirmed) | PXG-014 listing + PXG-058 `GET /admin/vendors/{id}` with session metadata and list `sort`; PXG-061 audited (`VENDOR_CREATED`/`VENDOR_UPDATED`) |
+| VEN-02   | Admin activates / deactivates vendor                    | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | Dedicated admin status endpoint is merged to main; production nearby-search exclusion remains in PXG-020; PXG-061 audited |
+| VEN-03   | Admin creates long-lived VendorSession                  | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | Rotation replaces the prior session; revocation removes active token record; PXG-061 audited (no token in metadata) |
 | VEN-04   | CRUD VendorBrand (prices with/without exchange)         | No          | No          | No         |       |
 | VEN-05   | Availability rule (`is_available AND available_until > now() AND is_open_now`) | Partial | Yes | No | Domain `Availability` VO; query wiring later |
 | GEO-01   | Nearby vendors (ST_DWithin + distance sort)             | No          | No          | No         |       |
@@ -69,7 +69,8 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 | PXG-057 | Vendor DTO & validation fixes | Merged to `main` |
 | PXG-058 | Vendor detail, session metadata, identity enrichment | Merged / complete per prior session |
 | PXG-059 | Admin auth hardening | Merged to `main` (PR #28) |
-| PXG-060 | Contract CI, SemVer, versioning | Done on `working/PXG-060`; Spectral lint + oasdiff breaking check in CI, versioned contract attached to releases. Awaiting PR + throwaway-PR proof |
+| PXG-060 | Contract CI, SemVer, versioning | Merged to `main` (PR #29) |
+| PXG-061 | Admin audit log | Done on `working/PXG-061`; `t_admin_audit_log`, audited vendor writes in one transaction, `GET /admin/audit-log`; server logging (correlation ID, SQL per profile, slow queries). Awaiting PR |
 
 ## Architecture Updates
 
@@ -135,6 +136,11 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - PXG-060 contract fixes: `setVendorStatus` 401 referenced the 422 response; unused `Locked` (423) and `UnprocessableEntity` (422) responses removed until PXG-036 / PXG-016 use them; shared 500 referenced by every operation.
 - Open (not PXG-060): `getVendor` documents no 401/403 and returns `VendorDTO` rather than the `VendorDetailDTO` named in the plan; `vendorSessionAuth` declares `bearerFormat: JWT` though tokens are opaque; `bearerAuth`/`oAuth` schemes remain (Demo uses `oAuth`). `docs/RELEASE_AND_DEPLOYMENT.md` still references removed `scripts/deploy-staging.sh` / `compose.staging.yaml`, and `TASK_PXG-012C.md` was never deleted — PXG-062 reconciliation.
 - Demo scaffold is kept by owner decision (2026-11-17) despite PXG-054's wording; PXG-054 must exclude Demo.
+- PXG-061 (2026-11-18): use cases had no transaction boundary (each adapter was its own `@Transactional`). New `UnitOfWork` port (`SpringUnitOfWork` → `TransactionTemplate`) wraps each audited write; `AuditLogPort.record` is `Propagation.MANDATORY`, so an audit row cannot be written outside the business transaction. Data tests prove a failure after both writes leaves neither, and an audit FK failure rolls back the vendor change.
+- PXG-061: admin writes now need a JWT whose subject is the admin's user id (login tokens already are); other subjects get 401 `PROXIGAZ-401-001`. E2E `I am connected with the scopes 'admin'` now signs with the bootstrapped admin's id; `security_audience.feature` writes use it.
+- PXG-061: `@Validated` controllers threw an unmapped `ConstraintViolationException` for out-of-range query parameters (e.g. `GET /admin/vendors?size=0` → 500). Now 400 `PROXIGAZ-400-002`.
+- PXG-061: `HttpLoggingFilter` now runs before Spring Security, so 401/403 responses are logged and carry a correlation ID; client-supplied `X-Correlation-Id` values are validated (log-injection guard).
+- Open (not PXG-061): `UserController.getAdminProfile` still parses the JWT subject itself (returns a bare 401 without problem body); align it with `AuthenticatedAdmin` later. `LoggingNotificationChannel` logs client phone numbers at INFO — revisit before the pilot (PXG-030).
 
 ## Architecture notes relevant to next task
 
@@ -144,12 +150,13 @@ Manual 2–3 week test: **Go; Sprint 0 gate explicitly waived by user direction*
 - Tracking must use `TrackingToken`; availability via `Availability.isCurrentlyAvailable(now)`.
 - PXG-013–015 and PXG-055–059 are merged. PXG-060 adds the `OpenAPI Contract` CI job (`scripts/validate-openapi.sh`, `.spectral.yaml`, `scripts/check-openapi-breaking.sh`); every new endpoint must lint clean (operationId, at least one 4xx, 500 via `components/responses/InternalServerError`, no unused components, `required` names declared).
 - Contract `info.version` stays `0.1.0-dev`; releases stamp the tag version via `scripts/prepare_openapi_release.py`. Breaking changes need the PR label `contract-breaking-approved`.
-- Remaining Epic 1.0: PXG-054 (keep Demo), PXG-061–063. Epic 1.2+ (catalog/availability/geo) remains.
+- PXG-061: every new admin write use case must take the admin `UserId`, run inside `UnitOfWork.inTransaction`, and record an `AuditEntry` (allowlisted `AuditMetadata` only). PXG-064 brand CRUD adds `AuditTargetType.BRAND` and its actions.
+- Remaining Epic 1.0: PXG-054 (keep Demo), PXG-062–063. Epic 1.2+ (catalog/availability/geo) remains.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits).
 
 ## Next recommended action
 
-1. Open the PXG-060 PR, then prove the gate: a throwaway PR removing a required response field must fail `OpenAPI Contract`. Optionally set the `STAGING_API_URL` repository variable.
-2. Continue Epic 1.0: PXG-061 (admin audit log), PXG-062 (ADRs + doc reconciliation), PXG-063 (scenario scripts), PXG-054 (template leftovers, keeping Demo).
+1. Commit PXG-061 with `cz c`, open the PR, and confirm CI (the contract job must report no breaking change).
+2. Continue Epic 1.0: PXG-062 (ADRs + doc reconciliation), PXG-063 (scenario scripts), PXG-054 (template leftovers, keeping Demo).
 3. Configure the GitHub `staging` environment and host secrets, and execute the alpha staging workflow end-to-end.
 4. Complete Epic 1.2+ (PXG-064, PXG-016, PXG-065, PXG-017, PXG-020/021, PXG-066/067).

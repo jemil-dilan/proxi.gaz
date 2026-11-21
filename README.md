@@ -8,7 +8,7 @@ Backend API for a neighborhood gas-cylinder ordering pilot (Cameroon). Clients r
 |------|--------|
 | Manual demand/vendor test | Go by explicit user waiver — Sprint 0 coding unblocked |
 | Sprint 0 — Foundations | Done (`PXG-001`–`PXG-011`) |
-| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`–`PXG-015` and Epic 1.0 `PXG-055`–`PXG-060` done; Epic 1.2 and geo search remain) |
+| Sprint 1 — Vendor & Catalog | In progress (`PXG-013`–`PXG-015` and Epic 1.0 `PXG-055`–`PXG-061` done; Epic 1.2 and geo search remain) |
 | Sprints 2–4 | Not started |
 
 Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/ProxiGaz_Sprint_Plan.md`](docs/ProxiGaz_Sprint_Plan.md). How to work on tasks: [`docs/ProxiGaz_Implementation_Guideline.md`](docs/ProxiGaz_Implementation_Guideline.md).
@@ -28,6 +28,8 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - The `local` Liquibase context seeds a development-only admin (`admin@proxigaz.local` / `password`) and five fictional vendors in central Douala. Seed data is excluded from staging and production contexts.
 - CI: Spotless + unit / data / e2e tests on GitHub Actions, plus an OpenAPI contract job: Spectral lint and an oasdiff breaking-change check against the target branch.
 - API docs (`/v3/api-docs`, Swagger UI) are public on the `local` and `staging` profiles only; production does not serve them.
+- Admin audit log: every admin vendor write (create, update, activate/deactivate, session rotate/revoke) records who did what in `t_admin_audit_log`, in the same transaction as the change. `GET /admin/audit-log?targetType=VENDOR&targetId=…` lists entries newest first. Metadata never contains tokens, hashes or field values.
+- Server logs carry a request correlation ID on every line; SQL statements are logged on `local` (with bind values) and `staging` (without); slow queries are logged everywhere. See [`docs/RUNTIME.md`](docs/RUNTIME.md#logging).
 
 Admin login (AUTH-01) includes JWT auth plus PXG-059 hardening (email+IP lockout → `429` / `Retry-After`, roles on `/admin/auth/me`, password `minLength`). Vendor management (VEN-01–03) and vendor session validation/rotation are implemented. Vendor brands/availability, production geo search, orders, fallback, and reviews are **not** implemented yet — see `status.md` use-case table.
 

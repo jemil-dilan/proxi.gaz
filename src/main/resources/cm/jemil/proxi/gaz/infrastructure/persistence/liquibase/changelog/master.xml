@@ -18,5 +18,7 @@
 		relativeToChangelogFile="true" />
 	<include file="internal/v-6-add-vendor-session-metadata.xml"
 		relativeToChangelogFile="true" />
+	<include file="internal/v-7-admin-audit-log.xml"
+		relativeToChangelogFile="true" />
 </databaseChangeLog>
 

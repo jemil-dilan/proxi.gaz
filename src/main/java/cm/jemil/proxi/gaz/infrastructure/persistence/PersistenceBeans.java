@@ -4,9 +4,11 @@
  */
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
+import cm.jemil.proxi.gaz.application.outbound.AuditLogPort;
 import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
+import cm.jemil.proxi.gaz.application.outbound.UnitOfWork;
 import cm.jemil.proxi.gaz.application.outbound.UserRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorOnboardingRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
@@ -18,6 +20,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @EntityScan(basePackages = {"cm.jemil.proxi.gaz.infrastructure.persistence"})
 @EnableJpaRepositories(basePackages = {"cm.jemil.proxi.gaz.infrastructure.persistence"})
@@ -54,6 +58,19 @@ public class PersistenceBeans {
   VendorSessionRepository vendorSessionRepository(
       VendorSessionSpringRepository vendorSessionSpringRepository, JpaMapper jpaMapper) {
     return new JpaVendorSessionRepository(vendorSessionSpringRepository, jpaMapper);
+  }
+
+  @Bean
+  AuditLogPort auditLogPort(
+      AdminAuditLogSpringRepository auditSpringRepository,
+      UserSpringRepository userSpringRepository,
+      JpaMapper jpaMapper) {
+    return new JpaAuditLogRepository(auditSpringRepository, userSpringRepository, jpaMapper);
+  }
+
+  @Bean
+  UnitOfWork unitOfWork(PlatformTransactionManager transactionManager) {
+    return new SpringUnitOfWork(new TransactionTemplate(transactionManager));
   }
 
   @Bean

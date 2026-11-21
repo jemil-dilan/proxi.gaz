@@ -74,4 +74,57 @@ class VendorTest {
         Money.fcfa(1200),
         active);
   }
+
+  @Test
+  void profileChangesTo_shouldListChangedFieldNamesInProfileOrder() {
+    var before = profile(VendorName.from("Before"), "+237699002001", GeoPoint.of(4.05, 9.70), 1200);
+    var after =
+        Vendor.reconstitute(
+            before.getId(),
+            before.getUserId(),
+            VendorName.from("After"),
+            PhoneNumber.from("+237699002001"),
+            GeoPoint.of(4.06, 9.70),
+            AddressText.from("Deido"),
+            true,
+            DeliveryFeeType.from("flat"),
+            Money.fcfa(1500),
+            false);
+
+    assertThat(before.profileChangesTo(after))
+        .containsExactly("name", "location", "addressText", "isStation", "deliveryFeeAmount");
+  }
+
+  @Test
+  void profileChangesTo_shouldBeEmptyWhenTheProfileIsUnchangedAndIgnoreStatus() {
+    var before = profile(VendorName.from("Same"), "+237699002001", GeoPoint.of(4.05, 9.70), 1200);
+    var sameProfileInactive =
+        Vendor.reconstitute(
+            before.getId(),
+            before.getUserId(),
+            before.getName(),
+            before.getPhone(),
+            before.getLocation(),
+            before.getAddressText(),
+            before.isStation(),
+            before.getDeliveryFeeType(),
+            before.getDeliveryFeeAmount(),
+            false);
+
+    assertThat(before.profileChangesTo(sameProfileInactive)).isEmpty();
+  }
+
+  private static Vendor profile(VendorName name, String phone, GeoPoint location, int fee) {
+    return Vendor.reconstitute(
+        VendorId.generate(),
+        UserId.generate(),
+        name,
+        PhoneNumber.from(phone),
+        location,
+        AddressText.from("Akwa"),
+        false,
+        DeliveryFeeType.from("flat"),
+        Money.fcfa(fee),
+        true);
+  }
 }
