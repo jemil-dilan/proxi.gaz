@@ -5,22 +5,19 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
 import cm.jemil.proxi.gaz.domain.shared.Email;
-import cm.jemil.proxi.gaz.domain.shared.UserId;
+import cm.jemil.proxi.gaz.domain.user.InvalidAdminTokenException;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.api.UserApi;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.LoginResponseDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,28 +37,16 @@ class UserController implements UserApi {
     return ResponseEntity.status(OK).body(restMapper.fromDomain(result));
   }
 
+  /**
+   * A token that is valid but does not describe an admin (missing or malformed subject or email)
+   * gets the same 401 problem response as every other admin endpoint ({@code PROXIGAZ-401-001}).
+   */
   @Override
   public ResponseEntity<AdminProfileDTO> getAdminProfile() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    if (!(authentication instanceof JwtAuthenticationToken jwtAuthentication)) {
-      return ResponseEntity.status(UNAUTHORIZED).build();
-    }
-
-    var token = jwtAuthentication.getToken();
-    var subject = token.getSubject();
-    if (subject == null || subject.isBlank()) {
-      return ResponseEntity.status(UNAUTHORIZED).build();
-    }
-
-    UUID subjectId;
-    try {
-      subjectId = UUID.fromString(subject);
-    } catch (IllegalArgumentException _) {
-      return ResponseEntity.status(UNAUTHORIZED).build();
-    }
-
-    String emailClaim = token.getClaimAsString("email");
-    var userId = UserId.from(subjectId);
+    var userId = AuthenticatedAdmin.currentAdminId();
+    var token =
+        ((JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication())
+            .getToken();
 
     // JWT stores space-separated scopes in the standard "scope" claim
     String scopeClaim = token.getClaimAsString("scope");
@@ -72,9 +57,9 @@ class UserController implements UserApi {
 
     Email email;
     try {
-      email = Email.from(emailClaim);
+      email = Email.from(token.getClaimAsString("email"));
     } catch (InvalidDomainValueException _) {
-      return ResponseEntity.status(UNAUTHORIZED).build();
+      throw new InvalidAdminTokenException();
     }
     return ResponseEntity.ok(restMapper.fromDomain(userId, email, roles));
   }

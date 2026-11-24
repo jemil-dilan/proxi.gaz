@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.interfaces.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.mock;
 import cm.jemil.proxi.gaz.application.usecase.LoginAdminUseCase;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
+import cm.jemil.proxi.gaz.domain.user.InvalidAdminTokenException;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -45,7 +47,7 @@ class UserControllerTest {
 
     var controller = controller();
 
-    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThatThrownBy(controller::getAdminProfile).isInstanceOf(InvalidAdminTokenException.class);
   }
 
   @Test
@@ -62,7 +64,7 @@ class UserControllerTest {
 
     var controller = controller();
 
-    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThatThrownBy(controller::getAdminProfile).isInstanceOf(InvalidAdminTokenException.class);
   }
 
   @Test
@@ -76,7 +78,7 @@ class UserControllerTest {
 
     var controller = controller();
 
-    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThatThrownBy(controller::getAdminProfile).isInstanceOf(InvalidAdminTokenException.class);
   }
 
   @Test
@@ -94,7 +96,7 @@ class UserControllerTest {
 
     var controller = controller();
 
-    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThatThrownBy(controller::getAdminProfile).isInstanceOf(InvalidAdminTokenException.class);
   }
 
   @Test
@@ -112,7 +114,7 @@ class UserControllerTest {
 
     var controller = controller();
 
-    assertThat(controller.getAdminProfile().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThatThrownBy(controller::getAdminProfile).isInstanceOf(InvalidAdminTokenException.class);
   }
 
   @Test
