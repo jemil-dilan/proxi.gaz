@@ -35,7 +35,8 @@ Feature: Admin authentication
   Scenario: Protected admin profile rejects an authenticated token with a malformed subject
     Given I am connected with an admin token with subject 'not-a-user-id'
     When I try to access the protected admin profile
-    Then The last request failed with the http status 'UNAUTHORIZED' and error code ''
+    Then The last request failed with the http status 'UNAUTHORIZED' and error code 'PROXIGAZ-401-001'
+    And The last response body should contain RFC 7807 Problem structure
 
   Scenario: Repeated failed logins lock out then recover after the window
     Given I am connected with the scopes ''

@@ -22,7 +22,20 @@ public class LoggingNotificationChannel implements NotificationChannel {
 
   @Override
   public boolean sendToClient(String recipientPhone, String title, String body) {
-    log.info("Notification to client {}: {} - {}", recipientPhone, title, body);
+    log.info("Notification to client {}: {} - {}", maskPhone(recipientPhone), title, body);
     return true;
+  }
+
+  /**
+   * Client phone numbers are personal data: logs keep the +237 country code and the last two digits
+   * only. Values too short to mask meaningfully are hidden entirely.
+   */
+  static String maskPhone(String phone) {
+    if (phone == null || phone.length() < 6) {
+      return "***";
+    }
+    var prefix = phone.startsWith("+237") ? "+237" : "";
+    var hidden = phone.length() - prefix.length() - 2;
+    return prefix + "*".repeat(hidden) + phone.substring(phone.length() - 2);
   }
 }

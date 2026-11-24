@@ -163,9 +163,10 @@ Acceptance criteria
 
 #### Tasks
 
-**PXG-054 ⬜ Remove template leftovers** (S)
-- Delete `/demo` endpoints, `DemoDTO`, `DemoCreateDTO`, `DemoUpdateDTO`, `CreationResponseDTO` (if unused), the `oAuth` security scheme and the `Demo` tag, plus the matching code, tests and seed.
-- Done when: a repo-wide search for `Demo`/`oAuth` returns nothing; contract lint passes.
+**PXG-054 ✅ Remove template leftovers** (S)
+- ~~Delete `/demo` endpoints, `DemoDTO`, `DemoCreateDTO`, `DemoUpdateDTO`, `CreationResponseDTO` (if unused), the `oAuth` security scheme and the `Demo` tag, plus the matching code, tests and seed.~~ **Superseded by [ADR 0021](adr/0021-keep-demo-slice.md):** the Demo slice and its `oAuth` scheme stay as the architecture reference.
+- Delivered (2026-11-24): removed the unused `bearerAuth` scheme and the unused CI/release `postgres` services (all DB tests use Testcontainers). Also closed Epic 1.0 open items: `getVendor` documents 400/401/403, `vendorSessionAuth` is described as opaque, `/admin/auth/me` returns the standard 401 problem (`PROXIGAZ-401-001`) for a token without a valid subject/email, and logged client phone numbers are masked.
+- Done when: every template leftover is either removed or explicitly kept by an ADR; contract lint passes and oasdiff reports no breaking change.
 
 **PXG-055 ✅ Error model & code registry** (M)
 - Add `components/schemas/Problem` (RFC 7807 + `code`, `correlationId`, `errors[{field, message}]`) and reusable `components/responses` for 400, 401, 403, 404, 409, 422, 423, 429, 500; reference them from every operation.
