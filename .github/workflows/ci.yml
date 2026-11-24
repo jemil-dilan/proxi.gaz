@@ -114,23 +114,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: spotless
-    # Remove this block if your tests only use Testcontainers
-    # (Testcontainers starts its own Postgres; Docker is preinstalled).
-    services:
-      postgres:
-        # Keep in sync with TestcontainersConfiguration.POSTGIS_IMAGE
-        image: postgis/postgis:17-3.5
-        env:
-          POSTGRES_USER: proxigaz
-          POSTGRES_PASSWORD: proxigaz
-          POSTGRES_DB: proxigaz
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U proxigaz"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=10
+    # No database service: data and e2e tests start PostGIS through Testcontainers
+    # (jdbc:tc URLs and @ServiceConnection); Docker is preinstalled on the runner.
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

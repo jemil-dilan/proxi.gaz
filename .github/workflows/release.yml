@@ -22,20 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
-    services:
-      postgres:
-        image: postgis/postgis:17-3.5
-        env:
-          POSTGRES_USER: proxigaz
-          POSTGRES_PASSWORD: proxigaz
-          POSTGRES_DB: proxigaz
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U proxigaz"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=10
+    # No database service: tests start PostGIS through Testcontainers.
 
     outputs:
       version: ${{ steps.validate.outputs.version }}

@@ -13,7 +13,7 @@ import org.testcontainers.utility.DockerImageName;
 @TestConfiguration(proxyBeanMethods = false)
 class TestcontainersConfiguration {
 
-  /** Pinned PostGIS image — keep in sync with CI and jdbc:tc URLs. */
+  /** Pinned PostGIS image — keep in sync with the jdbc:tc URLs and compose.yaml. */
   static final String POSTGIS_IMAGE = "postgis/postgis:17-3.5";
 
   @Bean
