@@ -6,7 +6,7 @@
 #   vendor_local_number                     - 9 digits after +237 (Hurl would read "+237..." as a number)
 #
 # Still to come when their tasks land (spec order: ... -> set brand + availability -> public nearby -> quote):
-#   TODO PXG-064/065: set a brand and its availability for the vendor
+#   TODO PXG-016/065: give the vendor a brand from the catalogue and set its availability
 #   TODO PXG-066:     find the vendor through the public nearby search
 #   TODO PXG-067:     request a quote
 
@@ -33,6 +33,34 @@ HTTP 200
 [Asserts]
 jsonpath "$.email" == "{{admin_email}}"
 jsonpath "$.roles" contains "admin"
+
+
+# 2b. The brand catalogue (PXG-064). Brands cannot be deleted, so the scenario uses one fixed
+#     brand: created on the first run against an environment (201), already there afterwards (409).
+POST {{base_url}}/admin/brands
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+{ "name": "Scenario Reference Brand" }
+HTTP *
+[Asserts]
+status toString matches "^(201|409)$"
+
+POST {{base_url}}/admin/brands
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+{ "name": "  scenario   REFERENCE brand " }
+HTTP 409
+[Asserts]
+header "Content-Type" contains "application/problem+json"
+jsonpath "$.code" == "PROXIGAZ-409-003"
+
+GET {{base_url}}/admin/brands
+Authorization: Bearer {{admin_token}}
+[Query]
+isActive: true
+HTTP 200
+[Asserts]
+jsonpath "$[*].name" contains "Scenario Reference Brand"
 
 
 # 3. Create a vendor; the one-time session token is never cached
