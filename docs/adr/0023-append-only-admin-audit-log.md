@@ -18,4 +18,4 @@ An admin with audit entries cannot be deleted (foreign key). Each new admin writ
 
 ## Implementation state
 
-**Done** — PXG-061. PXG-064 (brands) adds `AuditTargetType.BRAND`.
+**Done** — PXG-061 (vendor actions). PXG-064 added the first non-vendor target: `BRAND` with `BRAND_CREATED` (metadata `isActive`). The audit-log response lists actions and target types as extensible values (ADR 0024 amendment), so new ones are not contract breaks.

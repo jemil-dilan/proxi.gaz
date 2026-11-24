@@ -272,14 +272,14 @@ Acceptance criteria
 
 | ID | Status | Task | Details | Est. |
 |---|---|---|---|---|
-| PXG-064 | ⬜ | Brand reference table | see below | M |
+| PXG-064 | ✅ | Brand reference table | see below | M |
 | PXG-016 | ⬜ | CRUD VendorBrand (admin) | see below | L |
 | PXG-065 | ⬜ | Vendor self-service availability | see below | M |
 | PXG-017 | ⬜ | Availability computation | see below | M |
 | PXG-018 | ⛔ | Auto-expire job | Removed: availability is query-time truth; no job | — |
 | PXG-019 | ➡️ | Reliability score | **Moved to Sprint 3, Epic 3.2** (needs order data) | — |
 
-**PXG-064 ⬜ Brand reference table** (M)
+**PXG-064 ✅ Brand reference table** (M) — *done 2026-11-24 without a seed (owner decision: admins add brands); duplicates → `409-003`; creation audited (`BRAND_CREATED`)*
 - Migration `t_brands(id, name, is_active)` with unique `lower(name)`; seed from the brands collected in the manual test/vendor interviews; `GET /admin/brands`, `POST /admin/brands` (admin only).
 - Tests: I unique constraint case-insensitivity; E create/list.
 

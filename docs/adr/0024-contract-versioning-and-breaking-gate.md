@@ -19,3 +19,5 @@ Breaking changes need an explicit label and a release-notes entry.
 ## Implementation state
 
 **Done** — PXG-060.
+
+**Amendment (2026-11-24, PXG-064):** response values that are meant to grow — the audit log's `action` and `targetType` — are declared as strings with `x-extensible-enum` instead of `enum`. oasdiff treats adding a value to a response `enum` as breaking, while adding to `x-extensible-enum` is not; clients must therefore accept values they do not know. The change itself was breaking once (PR labelled `contract-breaking-approved`). Request filters keep strict enums (unknown values get 400). Use `x-extensible-enum` for any future response field whose value set grows with features.
