@@ -151,6 +151,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VendorDTO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "500":
@@ -594,12 +600,8 @@ components:
     vendorSessionAuth:
       type: "http"
       scheme: "bearer"
-      bearerFormat: "JWT"
-      description: "Vendor long-lived opaque session token for vendor operations"
-    bearerAuth:
-      type: "http"
-      scheme: "bearer"
-      bearerFormat: "JWT"
+      bearerFormat: "opaque"
+      description: "Vendor long-lived opaque session token (not a JWT), issued once at onboarding or rotation; only its SHA-256 hash is stored."
     oAuth:
       type: "oauth2"
       description: "This API uses OAuth 2 with the Authorization Code grant flow."
