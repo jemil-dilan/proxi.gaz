@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+	<changeSet id="PXG-064:1" author="Jemil-Dilan">
+		<comment>Brand reference catalogue (Analysis §4.3). Names are stored
+			trimmed with single inner spaces; uniqueness ignores case through
+			a
+			functional index. No seed: admins add brands via the API.</comment>
+		<createTable tableName="t_brands">
+			<column name="c_id" type="uuid">
+				<constraints nullable="false" primaryKey="true"
+					primaryKeyName="pk_brands" />
+			</column>
+			<column name="c_name" type="varchar(64)">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_is_active" type="boolean"
+				defaultValueBoolean="true">
+				<constraints nullable="false" />
+			</column>
+			<column name="c_created_at" type="timestamptz"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<sql>CREATE UNIQUE INDEX uq_brands_name_lower ON t_brands
+			(lower(c_name))</sql>
+		<rollback>
+			<dropTable tableName="t_brands" />
+		</rollback>
+	</changeSet>
+
+</databaseChangeLog>

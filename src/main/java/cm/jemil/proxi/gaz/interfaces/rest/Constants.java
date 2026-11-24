@@ -14,6 +14,7 @@ public final class Constants {
   public static final String PATH_ADMIN_AUTH_ROLE = PATH_ADMIN_AUTH + "/**";
   public static final String PATH_ADMIN_VENDORS = "/admin/vendors/**";
   public static final String PATH_ADMIN_AUDIT_LOG = "/admin/audit-log";
+  public static final String PATH_ADMIN_BRANDS = "/admin/brands/**";
   public static final String PATH_VENDOR_SESSION = "/vendor/**";
   public static final String FIELDS_TO_EXTRACT_CODE = "fieldsToExtractCode";
   public static final String FIELDS_TO_EXTRACT_1 = "fieldsToExtract_1";

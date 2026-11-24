@@ -88,6 +88,8 @@ public class SecurityConfig {
                     .hasAuthority(Scopes.ADMIN)
                     .requestMatchers(HttpMethod.GET, Constants.PATH_ADMIN_AUDIT_LOG)
                     .hasAuthority(Scopes.ADMIN)
+                    .requestMatchers(Constants.PATH_ADMIN_BRANDS)
+                    .hasAuthority(Scopes.ADMIN)
                     .requestMatchers(HttpMethod.GET, Constants.PATH_DEMO)
                     .hasAnyAuthority(Scopes.DEMO_READ_ALL)
                     .requestMatchers(HttpMethod.POST, Constants.PATH_DEMO)

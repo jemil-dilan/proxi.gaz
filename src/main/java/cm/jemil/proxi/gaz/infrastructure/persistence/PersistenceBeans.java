@@ -5,6 +5,7 @@
 package cm.jemil.proxi.gaz.infrastructure.persistence;
 
 import cm.jemil.proxi.gaz.application.outbound.AuditLogPort;
+import cm.jemil.proxi.gaz.application.outbound.BrandRepository;
 import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
@@ -58,6 +59,11 @@ public class PersistenceBeans {
   VendorSessionRepository vendorSessionRepository(
       VendorSessionSpringRepository vendorSessionSpringRepository, JpaMapper jpaMapper) {
     return new JpaVendorSessionRepository(vendorSessionSpringRepository, jpaMapper);
+  }
+
+  @Bean
+  BrandRepository brandRepository(BrandSpringRepository brandSpringRepository) {
+    return new JpaBrandRepository(brandSpringRepository);
   }
 
   @Bean

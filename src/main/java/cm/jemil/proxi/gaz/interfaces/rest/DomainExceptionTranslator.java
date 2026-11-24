@@ -10,6 +10,7 @@ import cm.jemil.proxi.gaz.domain.ErrorCode;
 import cm.jemil.proxi.gaz.domain.ErrorCodes;
 import cm.jemil.proxi.gaz.domain.FieldsExtractionCodeNotSupported;
 import cm.jemil.proxi.gaz.domain.InvalidDomainValueException;
+import cm.jemil.proxi.gaz.domain.brand.BrandAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoAlreadyExistsException;
 import cm.jemil.proxi.gaz.domain.demo.DemoNotFoundException;
 import cm.jemil.proxi.gaz.domain.order.InvalidOrderStatusTransitionException;
@@ -164,7 +165,7 @@ class DomainExceptionTranslator {
     return switch (ex) {
       case DemoNotFoundException _, VendorNotFoundException _ -> HttpStatus.NOT_FOUND;
       case VendorInactiveException _ -> HttpStatus.FORBIDDEN;
-      case DemoAlreadyExistsException _ -> HttpStatus.CONFLICT;
+      case DemoAlreadyExistsException _, BrandAlreadyExistsException _ -> HttpStatus.CONFLICT;
       case InvalidCredentialsException _,
           InvalidVendorSessionException _,
           InvalidAdminTokenException _ ->
