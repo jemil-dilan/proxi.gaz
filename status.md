@@ -19,7 +19,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 |---------------------------------------|-------------|--------------------------------------------|
 | Manual Test (2–3 weeks)               | Go (explicitly waived) | Unblocks Sprint 0 |
 | 0 — Foundations & Core Infrastructure | Implementation done; staging gate unmet | PXG-001–011 complete; manual-test gate explicitly waived; alpha releases `v0.1.0-alpha.1` and `v0.1.0-alpha.1.0` published; the staging deployment step has never run because no staging host exists |
-| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–062 done. Remaining Epic 1.0: PXG-054 (Demo excluded), PXG-063. Catalog/availability/geo (Epic 1.2+) remain |
+| 1 — Vendor & Catalog Management       | In progress | PXG-013–015 and Epic 1.0 PXG-055–062 done. Remaining Epic 1.0: PXG-054 (Demo excluded); PXG-063 done locally and in CI, open until its staging run. Catalog/availability/geo (Epic 1.2+) remain |
 | 2 — Order Flow (Vertical Slice)       | Not started | Open decision on fallback price rule must be closed before this sprint |
 | 3 — Fallback, Delivery & Reviews      | Not started |                                            |
 | 4 — Hardening, Admin & Pilot Ready    | Not started |                                            |
@@ -78,6 +78,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 | PXG-059 | Admin auth hardening | Merged to `main` (PR #28) |
 | PXG-060 | Contract CI, SemVer, versioning | Merged to `main` (PR #29) |
 | PXG-061 | Admin audit log | Merged to `main` (PR #31); `t_admin_audit_log`, audited vendor writes in one transaction, `GET /admin/audit-log`; server logging (correlation ID, SQL per profile, slow queries) |
+| PXG-063 | API scenario scripts | Done on `working/PXG-063` for local and CI: Hurl collection `api-scenarios/`, runner with seed reset, CI job `API Scenarios`, on-demand remote workflow. **Staging run pending** (no host) — the sprint plan's done-when is not met yet |
 | PXG-062 | Documentation reconciliation & ADRs | Done on `working/PXG-062`; 25 ADRs, gates G1/G2, Cadrage v1.4 baseline, deployment docs aligned with Jib. Awaiting PR |
 
 ## Architecture Updates
@@ -148,7 +149,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 - PXG-061: admin writes now need a JWT whose subject is the admin's user id (login tokens already are); other subjects get 401 `PROXIGAZ-401-001`. E2E `I am connected with the scopes 'admin'` now signs with the bootstrapped admin's id; `security_audience.feature` writes use it.
 - PXG-061: `@Validated` controllers threw an unmapped `ConstraintViolationException` for out-of-range query parameters (e.g. `GET /admin/vendors?size=0` → 500). Now 400 `PROXIGAZ-400-002`.
 - PXG-061: `HttpLoggingFilter` now runs before Spring Security, so 401/403 responses are logged and carry a correlation ID; client-supplied `X-Correlation-Id` values are validated (log-injection guard).
-- PXG-062 (2026-11-18): D1–D20 ratified as ADRs 0001–0020 with four amendments recorded in the ADRs: D11 (no token lookup prefix), D12 (`c_is_open_now` is still on `t_vendor_brands`; PXG-065 migrates it), D14 (`PhoneNumber` not yet E.164-normalised), D17 (no proxy, `X-Forwarded-For` ignored). D13 gap: API date-times are UTC but sent without an offset (`java8-localdatetime`); fix before contract milestone C1. ADRs 0021–0025 added.
+- PXG-062 (2026-11-18): D1–D20 ratified as ADRs 0001–0020 with four amendments recorded in the ADRs: D11 (no token lookup prefix), D12 (`c_is_open_now` is still on `t_vendor_brands`; PXG-065 migrates it), D14 (the contract enforces `+237` E.164 for vendor phones, but `PhoneNumber` itself does not and local formats are not normalised), D17 (no proxy, `X-Forwarded-For` ignored). D13 gap: API date-times are UTC but sent without an offset (`java8-localdatetime`); fix before contract milestone C1. ADRs 0021–0025 added.
 - PXG-062: deployment docs described files removed in `2e2ca19` (`Dockerfile`, `compose.staging.yaml`, `deploy-staging.sh`); rewritten for Jib. `compose.yaml` still had `build: context: .` and could not start; it now runs the Jib-built `proxigaz:local` image (verified: health 200, admin login 200). **No staging environment exists**, so the release gate's staging step cannot run. `TASK_PXG-012C.md` deleted. The release workflow now records the published image digests in the release notes.
 - Open (error codes): duplicate phone and email are not mapped to a domain error. `c_phone` has no unique constraint and a duplicate email violates `t_users`' unique index, so both would surface as an unhandled 500. `PROXIGAZ-409-001`/`409-002` were removed from the registry as unused; the task that implements duplicate detection (PXG-057 follow-up or PXG-064) must add them back per `docs/ERROR_CODES.md` → Adding New Error Codes. A registry/enum parity test (`ErrorCodesDocumentationTest`) is added on `chore/error-registry`.
 - Open (not PXG-061): `UserController.getAdminProfile` still parses the JWT subject itself (returns a bare 401 without problem body); align it with `AuthenticatedAdmin` later. `LoggingNotificationChannel` logs client phone numbers at INFO — revisit before the pilot (PXG-030).
@@ -162,7 +163,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 - PXG-013–015 and PXG-055–061 are merged. PXG-060 adds the `OpenAPI Contract` CI job (`scripts/validate-openapi.sh`, `.spectral.yaml`, `scripts/check-openapi-breaking.sh`); every new endpoint must lint clean (operationId, at least one 4xx, 500 via `components/responses/InternalServerError`, no unused components, `required` names declared).
 - Contract `info.version` stays `0.1.0-dev`; releases stamp the tag version via `scripts/prepare_openapi_release.py`. Breaking changes need the PR label `contract-breaking-approved`.
 - PXG-061: every new admin write use case must take the admin `UserId`, run inside `UnitOfWork.inTransaction`, and record an `AuditEntry` (allowlisted `AuditMetadata` only). PXG-064 brand CRUD adds `AuditTargetType.BRAND` and its actions.
-- Remaining Epic 1.0: PXG-054 (keep Demo), PXG-063. Epic 1.2+ (catalog/availability/geo) remains.
+- Remaining Epic 1.0: PXG-054 (keep Demo); PXG-063 open only for its staging run (no host yet). Epic 1.2+ (catalog/availability/geo) remains.
 - Decisions live in `docs/adr/`. When a task lands, update the "Implementation state" of the ADRs it touches; change a decision only by a dated amendment or a superseding ADR.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits).
 
@@ -170,5 +171,6 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 
 1. Open and merge the `working/PXG-062` PR (PXG-061 merged in #31). The follow-up branch `chore/error-registry` (Qodana fixes, registry trim, registry parity test) should be reviewed and merged separately.
 2. Choose and provision a staging environment (requirements in `docs/RELEASE_AND_DEPLOYMENT.md` → Pilot deployment). Without it, no sprint release can be completed under the release policy, and PXG-063's runner has nothing to run against.
-3. Continue Epic 1.0: PXG-063 (scenario scripts), PXG-054 (template leftovers, keeping Demo).
-4. Complete Epic 1.2+ (PXG-064, PXG-016, PXG-065, PXG-017, PXG-020/021, PXG-066/067).
+3. When staging exists: add the `PROXIGAZ_SCENARIO_ADMIN_*` secrets to the GitHub `staging` environment and run `API scenarios (remote)` to close PXG-063.
+4. Continue Epic 1.0: PXG-054 (template leftovers, keeping Demo). Each of PXG-064–067 extends `api-scenarios/sprint-1/` (brand, availability, nearby, quote).
+5. Complete Epic 1.2+ (PXG-064, PXG-016, PXG-065, PXG-017, PXG-020/021, PXG-066/067).

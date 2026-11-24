@@ -26,7 +26,7 @@ Authoritative checklist: [`status.md`](status.md). Sprint breakdown: [`docs/Prox
 - Config profiles: `local` (default, development defaults allowed), `staging`, `production` (secrets required via env); see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - Optional initial admin creation at startup uses environment-provided credentials and stores a BCrypt password hash; see [`docs/RUNTIME.md`](docs/RUNTIME.md).
 - The `local` Liquibase context seeds a development-only admin (`admin@proxigaz.local` / `password`) and five fictional vendors in central Douala. Seed data is excluded from staging and production contexts.
-- CI: Spotless + unit / data / e2e tests on GitHub Actions, plus an OpenAPI contract job: Spectral lint and an oasdiff breaking-change check against the target branch.
+- CI: Spotless + unit / data / e2e tests on GitHub Actions, an OpenAPI contract job (Spectral lint and an oasdiff breaking-change check against the target branch), and an API scenario job that runs the Sprint 1 Hurl scenario against the Jib image in Docker Compose.
 - API docs (`/v3/api-docs`, Swagger UI) are public on the `local` and `staging` profiles only; production does not serve them.
 - Admin audit log: every admin vendor write (create, update, activate/deactivate, session rotate/revoke) records who did what in `t_admin_audit_log`, in the same transaction as the change. `GET /admin/audit-log?targetType=VENDOR&targetId=…` lists entries newest first. Metadata never contains tokens, hashes or field values.
 - Server logs carry a request correlation ID on every line; SQL statements are logged on `local` (with bind values) and `staging` (without); slow queries are logged everywhere. See [`docs/RUNTIME.md`](docs/RUNTIME.md#logging).
@@ -71,6 +71,14 @@ Tests:
 ./gradlew test
 ./gradlew dataTest
 ./gradlew e2eTest
+```
+
+API scenarios ([Hurl](https://hurl.dev) files in `api-scenarios/`, run against a running server; CI runs them on every PR against the Compose stack):
+
+```bash
+scripts/install-hurl.sh                           # pinned, checksum-verified, to ~/.local/bin (or Docker is used)
+scripts/run-api-scenarios.sh local                # against a running local stack
+scripts/run-api-scenarios.sh --reset-local local  # rebuild image + fresh local database first (deletes the Compose DB volume)
 ```
 
 OpenAPI contract checks (Node.js 22+ for Spectral; oasdiff installs to `~/.local/bin`):
