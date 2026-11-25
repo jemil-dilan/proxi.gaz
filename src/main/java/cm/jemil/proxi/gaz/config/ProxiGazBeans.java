@@ -6,6 +6,7 @@ package cm.jemil.proxi.gaz.config;
 
 import cm.jemil.proxi.gaz.application.outbound.AccessTokenIssuer;
 import cm.jemil.proxi.gaz.application.outbound.AuditLogPort;
+import cm.jemil.proxi.gaz.application.outbound.BrandRepository;
 import cm.jemil.proxi.gaz.application.outbound.Clock;
 import cm.jemil.proxi.gaz.application.outbound.Configurations;
 import cm.jemil.proxi.gaz.application.outbound.DemoRepository;
@@ -20,12 +21,14 @@ import cm.jemil.proxi.gaz.application.outbound.VendorRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorSessionRepository;
 import cm.jemil.proxi.gaz.application.outbound.VendorSessionTokenGenerator;
 import cm.jemil.proxi.gaz.application.outbound.VendorSessionTokenHasher;
+import cm.jemil.proxi.gaz.application.usecase.CreateBrandUseCase;
 import cm.jemil.proxi.gaz.application.usecase.CreateDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.CreateVendorUseCase;
 import cm.jemil.proxi.gaz.application.usecase.DeleteDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllDemoUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAllVendorsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetAuditLogUseCase;
+import cm.jemil.proxi.gaz.application.usecase.GetBrandsUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetDemoByIdUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetVendorByIdUseCase;
 import cm.jemil.proxi.gaz.application.usecase.GetVendorSessionUseCase;
@@ -82,6 +85,17 @@ public class ProxiGazBeans {
       UnitOfWork unitOfWork,
       Clock clock) {
     return new SetVendorStatusUseCase(vendorRepository, auditLog, unitOfWork, clock);
+  }
+
+  @Bean
+  public CreateBrandUseCase createBrandUseCase(
+      BrandRepository brandRepository, AuditLogPort auditLog, UnitOfWork unitOfWork, Clock clock) {
+    return new CreateBrandUseCase(brandRepository, auditLog, unitOfWork, clock);
+  }
+
+  @Bean
+  public GetBrandsUseCase getBrandsUseCase(BrandRepository brandRepository) {
+    return new GetBrandsUseCase(brandRepository);
   }
 
   @Bean

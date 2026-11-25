@@ -20,5 +20,7 @@
 		relativeToChangelogFile="true" />
 	<include file="internal/v-7-admin-audit-log.xml"
 		relativeToChangelogFile="true" />
+	<include file="internal/v-8-brands.xml"
+		relativeToChangelogFile="true" />
 </databaseChangeLog>
 

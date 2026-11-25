@@ -16,6 +16,7 @@ import cm.jemil.proxi.gaz.application.views.DemoView;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView1;
 import cm.jemil.proxi.gaz.application.views.DemoView.DemoView2;
 import cm.jemil.proxi.gaz.application.views.VendorView;
+import cm.jemil.proxi.gaz.domain.brand.Brand;
 import cm.jemil.proxi.gaz.domain.shared.Email;
 import cm.jemil.proxi.gaz.domain.shared.Money;
 import cm.jemil.proxi.gaz.domain.shared.PageData;
@@ -24,10 +25,9 @@ import cm.jemil.proxi.gaz.domain.vendor.DeliveryFeeType;
 import cm.jemil.proxi.gaz.domain.vendor.VendorId;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminLoginDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AdminProfileDTO;
-import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AuditActionDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AuditLogEntryDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AuditLogPaginationDTO;
-import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AuditTargetTypeDTO;
+import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.BrandDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreateVendorDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.CreationResponseDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.DemoCreateDTO;
@@ -186,6 +186,14 @@ interface RestMapper {
   @Mapping(target = "totalPages", source = "totalPages")
   VendorPaginationDTO fromDomain(GetAllVendorsUseCase.Response response);
 
+  default BrandDTO fromBrand(Brand brand) {
+    return new BrandDTO(
+        brand.id().value(),
+        brand.name().value(),
+        brand.active(),
+        mapInstantToLocalDateTime(brand.createdAt().value()));
+  }
+
   default AuditLogPaginationDTO fromAuditLog(PageData<AuditLogView> page) {
     var content =
         page.stream()
@@ -196,8 +204,8 @@ interface RestMapper {
                       new AuditLogEntryDTO(
                           entry.id().value(),
                           entry.adminUserId().value(),
-                          AuditActionDTO.fromValue(entry.action().name()),
-                          AuditTargetTypeDTO.fromValue(entry.targetType().name()),
+                          entry.action().name(),
+                          entry.targetType().name(),
                           entry.targetId(),
                           new java.util.LinkedHashMap<>(entry.metadata().values()),
                           mapInstantToLocalDateTime(entry.createdAt().value()));

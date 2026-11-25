@@ -23,6 +23,7 @@ public enum ErrorCodes implements ErrorCode {
 
   // 409 Conflict
   PROXIGAZ_409_000("PROXIGAZ-409-000", "DEMO ALREADY EXISTS"),
+  PROXIGAZ_409_003("PROXIGAZ-409-003", "BRAND ALREADY EXISTS"),
 
   // 429 Too Many Requests
   PROXIGAZ_429_001("PROXIGAZ-429-001", "RATE LIMITED"),

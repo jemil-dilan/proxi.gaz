@@ -62,6 +62,17 @@ class AuditEntryTest {
   }
 
   @Test
+  void brand_shouldBuildABrandEntry() {
+    var entry =
+        AuditEntry.brand(
+            ADMIN, AuditAction.BRAND_CREATED, TARGET, AuditMetadata.created(true), NOW);
+
+    assertThat(entry.targetType()).isEqualTo(AuditTargetType.BRAND);
+    assertThat(entry.action()).isEqualTo(AuditAction.BRAND_CREATED);
+    assertThat(entry.targetId()).isEqualTo(TARGET);
+  }
+
+  @Test
   void statusAction_shouldMapTheNewState() {
     assertThat(AuditAction.forStatus(true)).isEqualTo(AuditAction.VENDOR_ACTIVATED);
     assertThat(AuditAction.forStatus(false)).isEqualTo(AuditAction.VENDOR_DEACTIVATED);

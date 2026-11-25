@@ -21,6 +21,8 @@ tags:
     description: "Vendor profile and onboarding operations"
   - name: "Audit"
     description: "Admin audit trail"
+  - name: "Brand"
+    description: "Gas brand reference catalogue"
 paths:
   /admin/vendors:
     get:
@@ -363,6 +365,69 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/brands:
+    get:
+      tags:
+        - "Brand"
+      summary: "List the brand catalogue"
+      description: "Returns every brand sorted by name (case-insensitive). `isActive` restricts the list to active or inactive brands."
+      operationId: "listBrands"
+      security:
+        - adminAuth: []
+      parameters:
+        - name: "isActive"
+          in: "query"
+          required: false
+          schema:
+            type: "boolean"
+      responses:
+        "200":
+          description: "Brands sorted by name"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/BrandDTO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - "Brand"
+      summary: "Add a brand to the catalogue"
+      description: "Creates an active brand. The name is trimmed and inner whitespace collapsed; names are unique regardless of case and spacing (`PROXIGAZ-409-003`). The creation is recorded in the audit log."
+      operationId: "createBrand"
+      security:
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BrandCreateDTO"
+      responses:
+        "201":
+          description: "Brand created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandDTO"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "500":
           $ref: "#/components/responses/InternalServerError"
   /admin/audit-log:
@@ -937,19 +1002,10 @@ components:
           description: "Whether the vendor is active"
     AuditTargetTypeDTO:
       type: "string"
-      description: "Kind of resource an audit entry refers to."
+      description: "Audit target types accepted by the `targetType` filter."
       enum:
         - "VENDOR"
-    AuditActionDTO:
-      type: "string"
-      description: "Admin write action recorded in the audit log."
-      enum:
-        - "VENDOR_CREATED"
-        - "VENDOR_UPDATED"
-        - "VENDOR_ACTIVATED"
-        - "VENDOR_DEACTIVATED"
-        - "VENDOR_SESSION_ROTATED"
-        - "VENDOR_SESSION_REVOKED"
+        - "BRAND"
     AuditLogEntryDTO:
       type: "object"
       required:
@@ -974,9 +1030,22 @@ components:
           nullable: true
           description: "Email of that admin, when known"
         action:
-          $ref: "#/components/schemas/AuditActionDTO"
+          type: "string"
+          description: "Admin write action. The set grows as features are audited: clients must accept values not listed here."
+          x-extensible-enum:
+            - "VENDOR_CREATED"
+            - "VENDOR_UPDATED"
+            - "VENDOR_ACTIVATED"
+            - "VENDOR_DEACTIVATED"
+            - "VENDOR_SESSION_ROTATED"
+            - "VENDOR_SESSION_REVOKED"
+            - "BRAND_CREATED"
         targetType:
-          $ref: "#/components/schemas/AuditTargetTypeDTO"
+          type: "string"
+          description: "Kind of audited resource. The set grows as features are audited: clients must accept values not listed here."
+          x-extensible-enum:
+            - "VENDOR"
+            - "BRAND"
         targetId:
           type: "string"
           format: "uuid"
@@ -1009,6 +1078,35 @@ components:
           format: "int64"
         totalPages:
           type: "integer"
+    BrandDTO:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "isActive"
+        - "createdAt"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+          description: "Display name, trimmed with single inner spaces"
+        isActive:
+          type: "boolean"
+        createdAt:
+          type: "string"
+          format: "date-time"
+    BrandCreateDTO:
+      type: "object"
+      required:
+        - "name"
+      properties:
+        name:
+          type: "string"
+          minLength: 1
+          maxLength: 64
+          description: "Brand name; unique regardless of case and spacing"
     ProblemDTO:
       type: "object"
       description: "RFC 7807 Problem Details"

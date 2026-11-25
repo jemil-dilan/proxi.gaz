@@ -31,6 +31,22 @@ public record AuditEntry(
     }
   }
 
+  public static AuditEntry brand(
+      UserId adminUserId,
+      AuditAction action,
+      UUID brandId,
+      AuditMetadata metadata,
+      CreatedAt createdAt) {
+    return new AuditEntry(
+        AuditEntryId.generate(),
+        adminUserId,
+        action,
+        AuditTargetType.BRAND,
+        brandId,
+        metadata,
+        createdAt);
+  }
+
   public static AuditEntry vendor(
       UserId adminUserId,
       AuditAction action,

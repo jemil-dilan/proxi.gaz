@@ -11,7 +11,8 @@ public enum AuditAction {
   VENDOR_ACTIVATED,
   VENDOR_DEACTIVATED,
   VENDOR_SESSION_ROTATED,
-  VENDOR_SESSION_REVOKED;
+  VENDOR_SESSION_REVOKED,
+  BRAND_CREATED;
 
   /** Action recorded by a status change, named after the requested state. */
   public static AuditAction forStatus(boolean isActive) {

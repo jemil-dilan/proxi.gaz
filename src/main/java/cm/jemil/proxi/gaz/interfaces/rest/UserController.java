@@ -18,8 +18,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -43,10 +41,9 @@ class UserController implements UserApi {
    */
   @Override
   public ResponseEntity<AdminProfileDTO> getAdminProfile() {
-    var userId = AuthenticatedAdmin.currentAdminId();
-    var token =
-        ((JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication())
-            .getToken();
+    var admin = AuthenticatedAdmin.current();
+    var userId = admin.id();
+    var token = admin.token();
 
     // JWT stores space-separated scopes in the standard "scope" claim
     String scopeClaim = token.getClaimAsString("scope");

@@ -35,6 +35,14 @@ class UserControllerTest {
   }
 
   @Test
+  void getAdminProfile_shouldRejectARequestWithoutAuthentication() {
+    SecurityContextHolder.clearContext();
+
+    assertThatThrownBy(controller()::getAdminProfile)
+        .isInstanceOf(InvalidAdminTokenException.class);
+  }
+
+  @Test
   void getAdminProfile_shouldRejectTokenWithoutSubject() {
     var jwt =
         Jwt.withTokenValue("test-token")

@@ -66,6 +66,7 @@ The Title column is the exact value returned in the `title` field of the error r
 | Code | Title | Description | HTTP Status |
 |------|-------|-------------|-------------|
 | `PROXIGAZ-409-000` | DEMO ALREADY EXISTS | A demo with this identifier already exists | 409 |
+| `PROXIGAZ-409-003` | BRAND ALREADY EXISTS | A brand with the same name, ignoring case and spacing, is already in the catalogue | 409 |
 
 ### 429 Too Many Requests
 

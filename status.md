@@ -1,6 +1,6 @@
 # ProxiGaz — Project Status
 
-Last updated: 2026-11-24 by `working/PXG-054` (PXG-054 complete: template leftovers + Epic 1.0 cleanups; PXG-063 merged in PR #34, open only for its staging run)
+Last updated: 2026-11-24 by `working/PXG-064` (PXG-064 complete: brand catalogue; PXG-054 merged in PR #35)
 
 ## Gates
 
@@ -33,7 +33,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 | VEN-01   | Admin creates / updates vendor + location (PostGIS)     | Implemented | Yes (user-confirmed) | Yes (user-confirmed) | PXG-014 listing + PXG-058 `GET /admin/vendors/{id}` with session metadata and list `sort`; PXG-061 audited (`VENDOR_CREATED`/`VENDOR_UPDATED`) |
 | VEN-02   | Admin activates / deactivates vendor                    | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | Dedicated admin status endpoint is merged to main; production nearby-search exclusion remains in PXG-020; PXG-061 audited |
 | VEN-03   | Admin creates long-lived VendorSession                  | Implemented | Yes (CI green, user-confirmed) | Yes (CI green, user-confirmed) | Rotation replaces the prior session; revocation removes active token record; PXG-061 audited (no token in metadata) |
-| VEN-04   | CRUD VendorBrand (prices with/without exchange)         | No          | No          | No         |       |
+| VEN-04   | CRUD VendorBrand (prices with/without exchange)         | No          | No          | No         | PXG-064: brand catalogue `t_brands` + `GET/POST /admin/brands` in place; vendor links are PXG-016 |
 | VEN-05   | Availability rule (`is_available AND available_until > now() AND is_open_now`) | Partial | Yes | No | Domain `Availability` VO; query wiring later |
 | GEO-01   | Nearby vendors (ST_DWithin + distance sort)             | No          | No          | No         |       |
 | ORD-01   | Create order + first OrderOffer + tracking_token + code | No          | No          | No         | Max 2 active + rate limit by IP/device |
@@ -80,6 +80,7 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 | PXG-061 | Admin audit log | Merged to `main` (PR #31); `t_admin_audit_log`, audited vendor writes in one transaction, `GET /admin/audit-log`; server logging (correlation ID, SQL per profile, slow queries) |
 | PXG-063 | API scenario scripts | Done on `working/PXG-063` for local and CI: Hurl collection `api-scenarios/`, runner with seed reset, CI job `API Scenarios`, on-demand remote workflow. **Staging run pending** (no host) — the sprint plan's done-when is not met yet |
 | PXG-054 | Remove template leftovers (+ Epic 1.0 cleanups) | Done on `working/PXG-054`: Demo kept (ADR 0021); `bearerAuth` and unused CI `postgres` services removed; `getVendor` 400/401/403; opaque vendor scheme; `/me` problem 401; phone masking in logs |
+| PXG-064 | Brand reference table | Done on `working/PXG-064`: `t_brands` (unique `lower(name)`, no seed), `GET/POST /admin/brands`, `409-003`, `BRAND_CREATED` audit, audit response enums made extensible (PR needs `contract-breaking-approved`), Qodana NPE fix in `/admin/auth/me` |
 | PXG-062 | Documentation reconciliation & ADRs | Done on `working/PXG-062`; 25 ADRs, gates G1/G2, Cadrage v1.4 baseline, deployment docs aligned with Jib. Awaiting PR |
 
 ## Architecture Updates
@@ -164,7 +165,9 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 - PXG-013–015 and PXG-055–061 are merged. PXG-060 adds the `OpenAPI Contract` CI job (`scripts/validate-openapi.sh`, `.spectral.yaml`, `scripts/check-openapi-breaking.sh`); every new endpoint must lint clean (operationId, at least one 4xx, 500 via `components/responses/InternalServerError`, no unused components, `required` names declared).
 - Contract `info.version` stays `0.1.0-dev`; releases stamp the tag version via `scripts/prepare_openapi_release.py`. Breaking changes need the PR label `contract-breaking-approved`.
 - PXG-061: every new admin write use case must take the admin `UserId`, run inside `UnitOfWork.inTransaction`, and record an `AuditEntry` (allowlisted `AuditMetadata` only). PXG-064 brand CRUD adds `AuditTargetType.BRAND` and its actions.
-- Epic 1.0 is done except PXG-063's staging run (no host yet). Epic 1.2+ (catalog/availability/geo) is next.
+- Epic 1.0 is done except PXG-063's staging run (no host yet). Epic 1.2 started: PXG-064 brand catalogue done.
+- PXG-064: `t_brands` exists, but `t_vendor_brands` still has a free-text `c_brand_name` (and `c_is_open_now`). Both tables are empty everywhere; PXG-016 replaces `c_brand_name` with `c_brand_id` → `t_brands`, PXG-065 moves `is_open_now` to `t_vendors` (ADR 0012).
+- Audit-log responses list `action`/`targetType` as `x-extensible-enum` (ADR 0024 amendment): new audited actions no longer break the contract.
 - Decisions live in `docs/adr/`. When a task lands, update the "Implementation state" of the ADRs it touches; change a decision only by a dated amendment or a superseding ADR.
 - All work must follow `docs/ProxiGaz_Implementation_Guideline.md` (including `cz c` commits).
 
@@ -173,5 +176,5 @@ Decisions D1–D20 were ratified on 2026-11-18 as [ADRs 0001–0020](docs/adr/RE
 1. Open and merge the `working/PXG-062` PR (PXG-061 merged in #31). The follow-up branch `chore/error-registry` (Qodana fixes, registry trim, registry parity test) should be reviewed and merged separately.
 2. Choose and provision a staging environment (requirements in `docs/RELEASE_AND_DEPLOYMENT.md` → Pilot deployment). Without it, no sprint release can be completed under the release policy, and PXG-063's runner has nothing to run against.
 3. When staging exists: add the `PROXIGAZ_SCENARIO_ADMIN_*` secrets to the GitHub `staging` environment and run `API scenarios (remote)` to close PXG-063.
-4. Start Epic 1.2: PXG-064 (brand reference table) first. Each of PXG-064–067 extends `api-scenarios/sprint-1/` (brand, availability, nearby, quote).
+4. Continue Epic 1.2: PXG-016 (vendor brands, linked to `t_brands`), then PXG-065, PXG-017. Each of PXG-064–067 extends `api-scenarios/sprint-1/` (brand, availability, nearby, quote).
 5. Complete Epic 1.2+ (PXG-064, PXG-016, PXG-065, PXG-017, PXG-020/021, PXG-066/067).

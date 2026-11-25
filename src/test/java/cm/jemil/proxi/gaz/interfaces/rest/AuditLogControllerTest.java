@@ -17,7 +17,6 @@ import cm.jemil.proxi.gaz.domain.audit.AuditTargetType;
 import cm.jemil.proxi.gaz.domain.shared.CreatedAt;
 import cm.jemil.proxi.gaz.domain.shared.PageData;
 import cm.jemil.proxi.gaz.domain.shared.UserId;
-import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AuditActionDTO;
 import cm.jemil.proxi.gaz.generated.adapter.rest.inbound.dto.AuditTargetTypeDTO;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -61,8 +60,8 @@ class AuditLogControllerTest {
     assertThat(dto.getId()).isEqualTo(entry.id().value());
     assertThat(dto.getAdminUserId()).isEqualTo(adminId.value());
     assertThat(dto.getAdminEmail()).isEqualTo("admin@example.test");
-    assertThat(dto.getAction()).isEqualTo(AuditActionDTO.VENDOR_UPDATED);
-    assertThat(dto.getTargetType()).isEqualTo(AuditTargetTypeDTO.VENDOR);
+    assertThat(dto.getAction()).isEqualTo("VENDOR_UPDATED");
+    assertThat(dto.getTargetType()).isEqualTo("VENDOR");
     assertThat(dto.getTargetId()).isEqualTo(vendorId);
     assertThat(dto.getMetadata()).containsEntry("changedFields", List.of("name"));
     assertThat(dto.getCreatedAt()).isEqualTo(LocalDateTime.parse("2026-11-18T10:15:30"));
